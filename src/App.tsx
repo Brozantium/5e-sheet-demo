@@ -251,6 +251,7 @@ export default function App() {
   const [role, setRole] = useState<'GM' | 'PLAYER'>(() => (localStorage.getItem('dnd5e-role') === 'GM' ? 'GM' : 'PLAYER'))
   const [players, setPlayers] = useState<Person[]>([])
   const [inbox, setInbox] = useState<ShareMsg | null>(null)
+  const [overwriteSlot, setOverwriteSlot] = useState<number | null>(null)
   const restRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const noticeTimer = useRef<number>(0)
@@ -306,14 +307,26 @@ export default function App() {
     setTab('main')
     return true
   }
-  const newCharacter = () => {
-    if (!addCharacter(initial)) return flash('All 5 slots are used. Delete one first.')
-    setMenuOpen(false)
-  }
   const switchSlot = (i: number) => {
     if (store.slots[i]) setStore((st) => ({ ...st, active: i }))
-    else addCharacter(initial)
+    else {
+      setStore((st) => ({ active: i, slots: st.slots.map((x, k) => (k === i ? initial : x)) }))
+      setTab('main')
+    }
     setMenuOpen(false)
+  }
+  const saveIncoming = (i: number) => {
+    if (!inbox) return
+    const sheet = normalize(inbox.sheet)
+    setStore((st) => ({ active: i, slots: st.slots.map((x, k) => (k === i ? sheet : x)) }))
+    setTab('main')
+    setInbox(null)
+    setOverwriteSlot(null)
+    flash(`Saved ${sheet.name || 'character'} to slot ${i + 1}`)
+  }
+  const chooseIncomingSlot = (i: number) => {
+    if (store.slots[i]) setOverwriteSlot(i)
+    else saveIncoming(i)
   }
   const deleteSlot = (i: number) => {
     const name = store.slots[i]?.name
@@ -512,12 +525,11 @@ export default function App() {
                   )}
                 </div>
               ))}
-              <MenuItem onClick={newCharacter}>New character</MenuItem>
               <div className="my-1 border-t border-rule/70" />
               <MenuItem onClick={exportJson}>Export character (JSON)</MenuItem>
               <MenuItem onClick={() => fileRef.current?.click()}>Import character (JSON)</MenuItem>
               <MenuItem onClick={() => { setShareOpen(true); setMenuOpen(false) }}>
-                {role === 'GM' ? 'Share to player' : 'Share to GM'}
+                {role === 'GM' ? 'Share to player' : 'Share to DM'}
               </MenuItem>
               {!inObr && (
                 <MenuItem onClick={() => { const r = role === 'GM' ? 'PLAYER' : 'GM'; setRole(r); localStorage.setItem('dnd5e-role', r) }}>
@@ -570,7 +582,7 @@ export default function App() {
       {shareOpen && (
         <div className="absolute inset-0 z-40 grid place-items-center bg-black/40 p-4" onMouseDown={() => setShareOpen(false)}>
           <div onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-xs rounded-lg border border-rule bg-card p-3 shadow-xl">
-            <Label>{role === 'GM' ? 'Share to player' : 'Share to GM'}</Label>
+            <Label>{role === 'GM' ? 'Share to player' : 'Share to DM'}</Label>
             <p className="mt-1 text-[11px] text-muted">Sends a copy of {s.name || 'this character'}. They choose whether to save it.</p>
             {role === 'GM' ? (
               <div className="mt-2 space-y-1">
@@ -582,7 +594,7 @@ export default function App() {
                 ))}
               </div>
             ) : (
-              <Btn tone="green" onClick={() => sendSheet('GM', 'GM')}>Send to GM</Btn>
+              <Btn tone="green" onClick={() => sendSheet('GM', 'DM')}>Send to DM</Btn>
             )}
             <button onClick={() => setShareOpen(false)} className="mt-2 text-xs text-muted hover:text-ink">Cancel</button>
           </div>
@@ -590,15 +602,52 @@ export default function App() {
       )}
       {inbox && (
         <div className="absolute inset-0 z-50 grid place-items-center bg-black/40 p-4">
-          <div className="w-full max-w-xs rounded-lg border border-rule bg-card p-3 shadow-xl">
-            <Label>Incoming character</Label>
-            <p className="mt-1 text-sm">
-              {inbox.fromName} shared <b>{inbox.sheet.name}</b> ({inbox.sheet.cls} {inbox.sheet.level}).
-            </p>
-            <div className="mt-3 flex gap-2">
-              <Btn tone="green" onClick={() => { if (addCharacter(normalize(inbox.sheet))) setInbox(null); else flash('All 5 slots are used. Delete one first.') }}>Save to new slot</Btn>
-              <Btn tone="plain" onClick={() => setInbox(null)}>Dismiss</Btn>
-            </div>
+          <div
+            role={overwriteSlot === null ? 'dialog' : 'alertdialog'}
+            aria-label={overwriteSlot === null ? 'Choose character slot' : 'Confirm overwrite'}
+            className="w-full max-w-xs rounded-lg border border-rule bg-card p-3 shadow-xl"
+          >
+            {overwriteSlot === null ? (
+              <>
+                <Label>Incoming character</Label>
+                <p className="mt-1 text-sm">
+                  {inbox.fromName} shared <b>{inbox.sheet.name}</b> ({inbox.sheet.cls} {inbox.sheet.level}).
+                </p>
+                <p className="mt-2 text-[11px] text-muted">Choose a slot to save this character.</p>
+                <div className="mt-2 space-y-1">
+                  {store.slots.map((character, i) => (
+                    <button
+                      key={i}
+                      onClick={() => chooseIncomingSlot(i)}
+                      className="flex w-full items-center rounded border border-rule px-2 py-2 text-left hover:bg-accent-soft"
+                    >
+                      <span className="mr-2 font-mono text-[10px] text-muted">{i + 1}</span>
+                      {character ? (
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm">{character.name || 'Unnamed'}</span>
+                          <span className="block text-[10px] text-muted">{character.cls} {character.level} · overwrite</span>
+                        </span>
+                      ) : (
+                        <span className="text-sm text-muted">Empty slot</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                <button onClick={() => setInbox(null)} className="mt-2 text-xs text-muted hover:text-ink">Dismiss</button>
+              </>
+            ) : (
+              <>
+                <Label>Overwrite slot {overwriteSlot + 1}?</Label>
+                <p className="mt-1 text-sm">
+                  <b>{store.slots[overwriteSlot]?.name || 'Unnamed'}</b> will be replaced by <b>{inbox.sheet.name || 'the incoming character'}</b>.
+                </p>
+                <p className="mt-1 text-[11px] text-danger">This cannot be undone.</p>
+                <div className="mt-3 flex gap-2">
+                  <Btn tone="red" onClick={() => saveIncoming(overwriteSlot)}>Overwrite</Btn>
+                  <Btn tone="plain" onClick={() => setOverwriteSlot(null)}>Cancel</Btn>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -832,20 +881,20 @@ export default function App() {
         <div className="space-y-4 px-3 pb-20 pt-3 @3xl:px-6">
           {tab === 'main' && (
             <>
-              <div className="grid gap-4 @2xl:grid-cols-[minmax(0,1fr)_minmax(0,19rem)]">
+              <div className="grid grid-cols-2 items-start gap-3 @2xl:gap-4">
                 <div>
-                  <Heading right={`${s.cls} · locked`}>Saving throws</Heading>
-                  <ul className="grid grid-cols-3 gap-2">
+                  <Heading>Saving throws</Heading>
+                  <ul className="grid grid-cols-2 gap-1.5">
                     {ABILITIES.map((a) => {
                       const p = s.saveProf.includes(a)
                       const b = m(a) + (p ? pb : 0)
                       return (
-                        <li key={a} className={`flex items-center gap-2 rounded-md border border-rule bg-card px-2 py-2`}>
-                          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${p ? 'bg-accent' : 'bg-muted/30'}`} />
-                          <span className="text-sm font-semibold">{a}</span>
+                        <li key={a} className="flex min-w-0 items-center gap-1 rounded-md border border-rule bg-card p-1">
+                          <span className={`h-2 w-2 shrink-0 rounded-full ${p ? 'bg-accent' : 'bg-muted/30'}`} title={p ? `${s.cls} proficiency` : undefined} />
+                          <span className="text-xs font-semibold">{a}</span>
                           <button
                             onClick={() => roll(`${a} save`, b)}
-                            className={ROLL_BTN + ' ml-auto w-11 py-1.5 text-sm'}
+                            className={ROLL_BTN + ' ml-auto w-8 py-1 text-xs'}
                             title="Roll"
                           >
                             {sgn(b)}
@@ -854,31 +903,22 @@ export default function App() {
                       )
                     })}
                   </ul>
-                  <div className="mt-3">
-                    <Heading right="edit in Gear tab">Resistances &amp; immunities</Heading>
-                    <p className="min-h-12 whitespace-pre-wrap rounded-md border border-dashed border-rule p-2 text-[12.5px] leading-snug">
-                      {s.defenses || <span className="text-muted">Damage, condition and spell immunities will show here.</span>}
-                    </p>
-                  </div>
+                  <p className="mt-1 text-[9px] text-muted">{s.cls} proficiencies are locked.</p>
                 </div>
                 <div>
-                  <Heading right="edit in Gear tab">Senses</Heading>
-                  <div className="grid grid-cols-2 gap-2">
+                  <Heading>Senses</Heading>
+                  <div className="space-y-1.5">
                     {DETAIL_SKILLS.map(([n, a]) => {
                       const b = skillBonus(n, a)
                       const st = s.skillProf[n] ?? 0
                       return (
-                        <div key={n} className="rounded-md border border-rule bg-card p-2">
-                          <div className="flex items-baseline justify-between">
-                            <span className="text-[12.5px] font-medium">{n}</span>
-                            <span className="text-[9px] uppercase text-muted">{a}{st === 2 ? ' · expertise' : st === 1 ? ' · prof' : ''}</span>
+                        <div key={n} className="rounded-md border border-rule bg-card px-2 py-1.5">
+                          <div className="flex min-w-0 items-baseline gap-1">
+                            <span className="truncate text-[11px] font-medium">Passive {n}</span>
+                            <span className="shrink-0 text-[9px] uppercase text-muted">({a})</span>
+                            <span className="ml-auto shrink-0 font-mono text-base leading-none">{10 + b}</span>
                           </div>
-                          <div className="mt-1 flex items-center gap-3">
-                            <div>
-                              <div className="font-mono text-xl leading-none">{10 + b}</div>
-                              <div className="text-[9px] uppercase text-muted">passive</div>
-                            </div>
-                          </div>
+                          {st > 0 && <div className="text-right text-[8px] uppercase text-muted">{st === 2 ? 'expertise' : 'proficient'}</div>}
                           {s.skillNotes[n] && <p className="mt-1 whitespace-pre-wrap text-[11px] text-muted">{s.skillNotes[n]}</p>}
                         </div>
                       )
@@ -891,6 +931,12 @@ export default function App() {
                     </div>
                   </div>
                 </div>
+              </div>
+              <div>
+                <Heading>Resistances &amp; immunities</Heading>
+                <p className="min-h-12 whitespace-pre-wrap rounded-md border border-dashed border-rule p-2 text-[12.5px] leading-snug">
+                  {s.defenses || <span className="text-muted">Damage, condition and spell immunities will show here.</span>}
+                </p>
               </div>
               <div>
                 <Heading right={`${s.cls} · ${poolUsed}/${pool.pick} chosen`}>Skills</Heading>
