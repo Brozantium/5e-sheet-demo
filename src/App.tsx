@@ -249,9 +249,13 @@ function hpColor(hp: number, maxHp: number) {
   return '#22c55e'
 }
 
-function rollFormula(roll: Roll) {
+function rollExpr(roll: Roll) {
   const modifier = roll.mod >= 0 ? `+ ${roll.mod}` : `− ${Math.abs(roll.mod)}`
-  return `${roll.die} ${roll.face} ${modifier} = ${roll.total}`
+  return `1${roll.die} (${roll.face}) ${modifier} =`
+}
+
+function rollFormula(roll: Roll) {
+  return `${rollExpr(roll)} ${roll.total}`
 }
 
 function getHpMeta(item: Item): HpBarMeta | null {
@@ -288,7 +292,7 @@ async function refreshHpLabels() {
   const labels = shared.flatMap((item) => {
     const meta = getHpMeta(item)
     if (!meta || meta.kind !== 'fill' || (role !== 'GM' && meta.ownerId !== playerId)) return []
-    const fontSize = Math.max(10, meta.height * 1.7)
+    const fontSize = Math.max(9, meta.height * 0.78)
     return [
       buildText()
         .name('D&D 5e HP')
@@ -509,10 +513,10 @@ export default function App() {
         OBR.player.getId(),
         OBR.scene.items.getItems(),
       ])
-      const width = clamp(bounds.width * 0.72, 36, 160)
-      const height = clamp(width * 0.075, 5, 12)
+      const width = bounds.width
+      const height = clamp(width * 0.14, 12, 40)
       const centerX = bounds.center.x
-      const centerY = bounds.max.y + height * 1.5
+      const centerY = bounds.max.y - height * 0.9
       const pct = s.maxHp > 0 ? clamp(s.hp / s.maxHp, 0, 1) : 0
       const fillWidth = Math.max(0.1, width * pct)
       const rotation = token.rotation
@@ -534,6 +538,11 @@ export default function App() {
         centerY,
         rotation,
       }
+      const taken = items.some((item) => {
+        const meta = getHpMeta(item)
+        return !!meta && meta.tokenId === token.id && !(meta.ownerId === ownerId && meta.slot === store.active)
+      })
+      if (taken) return flash('This token already has a sheet attached. Remove it first.')
       const oldBars = items.filter((item) => {
         const meta = getHpMeta(item)
         return !!meta && (meta.tokenId === token.id || (meta.ownerId === ownerId && meta.slot === store.active))
@@ -1510,10 +1519,10 @@ export default function App() {
               {rolls.length === 0 && <p className="py-6 text-center text-muted">No rolls yet. Tap an ability, skill or attack.</p>}
               <ul>
                 {rolls.map((r) => (
-                  <li key={r.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 border-b border-rule/60 py-2">
+                  <li key={r.id} className={`grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 border-b border-rule/60 px-2 py-2 ${r.die === 'd20' && r.face === 20 ? 'bg-green-700/40' : r.die === 'd20' && r.face === 1 ? 'bg-red-700/40' : ''}`}>
                     <span className="truncate text-xs font-semibold">{r.playerName}</span>
                     <span className={`row-span-2 self-center font-mono text-xs ${r.die === 'd20' && r.face === 20 ? 'text-accent' : r.die === 'd20' && r.face === 1 ? 'text-danger' : 'text-muted'}`}>
-                      {rollFormula(r)}
+                      {rollExpr(r)} <span className="text-xl font-bold text-ink">{r.total}</span>
                     </span>
                     <span className="truncate text-[11px] text-muted">
                       {r.label}
@@ -1545,11 +1554,11 @@ export default function App() {
           <div className="pointer-events-none sticky bottom-3 z-10 flex justify-center px-3">
             <button
               onClick={() => setTab('log')}
-              className="pointer-events-auto flex items-center gap-3 rounded-full bg-head px-4 py-1.5 text-white shadow-lg"
+              className={`pointer-events-auto flex items-center gap-3 rounded-full px-4 py-1.5 text-white shadow-lg ${lastRoll.die === 'd20' && lastRoll.face === 20 ? 'bg-green-800' : lastRoll.die === 'd20' && lastRoll.face === 1 ? 'bg-red-800' : 'bg-head'}`}
             >
               <span className="max-w-[140px] truncate text-xs">{lastRoll.playerName} · {lastRoll.label}</span>
               <span className="font-mono text-lg font-medium">{lastRoll.total}</span>
-              <span className={`font-mono text-[11px] ${lastRoll.die === 'd20' && lastRoll.face === 20 ? 'text-pink' : lastRoll.die === 'd20' && lastRoll.face === 1 ? 'text-[#ffb3aa]' : 'opacity-80'}`}>
+              <span className={`font-mono text-[11px] ${lastRoll.die === 'd20' && (lastRoll.face === 20 || lastRoll.face === 1) ? 'font-semibold' : 'opacity-80'}`}>
                 {rollFormula(lastRoll)}
                 {lastRoll.die === 'd20' && lastRoll.face === 20 && ' · CRIT'}
                 {lastRoll.die === 'd20' && lastRoll.face === 1 && ' · FUMBLE'}
