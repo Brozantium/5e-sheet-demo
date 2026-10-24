@@ -448,6 +448,50 @@ export default function App() {
     }
   }
 
+  const [attached, setAttached] = useState(false)
+  useEffect(() => {
+    if (!inObr) return
+    let cancelled = false
+    let unsub: (() => void) | undefined
+    const check = async () => {
+      if (!(await OBR.scene.isReady())) return setAttached(false)
+      const ownerId = await OBR.player.getId()
+      const items = await OBR.scene.items.getItems()
+      if (cancelled) return
+      setAttached(items.some((item) => {
+        const meta = getHpMeta(item)
+        return !!meta && meta.ownerId === ownerId && meta.slot === store.active
+      }))
+    }
+    const start = () => {
+      void check()
+      unsub = OBR.scene.items.onChange(() => void check())
+    }
+    if (OBR.isReady) start()
+    else OBR.onReady(start)
+    return () => {
+      cancelled = true
+      unsub?.()
+    }
+  }, [inObr, store.active])
+
+  const removeSheetFromToken = async () => {
+    setMenuOpen(false)
+    try {
+      const ownerId = await OBR.player.getId()
+      const items = await OBR.scene.items.getItems()
+      const bars = items.filter((item) => {
+        const meta = getHpMeta(item)
+        return !!meta && meta.ownerId === ownerId && meta.slot === store.active
+      })
+      if (bars.length) await OBR.scene.items.deleteItems(bars.map((item) => item.id))
+      await queueHpLabelRefresh()
+      flash(`Removed ${s.name || 'sheet'} from token`)
+    } catch {
+      flash('Could not remove sheet from token')
+    }
+  }
+
   const attachCharacterToToken = async () => {
     setMenuOpen(false)
     if (!inObr) return flash('Attach to token is only available inside Owlbear')
@@ -614,7 +658,7 @@ export default function App() {
       ...r,
       id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       playerId: playerIdRef.current,
-      playerName: playerNameRef.current,
+      playerName: s.name.trim() || playerNameRef.current,
     }
     setRolls((current) => [entry, ...current].slice(0, 40))
     if (inObr && OBR.isReady) {
@@ -670,10 +714,11 @@ export default function App() {
   const poolUsed = ALL_SKILLS.filter((n) => (s.skillProf[n] ?? 0) > 0).length
   const canAddSkill = (n: string) => pool.from.includes(n) && poolUsed < pool.pick
 
-  const applyHp = (kind: 'dmg' | 'heal') => {
+  const applyHp = (kind: 'dmg' | 'heal' | 'temp') => {
     const n = parseInt(amount)
     if (!n || n < 0) return
     setS((p) => {
+      if (kind === 'temp') return { ...p, tempHp: Math.max(p.tempHp, n) }
       if (kind === 'heal') return { ...p, hp: clamp(p.hp + n, 0, p.maxHp), deathS: 0, deathF: 0 }
       const absorbed = Math.min(p.tempHp, n)
       return { ...p, tempHp: p.tempHp - absorbed, hp: clamp(p.hp - (n - absorbed), 0, p.maxHp) }
@@ -754,6 +799,7 @@ export default function App() {
   const changeClass = (c: string) =>
     setS((p) => ({ ...p, cls: c, hitDie: CLASS_DIE[c], saveProf: CLASS_SAVES[c], skillProf: {}, hpDice: [], hpLock: [] }))
 
+  const barScale = Math.max(s.maxHp, s.hp + s.tempHp)
   const hpPct = s.maxHp ? clamp((s.hp / s.maxHp) * 100, 0, 100) : 0
   const lastRoll = rolls[0]
   const TABS: [Tab, string][] = [['main', 'Ability'], ['combat', 'Combat'], ['spells', 'Spells'], ['gear', 'Gear'], ['log', 'Log']]
@@ -818,7 +864,9 @@ export default function App() {
               <MenuItem onClick={() => { setShareOpen(true); setMenuOpen(false) }}>
                 {role === 'GM' ? 'Share to player' : 'Share to DM'}
               </MenuItem>
-              <MenuItem onClick={attachCharacterToToken}>Attach character to selected token</MenuItem>
+              <MenuItem onClick={attached ? removeSheetFromToken : attachCharacterToToken}>
+                {attached ? 'Remove sheet from token' : 'Attach sheet to selected token'}
+              </MenuItem>
               {!inObr && (
                 <MenuItem onClick={() => { const r = role === 'GM' ? 'PLAYER' : 'GM'; setRole(r); localStorage.setItem('dnd5e-role', r) }}>
                   Demo view: {role === 'GM' ? 'GM' : 'Player'} (tap to switch)
@@ -1005,17 +1053,23 @@ export default function App() {
             <div className="relative flex h-8 flex-1 items-center justify-center overflow-hidden rounded bg-pink/35">
               <div
                 className={`absolute inset-y-0 left-0 transition-all ${hpPct <= 25 ? 'bg-red-500' : hpPct <= 50 ? 'bg-amber-400' : 'bg-green-500'}`}
-                style={{ width: `${hpPct}%` }}
+                style={{ width: `${barScale ? clamp((s.hp / barScale) * 100, 0, 100) : 0}%` }}
               />
+              {s.tempHp > 0 && (
+                <div
+                  className="absolute inset-y-0 bg-white transition-all"
+                  style={{
+                    left: `${barScale ? clamp((s.hp / barScale) * 100, 0, 100) : 0}%`,
+                    width: `${barScale ? clamp((s.tempHp / barScale) * 100, 0, 100) : 0}%`,
+                  }}
+                />
+              )}
               <span className="relative flex items-center rounded bg-card/85 px-1.5 font-mono text-sm font-medium text-ink">
                 <NumIn v={s.hp} on={(v) => set('hp', clamp(v, 0, s.maxHp))} className="w-9 text-right" />
                 <span className="px-0.5 opacity-70">/</span>
                 <span className="w-9 text-left" title="Follows class, level and CON">{s.maxHp}</span>
+                {s.tempHp > 0 && <span className="pl-1 text-xs font-semibold" title="Temporary HP">+{s.tempHp}</span>}
               </span>
-            </div>
-            <span className="w-8 text-right text-xs font-semibold text-muted">TMP</span>
-            <div className="flex h-8 w-14 items-center justify-center rounded bg-pink/35">
-              <NumIn v={s.tempHp} on={(v) => set('tempHp', Math.max(0, v))} className="w-full font-medium" />
             </div>
           </div>
           {hpOpen && (
@@ -1108,6 +1162,7 @@ export default function App() {
             />
             <Btn onClick={() => applyHp('dmg')} tone="red">Damage</Btn>
             <Btn onClick={() => applyHp('heal')} tone="green">Heal</Btn>
+            <Btn onClick={() => applyHp('temp')} tone="plain">Temp</Btn>
           </div>
 
           </div>
