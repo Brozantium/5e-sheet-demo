@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import OBR from '@owlbear-rodeo/sdk'
+import OBR, { buildShape, buildText, type Item } from '@owlbear-rodeo/sdk'
 
 const ABILITIES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'] as const
 type Ab = (typeof ABILITIES)[number]
@@ -168,14 +168,41 @@ const sgn = (n: number) => (n >= 0 ? `+${n}` : `${n}`)
 const prof = (lvl: number) => Math.ceil(lvl / 4) + 1
 const clamp = (n: number, a: number, b: number) => Math.min(b, Math.max(a, n))
 
-type Roll = { label: string; d20: number; mod: number; total: number; id: number; note?: string }
+type Roll = {
+  label: string
+  die: string
+  face: number
+  mod: number
+  total: number
+  id: string
+  playerId: string
+  playerName: string
+  note?: string
+}
 type Tab = 'main' | 'combat' | 'spells' | 'gear' | 'log'
 
 const SLOTS = 5
 const CHANNEL = 'dnd5e.sheet.share'
+const ROLL_CHANNEL = 'dnd5e.roll.share'
+const ROLL_STORAGE = 'dnd5e-roll-log'
+const HP_META = 'dnd5e.sheet.hp-bar'
+const HP_LABEL_META = 'dnd5e.sheet.hp-label'
 type Store = { active: number; slots: (Sheet | null)[] }
 type Person = { id: string; name: string }
 type ShareMsg = { to: string; fromName: string; sheet: Sheet }
+type HpBarMeta = {
+  kind: 'background' | 'fill'
+  ownerId: string
+  slot: number
+  tokenId: string
+  hp: number
+  maxHp: number
+  width: number
+  height: number
+  centerX: number
+  centerY: number
+  rotation: number
+}
 
 function normalize(saved: Partial<Sheet> & Record<string, any>): Sheet {
   const cls = CLASS_NAMES.find((c) => String(saved.cls ?? '').startsWith(c)) ?? initial.cls
@@ -206,6 +233,94 @@ function loadStore(): Store {
   return { active: 0, slots: [initial, ...Array(SLOTS - 1).fill(null)] }
 }
 
+function loadRolls(): Roll[] {
+  try {
+    const saved = JSON.parse(localStorage.getItem(ROLL_STORAGE) ?? '[]')
+    return Array.isArray(saved) ? saved.slice(0, 40) : []
+  } catch {
+    return []
+  }
+}
+
+function hpColor(hp: number, maxHp: number) {
+  const pct = maxHp > 0 ? hp / maxHp : 0
+  if (pct <= 0.25) return '#ef4444'
+  if (pct <= 0.5) return '#fbbf24'
+  return '#22c55e'
+}
+
+function rollFormula(roll: Roll) {
+  const modifier = roll.mod >= 0 ? `+ ${roll.mod}` : `− ${Math.abs(roll.mod)}`
+  return `${roll.die} ${roll.face} ${modifier} = ${roll.total}`
+}
+
+function getHpMeta(item: Item): HpBarMeta | null {
+  const value = item.metadata[HP_META]
+  if (!value || typeof value !== 'object') return null
+  const meta = value as Partial<HpBarMeta>
+  if (
+    (meta.kind !== 'background' && meta.kind !== 'fill') ||
+    typeof meta.ownerId !== 'string' ||
+    typeof meta.slot !== 'number' ||
+    typeof meta.tokenId !== 'string' ||
+    typeof meta.hp !== 'number' ||
+    typeof meta.maxHp !== 'number' ||
+    typeof meta.width !== 'number' ||
+    typeof meta.height !== 'number' ||
+    typeof meta.centerX !== 'number' ||
+    typeof meta.centerY !== 'number' ||
+    typeof meta.rotation !== 'number'
+  ) return null
+  return meta as HpBarMeta
+}
+
+async function refreshHpLabels() {
+  if (!OBR.isAvailable || !(await OBR.scene.isReady())) return
+  const [role, playerId, shared, local] = await Promise.all([
+    OBR.player.getRole(),
+    OBR.player.getId(),
+    OBR.scene.items.getItems(),
+    OBR.scene.local.getItems(),
+  ])
+  const oldLabels = local.filter((item) => item.metadata[HP_LABEL_META])
+  if (oldLabels.length) await OBR.scene.local.deleteItems(oldLabels.map((item) => item.id))
+
+  const labels = shared.flatMap((item) => {
+    const meta = getHpMeta(item)
+    if (!meta || meta.kind !== 'fill' || (role !== 'GM' && meta.ownerId !== playerId)) return []
+    const fontSize = Math.max(10, meta.height * 1.7)
+    return [
+      buildText()
+        .name('D&D 5e HP')
+        .plainText(`${meta.hp}/${meta.maxHp}`)
+        .width(meta.width)
+        .height(Math.max(18, meta.height * 3))
+        .fontSize(fontSize)
+        .fontWeight(700)
+        .textAlign('CENTER')
+        .textAlignVertical('MIDDLE')
+        .fillColor('#ffffff')
+        .strokeColor('#111827')
+        .strokeWidth(Math.max(1, fontSize * 0.12))
+        .position({ x: meta.centerX, y: meta.centerY })
+        .rotation(meta.rotation)
+        .layer('ATTACHMENT')
+        .attachedTo(meta.tokenId)
+        .locked(true)
+        .disableHit(true)
+        .metadata({ [HP_LABEL_META]: item.id })
+        .build(),
+    ]
+  })
+  if (labels.length) await OBR.scene.local.addItems(labels)
+}
+
+let hpLabelRefresh = Promise.resolve()
+function queueHpLabelRefresh() {
+  hpLabelRefresh = hpLabelRefresh.then(refreshHpLabels, refreshHpLabels).catch(() => undefined)
+  return hpLabelRefresh
+}
+
 function useDismiss(open: boolean, close: () => void, ref: React.RefObject<HTMLElement | null>) {
   useEffect(() => {
     if (!open) return
@@ -228,7 +343,7 @@ export default function App() {
   const setS = (f: (p: Sheet) => Sheet) =>
     setStore((st) => ({ ...st, slots: st.slots.map((x, i) => (i === st.active && x ? f(x) : x)) }))
   const [tab, setTab] = useState<Tab>('main')
-  const [rolls, setRolls] = useState<Roll[]>([])
+  const [rolls, setRolls] = useState<Roll[]>(loadRolls)
   const [amount, setAmount] = useState('')
   const [open, setOpen] = useState(false)
   const [hpOpen, setHpOpen] = useState(false)
@@ -239,6 +354,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('dnd5e-chars', JSON.stringify(store))
   }, [store])
+
+  useEffect(() => {
+    localStorage.setItem(ROLL_STORAGE, JSON.stringify(rolls))
+  }, [rolls])
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
@@ -255,6 +374,8 @@ export default function App() {
   const restRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const noticeTimer = useRef<number>(0)
+  const playerIdRef = useRef('local')
+  const playerNameRef = useRef('You')
   useDismiss(menuOpen, () => setMenuOpen(false), menuRef)
   useDismiss(restOpen, () => setRestOpen(false), restRef)
 
@@ -269,7 +390,14 @@ export default function App() {
     if (!inObr) return
     const off: (() => void)[] = []
     OBR.onReady(async () => {
-      setRole(await OBR.player.getRole())
+      const [currentRole, playerId, playerName] = await Promise.all([
+        OBR.player.getRole(),
+        OBR.player.getId(),
+        OBR.player.getName(),
+      ])
+      setRole(currentRole)
+      playerIdRef.current = playerId
+      playerNameRef.current = playerName || 'Player'
       const toPeople = (ps: { id: string; name: string }[]) => setPlayers(ps.map((p) => ({ id: p.id, name: p.name || 'Player' })))
       toPeople(await OBR.party.getPlayers())
       off.push(OBR.party.onChange(toPeople))
@@ -280,6 +408,27 @@ export default function App() {
           if (d.to === OBR.player.id || (d.to === 'GM' && me === 'GM')) setInbox(d)
         }),
       )
+      off.push(
+        OBR.broadcast.onMessage(ROLL_CHANNEL, (ev) => {
+          const d = ev.data as Partial<Roll>
+          if (
+            typeof d.label === 'string' &&
+            typeof d.die === 'string' &&
+            typeof d.face === 'number' &&
+            typeof d.mod === 'number' &&
+            typeof d.total === 'number' &&
+            typeof d.id === 'string' &&
+            typeof d.playerId === 'string' &&
+            typeof d.playerName === 'string'
+          ) {
+            setRolls((current) => current.some((roll) => roll.id === d.id) ? current : [d as Roll, ...current].slice(0, 40))
+          }
+        }),
+      )
+      const syncLabels = () => void queueHpLabelRefresh()
+      if (await OBR.scene.isReady()) syncLabels()
+      off.push(OBR.scene.items.onChange(syncLabels))
+      off.push(OBR.scene.onReadyChange((ready) => ready && syncLabels()))
     })
     return () => off.forEach((f) => f())
   }, [])
@@ -296,6 +445,96 @@ export default function App() {
       flash(`Shared to ${label}`)
     } catch {
       flash('Could not share')
+    }
+  }
+
+  const attachCharacterToToken = async () => {
+    setMenuOpen(false)
+    if (!inObr) return flash('Attach to token is only available inside Owlbear')
+    try {
+      if (!(await OBR.scene.isReady())) return flash('Open a scene first')
+      const selection = await OBR.player.getSelection()
+      if (!selection || selection.length !== 1) return flash('Select exactly one character token first')
+      const [token] = await OBR.scene.items.getItems(selection)
+      if (!token || (token.layer !== 'CHARACTER' && token.layer !== 'MOUNT')) {
+        return flash('Select a character or mount token')
+      }
+
+      const [bounds, ownerId, items] = await Promise.all([
+        OBR.scene.items.getItemBounds([token.id]),
+        OBR.player.getId(),
+        OBR.scene.items.getItems(),
+      ])
+      const width = clamp(bounds.width * 0.72, 36, 160)
+      const height = clamp(width * 0.075, 5, 12)
+      const centerX = bounds.center.x
+      const centerY = bounds.max.y + height * 1.5
+      const pct = s.maxHp > 0 ? clamp(s.hp / s.maxHp, 0, 1) : 0
+      const fillWidth = Math.max(0.1, width * pct)
+      const rotation = token.rotation
+      const shift = (fillWidth - width) / 2
+      const radians = rotation * Math.PI / 180
+      const fillPosition = {
+        x: centerX + shift * Math.cos(radians),
+        y: centerY + shift * Math.sin(radians),
+      }
+      const baseMeta: Omit<HpBarMeta, 'kind'> = {
+        ownerId,
+        slot: store.active,
+        tokenId: token.id,
+        hp: s.hp,
+        maxHp: s.maxHp,
+        width,
+        height,
+        centerX,
+        centerY,
+        rotation,
+      }
+      const oldBars = items.filter((item) => {
+        const meta = getHpMeta(item)
+        return !!meta && (meta.tokenId === token.id || (meta.ownerId === ownerId && meta.slot === store.active))
+      })
+      if (oldBars.length) await OBR.scene.items.deleteItems(oldBars.map((item) => item.id))
+
+      const background = buildShape()
+        .name(`${s.name} HP background`)
+        .shapeType('RECTANGLE')
+        .width(width)
+        .height(height)
+        .fillColor('#111827')
+        .fillOpacity(0.85)
+        .strokeColor('#ffffff')
+        .strokeOpacity(0.55)
+        .strokeWidth(Math.max(1, height * 0.12))
+        .position({ x: centerX, y: centerY })
+        .rotation(rotation)
+        .layer('ATTACHMENT')
+        .attachedTo(token.id)
+        .locked(true)
+        .disableHit(true)
+        .metadata({ [HP_META]: { ...baseMeta, kind: 'background' } satisfies HpBarMeta })
+        .build()
+      const fill = buildShape()
+        .name(`${s.name} HP`)
+        .shapeType('RECTANGLE')
+        .width(fillWidth)
+        .height(height)
+        .fillColor(hpColor(s.hp, s.maxHp))
+        .fillOpacity(pct > 0 ? 1 : 0)
+        .strokeOpacity(0)
+        .position(fillPosition)
+        .rotation(rotation)
+        .layer('ATTACHMENT')
+        .attachedTo(token.id)
+        .locked(true)
+        .disableHit(true)
+        .metadata({ [HP_META]: { ...baseMeta, kind: 'fill' } satisfies HpBarMeta })
+        .build()
+      await OBR.scene.items.addItems([background, fill])
+      await queueHpLabelRefresh()
+      flash(`Attached ${s.name || 'character'} to token`)
+    } catch {
+      flash('Could not attach character to token')
     }
   }
 
@@ -370,13 +609,61 @@ export default function App() {
   const pb = prof(s.level)
   const m = (a: Ab) => mod(s.scores[a])
 
-  const pushRoll = (r: Omit<Roll, 'id'>) =>
-    setRolls((x) => [{ ...r, id: Date.now() + Math.random() }, ...x].slice(0, 40))
+  const pushRoll = (r: Pick<Roll, 'label' | 'die' | 'face' | 'mod' | 'total' | 'note'>) => {
+    const entry: Roll = {
+      ...r,
+      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      playerId: playerIdRef.current,
+      playerName: playerNameRef.current,
+    }
+    setRolls((current) => [entry, ...current].slice(0, 40))
+    if (inObr && OBR.isReady) {
+      OBR.broadcast.sendMessage(ROLL_CHANNEL, entry, { destination: 'REMOTE' }).catch(() => flash('Roll saved locally, but could not be shared'))
+    }
+  }
 
   const roll = (label: string, bonus: number) => {
     const d20 = 1 + Math.floor(Math.random() * 20)
-    pushRoll({ label, d20, mod: bonus, total: d20 + bonus })
+    pushRoll({ label, die: 'd20', face: d20, mod: bonus, total: d20 + bonus })
   }
+
+  useEffect(() => {
+    if (!inObr) return
+    let cancelled = false
+    const updateAttachedBar = async () => {
+      if (!(await OBR.scene.isReady())) return
+      const ownerId = await OBR.player.getId()
+      const fills = (await OBR.scene.items.getItems()).filter((item) => {
+        const meta = getHpMeta(item)
+        return meta?.kind === 'fill' && meta.ownerId === ownerId && meta.slot === store.active
+      })
+      if (!fills.length || cancelled) return
+      await OBR.scene.items.updateItems(fills, (drafts) => {
+        for (const draft of drafts) {
+          const meta = getHpMeta(draft as unknown as Item)
+          if (!meta || draft.type !== 'SHAPE') continue
+          const pct = s.maxHp > 0 ? clamp(s.hp / s.maxHp, 0, 1) : 0
+          const fillWidth = Math.max(0.1, meta.width * pct)
+          const shift = (fillWidth - meta.width) / 2
+          const radians = meta.rotation * Math.PI / 180
+          draft.width = fillWidth
+          draft.position = {
+            x: meta.centerX + shift * Math.cos(radians),
+            y: meta.centerY + shift * Math.sin(radians),
+          }
+          draft.style.fillColor = hpColor(s.hp, s.maxHp)
+          draft.style.fillOpacity = pct > 0 ? 1 : 0
+          draft.metadata[HP_META] = { ...meta, hp: s.hp, maxHp: s.maxHp }
+        }
+      })
+      if (!cancelled) await queueHpLabelRefresh()
+    }
+    if (OBR.isReady) void updateAttachedBar()
+    else OBR.onReady(() => void updateAttachedBar())
+    return () => {
+      cancelled = true
+    }
+  }, [inObr, s.hp, s.maxHp, store.active])
 
   const skillBonus = (name: string, ab: Ab) => m(ab) + (s.skillProf[name] ?? 0) * pb
   const pool = CLASS_SKILLS[s.cls]
@@ -531,6 +818,7 @@ export default function App() {
               <MenuItem onClick={() => { setShareOpen(true); setMenuOpen(false) }}>
                 {role === 'GM' ? 'Share to player' : 'Share to DM'}
               </MenuItem>
+              <MenuItem onClick={attachCharacterToToken}>Attach character to selected token</MenuItem>
               {!inObr && (
                 <MenuItem onClick={() => { const r = role === 'GM' ? 'PLAYER' : 'GM'; setRole(r); localStorage.setItem('dnd5e-role', r) }}>
                   Demo view: {role === 'GM' ? 'GM' : 'Player'} (tap to switch)
@@ -881,20 +1169,20 @@ export default function App() {
         <div className="space-y-4 px-3 pb-20 pt-3 @3xl:px-6">
           {tab === 'main' && (
             <>
-              <div className="grid grid-cols-2 items-start gap-3 @2xl:gap-4">
-                <div>
+              <div className="grid items-start gap-4 @2xl:grid-cols-[minmax(0,1fr)_minmax(0,19rem)]">
+                <div className="@2xl:col-start-1 @2xl:row-start-1">
                   <Heading>Saving throws</Heading>
-                  <ul className="grid grid-cols-2 gap-1.5">
+                  <ul className="grid grid-cols-3 gap-2">
                     {ABILITIES.map((a) => {
                       const p = s.saveProf.includes(a)
                       const b = m(a) + (p ? pb : 0)
                       return (
-                        <li key={a} className="flex min-w-0 items-center gap-1 rounded-md border border-rule bg-card p-1">
-                          <span className={`h-2 w-2 shrink-0 rounded-full ${p ? 'bg-accent' : 'bg-muted/30'}`} title={p ? `${s.cls} proficiency` : undefined} />
-                          <span className="text-xs font-semibold">{a}</span>
+                        <li key={a} className="flex min-w-0 items-center gap-2 rounded-md border border-rule bg-card px-2 py-2">
+                          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${p ? 'bg-accent' : 'bg-muted/30'}`} title={p ? `${s.cls} proficiency` : undefined} />
+                          <span className="text-sm font-semibold">{a}</span>
                           <button
                             onClick={() => roll(`${a} save`, b)}
-                            className={ROLL_BTN + ' ml-auto w-8 py-1 text-xs'}
+                            className={ROLL_BTN + ' ml-auto w-11 py-1.5 text-sm'}
                             title="Roll"
                           >
                             {sgn(b)}
@@ -905,7 +1193,13 @@ export default function App() {
                   </ul>
                   <p className="mt-1 text-[9px] text-muted">{s.cls} proficiencies are locked.</p>
                 </div>
-                <div>
+                <div className="@2xl:col-start-1 @2xl:row-start-2">
+                  <Heading>Resistances &amp; immunities</Heading>
+                  <p className="min-h-12 whitespace-pre-wrap rounded-md border border-dashed border-rule p-2 text-[12.5px] leading-snug">
+                    {s.defenses || <span className="text-muted">Damage, condition and spell immunities will show here.</span>}
+                  </p>
+                </div>
+                <div className="@2xl:col-start-2 @2xl:row-span-2 @2xl:row-start-1">
                   <Heading>Senses</Heading>
                   <div className="space-y-1.5">
                     {DETAIL_SKILLS.map(([n, a]) => {
@@ -931,12 +1225,6 @@ export default function App() {
                     </div>
                   </div>
                 </div>
-              </div>
-              <div>
-                <Heading>Resistances &amp; immunities</Heading>
-                <p className="min-h-12 whitespace-pre-wrap rounded-md border border-dashed border-rule p-2 text-[12.5px] leading-snug">
-                  {s.defenses || <span className="text-muted">Damage, condition and spell immunities will show here.</span>}
-                </p>
               </div>
               <div>
                 <Heading right={`${s.cls} · ${poolUsed}/${pool.pick} chosen`}>Skills</Heading>
@@ -1033,7 +1321,7 @@ export default function App() {
                         const d = 1 + Math.floor(Math.random() * s.hitDie)
                         const heal = Math.max(0, d + c)
                         setS((p) => ({ ...p, hitDiceUsed: p.hitDiceUsed + 1, hp: clamp(p.hp + heal, 0, p.maxHp) }))
-                        pushRoll({ label: `Hit die d${s.hitDie}`, d20: d, mod: c, total: heal, note: `+${heal} HP` })
+                        pushRoll({ label: 'Hit die', die: `d${s.hitDie}`, face: d, mod: c, total: heal, note: `+${heal} HP` })
                       }}
                     >
                       Spend
@@ -1147,16 +1435,36 @@ export default function App() {
 
           {tab === 'log' && (
             <div>
+              <Heading
+                right={
+                  <button
+                    onClick={() => setRolls([])}
+                    disabled={rolls.length === 0}
+                    aria-label="Clear roll log"
+                    title="Clear roll log on this device"
+                    className="text-muted transition-colors hover:text-danger disabled:opacity-40"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" />
+                    </svg>
+                  </button>
+                }
+              >
+                Room rolls
+              </Heading>
               {rolls.length === 0 && <p className="py-6 text-center text-muted">No rolls yet. Tap an ability, skill or attack.</p>}
               <ul>
                 {rolls.map((r) => (
-                  <li key={r.id} className="flex items-center gap-3 border-b border-rule/60 py-2">
-                    <span className="w-10 text-right font-mono text-xl font-medium">{r.total}</span>
-                    <span className="min-w-0 flex-1 truncate">{r.label}</span>
-                    <span className={`font-mono text-xs ${r.d20 === 20 && !r.note ? 'text-accent' : r.d20 === 1 && !r.note ? 'text-danger' : 'text-muted'}`}>
-                      {r.note ?? `d20 ${r.d20} ${sgn(r.mod)}`}
-                      {!r.note && r.d20 === 20 && ' · crit'}
-                      {!r.note && r.d20 === 1 && ' · fumble'}
+                  <li key={r.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 border-b border-rule/60 py-2">
+                    <span className="truncate text-xs font-semibold">{r.playerName}</span>
+                    <span className={`row-span-2 self-center font-mono text-xs ${r.die === 'd20' && r.face === 20 ? 'text-accent' : r.die === 'd20' && r.face === 1 ? 'text-danger' : 'text-muted'}`}>
+                      {rollFormula(r)}
+                    </span>
+                    <span className="truncate text-[11px] text-muted">
+                      {r.label}
+                      {r.note && ` · ${r.note}`}
+                      {r.die === 'd20' && r.face === 20 && ' · crit'}
+                      {r.die === 'd20' && r.face === 1 && ' · fumble'}
                     </span>
                   </li>
                 ))}
@@ -1184,12 +1492,12 @@ export default function App() {
               onClick={() => setTab('log')}
               className="pointer-events-auto flex items-center gap-3 rounded-full bg-head px-4 py-1.5 text-white shadow-lg"
             >
-              <span className="max-w-[140px] truncate text-xs">{lastRoll.label}</span>
+              <span className="max-w-[140px] truncate text-xs">{lastRoll.playerName} · {lastRoll.label}</span>
               <span className="font-mono text-lg font-medium">{lastRoll.total}</span>
-              <span className={`font-mono text-[11px] ${lastRoll.d20 === 20 && !lastRoll.note ? 'text-pink' : lastRoll.d20 === 1 && !lastRoll.note ? 'text-[#ffb3aa]' : 'opacity-80'}`}>
-                {lastRoll.note ?? `d20 ${lastRoll.d20} ${sgn(lastRoll.mod)}`}
-                {!lastRoll.note && lastRoll.d20 === 20 && ' · CRIT'}
-                {!lastRoll.note && lastRoll.d20 === 1 && ' · FUMBLE'}
+              <span className={`font-mono text-[11px] ${lastRoll.die === 'd20' && lastRoll.face === 20 ? 'text-pink' : lastRoll.die === 'd20' && lastRoll.face === 1 ? 'text-[#ffb3aa]' : 'opacity-80'}`}>
+                {rollFormula(lastRoll)}
+                {lastRoll.die === 'd20' && lastRoll.face === 20 && ' · CRIT'}
+                {lastRoll.die === 'd20' && lastRoll.face === 1 && ' · FUMBLE'}
               </span>
             </button>
           </div>
@@ -1226,7 +1534,7 @@ function Label({ children }: { children: React.ReactNode }) {
   return <div className="text-[10px] font-semibold uppercase tracking-wider text-muted">{children}</div>
 }
 
-function Heading({ children, right }: { children: React.ReactNode; right?: string }) {
+function Heading({ children, right }: { children: React.ReactNode; right?: React.ReactNode }) {
   return (
     <h2 className="mb-1 flex items-baseline justify-between text-[11px] font-semibold uppercase tracking-wider text-accent">
       {children}
