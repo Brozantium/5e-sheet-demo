@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import OBR from '@owlbear-rodeo/sdk'
 
 const ABILITIES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'] as const
 type Ab = (typeof ABILITIES)[number]
@@ -37,11 +38,11 @@ type Sheet = {
   saveProf: Ab[]
   skillProf: Record<string, 0 | 1 | 2>
   acBonus: number
-  skillExtra: number
   speed: number
   initMisc: number
   hp: number
   maxHp: number
+  hpMode: 'roll' | 'avg' | 'max'
   tempHp: number
   hitDie: number
   hpDice: number[]
@@ -75,11 +76,11 @@ const initial: Sheet = {
   saveProf: ['CON', 'INT'],
   skillProf: {},
   acBonus: 0,
-  skillExtra: 2,
   speed: 30,
   initMisc: 0,
   hp: 8,
   maxHp: 8,
+  hpMode: 'avg',
   tempHp: 0,
   hitDie: 8,
   hpDice: [],
@@ -170,42 +171,47 @@ const clamp = (n: number, a: number, b: number) => Math.min(b, Math.max(a, n))
 type Roll = { label: string; d20: number; mod: number; total: number; id: number; note?: string }
 type Tab = 'main' | 'combat' | 'spells' | 'gear' | 'log'
 
-export default function App() {
-  const [s, setS] = useState<Sheet>(() => {
-    try {
-      const raw = localStorage.getItem('dnd5e-sheet')
-      if (!raw) return initial
-      const saved = JSON.parse(raw)
-      const cls = CLASS_NAMES.find((c) => String(saved.cls ?? '').startsWith(c)) ?? initial.cls
-      return { ...initial, ...saved, cls, hitDie: CLASS_DIE[cls], saveProf: CLASS_SAVES[cls], skillNotes: { ...initial.skillNotes, ...saved.skillNotes } }
-    } catch {
-      return initial
+const SLOTS = 5
+const CHANNEL = 'dnd5e.sheet.share'
+type Store = { active: number; slots: (Sheet | null)[] }
+type Person = { id: string; name: string }
+type ShareMsg = { to: string; fromName: string; sheet: Sheet }
+
+function normalize(saved: Partial<Sheet> & Record<string, any>): Sheet {
+  const cls = CLASS_NAMES.find((c) => String(saved.cls ?? '').startsWith(c)) ?? initial.cls
+  const pl = CLASS_SKILLS[cls]
+  const skillProf: Record<string, 0 | 1 | 2> = {}
+  const sp: Record<string, number> = saved.skillProf ?? {}
+  Object.keys(sp)
+    .filter((n) => sp[n] > 0 && pl.from.includes(n))
+    .slice(0, pl.pick)
+    .forEach((n) => (skillProf[n] = 1))
+  return { ...initial, ...saved, cls, skillProf, hitDie: CLASS_DIE[cls], saveProf: CLASS_SAVES[cls], skillNotes: { ...initial.skillNotes, ...saved.skillNotes } }
+}
+
+function loadStore(): Store {
+  try {
+    const raw = localStorage.getItem('dnd5e-chars')
+    if (raw) {
+      const p = JSON.parse(raw)
+      const slots = Array.from({ length: SLOTS }, (_, i) => (p.slots?.[i] ? normalize(p.slots[i]) : null))
+      const active = slots[p.active] ? p.active : slots.findIndex(Boolean)
+      if (active >= 0) return { active, slots }
     }
-  })
-  const [tab, setTab] = useState<Tab>('main')
-  const [rolls, setRolls] = useState<Roll[]>([])
-  const [amount, setAmount] = useState('')
-  const [open, setOpen] = useState(false)
-  const [hpOpen, setHpOpen] = useState(false)
-  const [hpMode, setHpMode] = useState<'roll' | 'avg' | 'max'>('avg')
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [dark, setDark] = useState(() => localStorage.getItem('dnd5e-theme') !== 'light')
-  const menuRef = useRef<HTMLDivElement>(null)
+    const legacy = localStorage.getItem('dnd5e-sheet')
+    if (legacy) return { active: 0, slots: [normalize(JSON.parse(legacy)), ...Array(SLOTS - 1).fill(null)] }
+  } catch {
+    /* fall through */
+  }
+  return { active: 0, slots: [initial, ...Array(SLOTS - 1).fill(null)] }
+}
 
+function useDismiss(open: boolean, close: () => void, ref: React.RefObject<HTMLElement | null>) {
   useEffect(() => {
-    localStorage.setItem('dnd5e-sheet', JSON.stringify(s))
-  }, [s])
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark)
-    localStorage.setItem('dnd5e-theme', dark ? 'dark' : 'light')
-  }, [dark])
-
-  useEffect(() => {
-    if (!menuOpen) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMenuOpen(false)
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close()
     const onDown = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+      if (ref.current && !ref.current.contains(e.target as Node)) close()
     }
     window.addEventListener('keydown', onKey)
     window.addEventListener('mousedown', onDown)
@@ -213,8 +219,140 @@ export default function App() {
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('mousedown', onDown)
     }
-  }, [menuOpen])
+  }, [open])
+}
 
+export default function App() {
+  const [store, setStore] = useState<Store>(loadStore)
+  const s = store.slots[store.active] as Sheet
+  const setS = (f: (p: Sheet) => Sheet) =>
+    setStore((st) => ({ ...st, slots: st.slots.map((x, i) => (i === st.active && x ? f(x) : x)) }))
+  const [tab, setTab] = useState<Tab>('main')
+  const [rolls, setRolls] = useState<Roll[]>([])
+  const [amount, setAmount] = useState('')
+  const [open, setOpen] = useState(false)
+  const [hpOpen, setHpOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [dark, setDark] = useState(() => localStorage.getItem('dnd5e-theme') !== 'light')
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    localStorage.setItem('dnd5e-chars', JSON.stringify(store))
+  }, [store])
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark)
+    localStorage.setItem('dnd5e-theme', dark ? 'dark' : 'light')
+  }, [dark])
+
+  const [restOpen, setRestOpen] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
+  const [notice, setNotice] = useState('')
+  const [role, setRole] = useState<'GM' | 'PLAYER'>(() => (localStorage.getItem('dnd5e-role') === 'GM' ? 'GM' : 'PLAYER'))
+  const [players, setPlayers] = useState<Person[]>([])
+  const [inbox, setInbox] = useState<ShareMsg | null>(null)
+  const restRef = useRef<HTMLDivElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const noticeTimer = useRef<number>(0)
+  useDismiss(menuOpen, () => setMenuOpen(false), menuRef)
+  useDismiss(restOpen, () => setRestOpen(false), restRef)
+
+  const flash = (msg: string) => {
+    setNotice(msg)
+    window.clearTimeout(noticeTimer.current)
+    noticeTimer.current = window.setTimeout(() => setNotice(''), 2600)
+  }
+
+  const inObr = OBR.isAvailable
+  useEffect(() => {
+    if (!inObr) return
+    const off: (() => void)[] = []
+    OBR.onReady(async () => {
+      setRole(await OBR.player.getRole())
+      const toPeople = (ps: { id: string; name: string }[]) => setPlayers(ps.map((p) => ({ id: p.id, name: p.name || 'Player' })))
+      toPeople(await OBR.party.getPlayers())
+      off.push(OBR.party.onChange(toPeople))
+      off.push(
+        OBR.broadcast.onMessage(CHANNEL, async (ev) => {
+          const d = ev.data as ShareMsg
+          const me = await OBR.player.getRole()
+          if (d.to === OBR.player.id || (d.to === 'GM' && me === 'GM')) setInbox(d)
+        }),
+      )
+    })
+    return () => off.forEach((f) => f())
+  }, [])
+
+  const demoPlayers: Person[] = [{ id: 'demo-1', name: 'Aria (demo)' }, { id: 'demo-2', name: 'Bram (demo)' }]
+  const shareTargets = inObr ? players : demoPlayers
+
+  const sendSheet = async (to: string, label: string) => {
+    setShareOpen(false)
+    setMenuOpen(false)
+    if (!inObr) return flash(`Shared to ${label} (demo, not inside Owlbear)`)
+    try {
+      await OBR.broadcast.sendMessage(CHANNEL, { to, fromName: await OBR.player.getName(), sheet: s } satisfies ShareMsg, { destination: 'REMOTE' })
+      flash(`Shared to ${label}`)
+    } catch {
+      flash('Could not share')
+    }
+  }
+
+  const freeSlot = () => store.slots.findIndex((x) => !x)
+  const addCharacter = (sheet: Sheet) => {
+    const i = freeSlot()
+    if (i < 0) return false
+    setStore((st) => ({ active: i, slots: st.slots.map((x, k) => (k === i ? sheet : x)) }))
+    setTab('main')
+    return true
+  }
+  const newCharacter = () => {
+    if (!addCharacter(initial)) return flash('All 5 slots are used. Delete one first.')
+    setMenuOpen(false)
+  }
+  const switchSlot = (i: number) => {
+    if (store.slots[i]) setStore((st) => ({ ...st, active: i }))
+    else addCharacter(initial)
+    setMenuOpen(false)
+  }
+  const deleteSlot = (i: number) => {
+    const name = store.slots[i]?.name
+    if (!confirm(`Delete ${name}?`)) return
+    setStore((st) => {
+      const slots = st.slots.map((x, k) => (k === i ? null : x))
+      const active = slots[st.active] ? st.active : slots.findIndex(Boolean)
+      return active < 0 ? { active: 0, slots: [initial, ...Array(SLOTS - 1).fill(null)] } : { active, slots }
+    })
+  }
+
+  const exportJson = () => {
+    const blob = new Blob([JSON.stringify({ app: 'dnd5e-sheet', version: 1, sheet: s }, null, 2)], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `${(s.name || 'character').replace(/[^\w-]+/g, '_')}.json`
+    a.click()
+    URL.revokeObjectURL(a.href)
+    setMenuOpen(false)
+  }
+  const importJson = async (file: File) => {
+    try {
+      const data = JSON.parse(await file.text())
+      const raw = data.sheet ?? data
+      if (typeof raw !== 'object' || !raw || !raw.scores) throw new Error('bad')
+      const sheet = normalize(raw)
+      if (!addCharacter(sheet)) {
+        if (!confirm('All 5 slots are used. Replace the current character?')) return
+        setS(() => sheet)
+      }
+      flash(`Imported ${sheet.name}`)
+      setMenuOpen(false)
+    } catch {
+      flash('That file is not a valid character')
+    }
+  }
+
+  const hpMode = s.hpMode
+  const setHpMode = (v: Sheet['hpMode']) => setS((p) => ({ ...p, hpMode: v }))
   const set = <K extends keyof Sheet>(k: K, v: Sheet[K]) => setS((p) => ({ ...p, [k]: v }))
   const pb = prof(s.level)
   const m = (a: Ab) => mod(s.scores[a])
@@ -229,11 +367,8 @@ export default function App() {
 
   const skillBonus = (name: string, ab: Ab) => m(ab) + (s.skillProf[name] ?? 0) * pb
   const pool = CLASS_SKILLS[s.cls]
-  const profSkills = ALL_SKILLS.filter((n) => (s.skillProf[n] ?? 0) > 0)
-  const poolUsed = profSkills.filter((n) => pool.from.includes(n)).length
-  const extraUsed = profSkills.length - poolUsed + Math.max(0, poolUsed - pool.pick)
-  const canAddSkill = (n: string) =>
-    pool.from.includes(n) ? poolUsed < pool.pick || extraUsed < s.skillExtra : extraUsed < s.skillExtra
+  const poolUsed = ALL_SKILLS.filter((n) => (s.skillProf[n] ?? 0) > 0).length
+  const canAddSkill = (n: string) => pool.from.includes(n) && poolUsed < pool.pick
 
   const applyHp = (kind: 'dmg' | 'heal') => {
     const n = parseInt(amount)
@@ -257,6 +392,12 @@ export default function App() {
       slots: p.slots.map((x) => ({ ...x, used: 0 })),
     }))
 
+  const shortRest = () => {
+    if (s.cls === 'Warlock') setS((p) => ({ ...p, slots: p.slots.map((x) => ({ ...x, used: 0 })) }))
+    flash(s.cls === 'Warlock' ? 'Short rest: pact slots restored' : 'Short rest: spend hit dice in the Combat tab')
+  }
+  const dawn = () => flash('Dawn: daily features recharged')
+
   const upAttack = (id: number, patch: Partial<Attack>) =>
     set('attacks', s.attacks.map((a) => (a.id === id ? { ...a, ...patch } : a)))
   const upSlot = (i: number, patch: Partial<{ max: number; used: number }>) =>
@@ -265,15 +406,29 @@ export default function App() {
   // Level 1 = full hit die. Levels 2+ = rolled / average / max hit die. CON mod applies every level (min 1 HP per level).
   const conMod = mod(s.scores.CON)
   const avgDie = Math.floor(s.hitDie / 2) + 1
-  const rolledAll = Array.from({ length: s.level - 1 }).every((_, i) => (s.hpDice[i] ?? 0) > 0)
-  const hpPerLevel: number[] | null =
-    hpMode === 'roll' && !rolledAll
-      ? null
-      : Array.from({ length: s.level }, (_, i) => {
-          const die = i === 0 || hpMode === 'max' ? s.hitDie : hpMode === 'avg' ? avgDie : s.hpDice[i - 1]
-          return Math.max(1, die + conMod)
-        })
-  const hpPreview = hpPerLevel ? hpPerLevel.reduce((a, b) => a + b, 0) : null
+  // Roll mode: a level only counts once its rolled die is locked (approved).
+  const hpPerLevel: (number | null)[] = Array.from({ length: s.level }, (_, i) => {
+    if (i === 0) return Math.max(1, s.hitDie + conMod)
+    let die: number
+    if (hpMode === 'max') die = s.hitDie
+    else if (hpMode === 'avg') die = avgDie
+    else if (s.hpLock[i - 1] && (s.hpDice[i - 1] ?? 0) > 0) die = s.hpDice[i - 1]
+    else return null
+    return Math.max(1, die + conMod)
+  })
+  const derivedMax = hpPerLevel.reduce<number>((a, b) => a + (b ?? 0), 0)
+  const pendingLevels = hpPerLevel.filter((x) => x === null).length
+
+  const lastActive = useRef(store.active)
+  useEffect(() => {
+    const switched = lastActive.current !== store.active
+    lastActive.current = store.active
+    setS((p) => {
+      if (p.maxHp === derivedMax) return p
+      const hp = switched ? p.hp : p.hp + (derivedMax - p.maxHp)
+      return { ...p, maxHp: derivedMax, hp: clamp(hp, 0, derivedMax) }
+    })
+  }, [derivedMax, store.active])
 
   // Locked levels keep their rolled die; only unlocked levels are re-rolled.
   const rollHpDice = () => {
@@ -299,15 +454,9 @@ export default function App() {
   const changeClass = (c: string) =>
     setS((p) => ({ ...p, cls: c, hitDie: CLASS_DIE[c], saveProf: CLASS_SAVES[c], skillProf: {}, hpDice: [], hpLock: [] }))
 
-  const applyMaxHp = () => {
-    if (hpPreview === null) return
-    setS((p) => ({ ...p, maxHp: hpPreview, hp: Math.min(p.hp, hpPreview) }))
-    setHpOpen(false)
-  }
-
   const hpPct = s.maxHp ? clamp((s.hp / s.maxHp) * 100, 0, 100) : 0
   const lastRoll = rolls[0]
-  const TABS: [Tab, string][] = [['main', 'Main'], ['combat', 'Combat'], ['spells', 'Spells'], ['gear', 'Gear'], ['log', 'Log']]
+  const TABS: [Tab, string][] = [['main', 'Ability'], ['combat', 'Combat'], ['spells', 'Spells'], ['gear', 'Gear'], ['log', 'Log']]
 
   return (
     <div className="@container h-dvh w-full bg-paper">
@@ -331,7 +480,7 @@ export default function App() {
             <div
               role="dialog"
               aria-label="Settings"
-              className="absolute left-2 top-11 z-30 w-60 rounded-lg border border-white/25 bg-card/60 p-2 text-ink shadow-[0_12px_40px_-8px_rgba(0,0,0,0.6)] backdrop-blur-md"
+              className="absolute left-2 top-11 z-30 max-h-[80dvh] w-64 overflow-y-auto rounded-lg border border-white/25 bg-card/60 p-2 text-ink shadow-[0_12px_40px_-8px_rgba(0,0,0,0.6)] backdrop-blur-md"
             >
               <button
                 role="switch"
@@ -344,15 +493,43 @@ export default function App() {
                   <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${dark ? 'left-[18px]' : 'left-0.5'}`} />
                 </span>
               </button>
-              <MenuItem onClick={() => { longRest(); setMenuOpen(false) }}>Long rest</MenuItem>
-              <MenuItem onClick={() => { set('inspiration', !s.inspiration); setMenuOpen(false) }}>
-                {s.inspiration ? 'Spend inspiration' : 'Grant inspiration'}
+              <Label>Characters</Label>
+              {store.slots.map((c, i) => (
+                <div key={i} className={`flex items-center rounded ${i === store.active ? 'bg-accent-soft' : 'hover:bg-accent-soft'}`}>
+                  <button onClick={() => switchSlot(i)} className="min-w-0 flex-1 px-2 py-1.5 text-left text-sm">
+                    <span className="mr-1.5 font-mono text-[10px] text-muted">{i + 1}</span>
+                    {c ? (
+                      <>
+                        {c.name || 'Unnamed'}
+                        <span className="ml-1 text-[11px] text-muted">{c.cls} {c.level}</span>
+                      </>
+                    ) : (
+                      <span className="text-muted">+ Empty slot</span>
+                    )}
+                  </button>
+                  {c && store.slots.filter(Boolean).length > 1 && (
+                    <button onClick={() => deleteSlot(i)} aria-label={`Delete ${c.name}`} className="px-2 text-muted hover:text-danger">×</button>
+                  )}
+                </div>
+              ))}
+              <MenuItem onClick={newCharacter}>New character</MenuItem>
+              <div className="my-1 border-t border-rule/70" />
+              <MenuItem onClick={exportJson}>Export character (JSON)</MenuItem>
+              <MenuItem onClick={() => fileRef.current?.click()}>Import character (JSON)</MenuItem>
+              <MenuItem onClick={() => { setShareOpen(true); setMenuOpen(false) }}>
+                {role === 'GM' ? 'Share to player' : 'Share to GM'}
               </MenuItem>
+              {!inObr && (
+                <MenuItem onClick={() => { const r = role === 'GM' ? 'PLAYER' : 'GM'; setRole(r); localStorage.setItem('dnd5e-role', r) }}>
+                  Demo view: {role === 'GM' ? 'GM' : 'Player'} (tap to switch)
+                </MenuItem>
+              )}
+              <div className="my-1 border-t border-rule/70" />
               <MenuItem onClick={() => { setRolls([]); setMenuOpen(false) }}>Clear roll log</MenuItem>
               <MenuItem
                 danger
                 onClick={() => {
-                  if (confirm('Reset sheet to defaults?')) setS(initial)
+                  if (confirm('Reset sheet to defaults?')) setS(() => initial)
                   setMenuOpen(false)
                 }}
               >
@@ -362,15 +539,69 @@ export default function App() {
           )}
         </div>
         <h1 className="min-w-0 flex-1 truncate text-lg font-medium">D&amp;D 5e</h1>
-        <button
-          onClick={() => set('inspiration', !s.inspiration)}
-          aria-pressed={s.inspiration}
-          title="Inspiration"
-          className={`grid h-8 w-8 place-items-center rounded-full text-base transition-colors ${s.inspiration ? 'bg-pink text-onpink' : 'hover:bg-white/20'}`}
-        >
-          ★
-        </button>
+        <div ref={restRef}>
+          <button
+            onClick={() => setRestOpen((o) => !o)}
+            aria-label="Rest"
+            aria-expanded={restOpen}
+            title="Rest"
+            className={`grid h-8 w-8 place-items-center rounded-full transition-colors ${restOpen ? 'bg-white/25' : 'hover:bg-white/20'}`}
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M12 4 3 20h18L12 4Z" />
+              <path d="M12 11l-3 9M12 11l3 9" />
+            </svg>
+          </button>
+          {restOpen && (
+            <div role="dialog" aria-label="Rest" className="absolute right-2 top-11 z-30 w-44 rounded-lg border border-white/25 bg-card/60 p-2 text-ink shadow-[0_12px_40px_-8px_rgba(0,0,0,0.6)] backdrop-blur-md">
+              <MenuItem onClick={() => { longRest(); flash('Long rest: HP, slots and hit dice restored'); setRestOpen(false) }}>Long rest</MenuItem>
+              <MenuItem onClick={() => { shortRest(); setRestOpen(false) }}>Short rest</MenuItem>
+              <MenuItem onClick={() => { dawn(); setRestOpen(false) }}>Dawn</MenuItem>
+            </div>
+          )}
+        </div>
       </header>
+
+      {notice && (
+        <div className="pointer-events-none absolute left-0 right-0 top-14 z-40 flex justify-center px-3">
+          <div className="rounded-full bg-card px-4 py-1.5 text-xs text-ink shadow-lg ring-1 ring-rule">{notice}</div>
+        </div>
+      )}
+      {shareOpen && (
+        <div className="absolute inset-0 z-40 grid place-items-center bg-black/40 p-4" onMouseDown={() => setShareOpen(false)}>
+          <div onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-xs rounded-lg border border-rule bg-card p-3 shadow-xl">
+            <Label>{role === 'GM' ? 'Share to player' : 'Share to GM'}</Label>
+            <p className="mt-1 text-[11px] text-muted">Sends a copy of {s.name || 'this character'}. They choose whether to save it.</p>
+            {role === 'GM' ? (
+              <div className="mt-2 space-y-1">
+                {shareTargets.length === 0 && <p className="text-xs text-muted">No other players in the room.</p>}
+                {shareTargets.map((p) => (
+                  <button key={p.id} onClick={() => sendSheet(p.id, p.name)} className="block w-full rounded border border-rule px-2 py-2 text-left text-sm hover:bg-accent-soft">
+                    {p.name}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <Btn tone="green" onClick={() => sendSheet('GM', 'GM')}>Send to GM</Btn>
+            )}
+            <button onClick={() => setShareOpen(false)} className="mt-2 text-xs text-muted hover:text-ink">Cancel</button>
+          </div>
+        </div>
+      )}
+      {inbox && (
+        <div className="absolute inset-0 z-50 grid place-items-center bg-black/40 p-4">
+          <div className="w-full max-w-xs rounded-lg border border-rule bg-card p-3 shadow-xl">
+            <Label>Incoming character</Label>
+            <p className="mt-1 text-sm">
+              {inbox.fromName} shared <b>{inbox.sheet.name}</b> ({inbox.sheet.cls} {inbox.sheet.level}).
+            </p>
+            <div className="mt-3 flex gap-2">
+              <Btn tone="green" onClick={() => { if (addCharacter(normalize(inbox.sheet))) setInbox(null); else flash('All 5 slots are used. Delete one first.') }}>Save to new slot</Btn>
+              <Btn tone="plain" onClick={() => setInbox(null)}>Dismiss</Btn>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Scroll body */}
       <div className="relative min-h-0 flex-1 overflow-y-auto">
@@ -406,7 +637,18 @@ export default function App() {
               <Field label="Race" v={s.race} on={(v) => set('race', v)} />
               <Field label="Background" v={s.background} on={(v) => set('background', v)} />
               <Field label="Alignment" v={s.alignment} on={(v) => set('alignment', v)} />
-              <NumField label="Level" v={s.level} on={(v) => set('level', clamp(v, 1, 20))} />
+              <div className="border-b border-rule">
+                <span className="block text-[10px] text-muted">Level</span>
+                <div className="flex items-center gap-1 pb-0.5">
+                  <button onClick={() => set('level', clamp(s.level - 1, 1, 20))} disabled={s.level <= 1} aria-label="Level down" className="grid h-6 w-6 place-items-center rounded bg-pink text-onpink transition-[filter] hover:brightness-95 active:brightness-75 disabled:opacity-40">
+                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden><path d="M6 12h12" /></svg>
+                  </button>
+                  <span className="w-8 text-center font-mono text-sm">{s.level}</span>
+                  <button onClick={() => set('level', clamp(s.level + 1, 1, 20))} disabled={s.level >= 20} aria-label="Level up" className="grid h-6 w-6 place-items-center rounded bg-pink text-onpink transition-[filter] hover:brightness-95 active:brightness-75 disabled:opacity-40">
+                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden><path d="M6 12h12M12 6v12" /></svg>
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </section>
@@ -431,7 +673,7 @@ export default function App() {
               <span className="relative flex items-center rounded bg-card/85 px-1.5 font-mono text-sm font-medium text-ink">
                 <NumIn v={s.hp} on={(v) => set('hp', clamp(v, 0, s.maxHp))} className="w-9 text-right" />
                 <span className="px-0.5 opacity-70">/</span>
-                <NumIn v={s.maxHp} on={(v) => set('maxHp', Math.max(1, v))} className="w-9 text-left" />
+                <span className="w-9 text-left" title="Follows class, level and CON">{s.maxHp}</span>
               </span>
             </div>
             <span className="w-8 text-right text-xs font-semibold text-muted">TMP</span>
@@ -473,10 +715,10 @@ export default function App() {
                   </button>
                 ))}
               </div>
-              {hpMode === 'roll' && s.level > 1 && rolledAll && (
+              {hpMode === 'roll' && s.level > 1 && (
                 <div className="mt-2">
                   <div className="flex items-center justify-between">
-                    <Label>Rolled levels (tap to lock)</Label>
+                    <Label>Tap a rolled level to lock it</Label>
                     <button
                       onClick={() => setAllHpLocks(!Array.from({ length: s.level - 1 }).every((_, i) => s.hpLock[i]))}
                       className="text-[11px] font-medium text-accent hover:underline"
@@ -491,29 +733,28 @@ export default function App() {
                         <button
                           key={i}
                           onClick={() => toggleHpLock(i)}
+                          disabled={!(s.hpDice[i] > 0)}
                           aria-pressed={locked}
                           title={locked ? 'Locked: Roll will keep this' : 'Unlocked: Roll will re-roll this'}
-                          className={`flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[11px] transition-colors ${locked ? 'border-transparent bg-pink text-onpink' : 'border-rule text-muted hover:border-accent hover:text-ink'}`}
+                          className={`flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[11px] transition-colors disabled:opacity-50 ${locked ? 'border-transparent bg-pink text-onpink' : 'border-rule text-muted hover:border-accent hover:text-ink'}`}
                         >
                           <Padlock locked={locked} className="h-3 w-3" />
-                          L{i + 2}: {s.hpDice[i]}
+                          L{i + 2}: {s.hpDice[i] > 0 ? s.hpDice[i] : '—'}
                         </button>
                       )
                     })}
                   </div>
                 </div>
               )}
-              <div className="mt-2 flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="font-mono text-xl font-medium">
-                    {hpPreview ?? '—'}
-                    <span className="text-xs text-muted"> max HP</span>
-                  </div>
-                  <div className="truncate font-mono text-[10px] text-muted">
-                    {hpPerLevel ? hpPerLevel.join(' + ') : 'Tap Roll to roll hit dice'}
-                  </div>
+              <div className="mt-2">
+                <div className="font-mono text-xl font-medium">
+                  {derivedMax}
+                  <span className="text-xs text-muted"> max HP</span>
                 </div>
-                <Btn tone="plain" onClick={applyMaxHp}>Apply</Btn>
+                <div className="truncate font-mono text-[10px] text-muted">
+                  {hpPerLevel.map((x) => x ?? '?').join(' + ')}
+                  {pendingLevels > 0 && ` · ${pendingLevels} level${pendingLevels > 1 ? 's' : ''} waiting for a lock`}
+                </div>
               </div>
             </div>
           )}
@@ -558,10 +799,7 @@ export default function App() {
                 className="group w-full"
                 title={`Roll ${a} check`}
               >
-                <span className="flex items-center justify-center gap-1 text-base font-semibold">
-                  {a}
-                  <D20 className="h-4 w-4 text-accent transition-transform group-hover:rotate-12 group-active:rotate-90" />
-                </span>
+                <span className="block text-base font-semibold">{a}</span>
                 <span className="block font-mono text-2xl leading-tight">{sgn(m(a))}</span>
               </button>
               <div className="mx-auto mt-0.5 w-fit rounded-full bg-paper px-2 py-px">
@@ -602,8 +840,8 @@ export default function App() {
                       const p = s.saveProf.includes(a)
                       const b = m(a) + (p ? pb : 0)
                       return (
-                        <li key={a} className="flex items-center gap-2 rounded-md border border-rule bg-card px-2 py-2">
-                          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${p ? 'bg-accent' : 'border border-muted'}`} />
+                        <li key={a} className={`flex items-center gap-2 rounded-md border border-rule bg-card px-2 py-2`}>
+                          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${p ? 'bg-accent' : 'bg-muted/30'}`} />
                           <span className="text-sm font-semibold">{a}</span>
                           <button
                             onClick={() => roll(`${a} save`, b)}
@@ -655,7 +893,7 @@ export default function App() {
                 </div>
               </div>
               <div>
-                <Heading right={`Class ${Math.min(poolUsed, pool.pick)}/${pool.pick} · Extra ${extraUsed}/${s.skillExtra}`}>Skills</Heading>
+                <Heading right={`${s.cls} · ${poolUsed}/${pool.pick} chosen`}>Skills</Heading>
                 <ul className="grid grid-cols-2 gap-x-4 @2xl:grid-cols-3">
                   {SKILLS.map(([n, a]) => {
                     const st = s.skillProf[n] ?? 0
@@ -667,7 +905,7 @@ export default function App() {
                         state={st}
                         locked={locked}
                         inPool={pool.from.includes(n)}
-                        onToggle={() => set('skillProf', { ...s.skillProf, [n]: ((st + 1) % 3) as 0 | 1 | 2 })}
+                        onToggle={() => set('skillProf', { ...s.skillProf, [n]: st ? 0 : 1 })}
                         label={n}
                         sub={a}
                         bonus={b}
@@ -676,7 +914,7 @@ export default function App() {
                     )
                   })}
                 </ul>
-                <p className="mt-2 text-[11px] text-muted">Dot cycles none, proficient, expertise. Outlined names are in your class pool; locked skills need an Extra slot (background, race, feat). Tap a bonus to roll.</p>
+                <p className="mt-2 text-[11px] text-muted">Only skills in your class pool can be chosen, up to the class limit. Tap a bonus to roll.</p>
               </div>
             </>
           )}
@@ -881,6 +1119,18 @@ export default function App() {
           )}
         </div>
 
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) importJson(file)
+            e.target.value = ''
+          }}
+        />
+
         {/* Last roll toast */}
         {lastRoll && tab !== 'log' && (
           <div className="pointer-events-none sticky bottom-3 z-10 flex justify-center px-3">
@@ -1029,7 +1279,7 @@ function Row({
         onClick={onToggle}
         disabled={locked}
         aria-label={`Toggle proficiency ${label}`}
-        title={locked ? 'Locked: not in your class pool, or no slots left' : undefined}
+        title={locked ? 'Locked: not in your class pool, or class picks used up' : undefined}
         className={`grid h-4 w-4 shrink-0 place-items-center rounded-full border ${locked ? 'cursor-not-allowed border-rule opacity-50' : inPool ? 'border-accent' : 'border-muted'}`}
       >
         {state > 0 && (
