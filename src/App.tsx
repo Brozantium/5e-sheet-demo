@@ -293,12 +293,17 @@ async function refreshHpLabels() {
     const meta = getHpMeta(item)
     if (!meta || meta.kind !== 'fill' || (role !== 'GM' && meta.ownerId !== playerId)) return []
     const fontSize = Math.max(9, meta.height * 0.78)
+    const bg = shared.find((x) => {
+      const m = getHpMeta(x)
+      return m?.kind === 'background' && m.tokenId === meta.tokenId && m.ownerId === meta.ownerId && m.slot === meta.slot
+    })
+    if (!bg) return []
     return [
       buildText()
         .name('D&D 5e HP')
         .plainText(`${meta.hp}/${meta.maxHp}`)
         .width(meta.width)
-        .height(Math.max(18, meta.height * 3))
+        .height(meta.height)
         .fontSize(fontSize)
         .fontWeight(700)
         .textAlign('CENTER')
@@ -306,8 +311,8 @@ async function refreshHpLabels() {
         .fillColor('#ffffff')
         .strokeColor('#111827')
         .strokeWidth(Math.max(1, fontSize * 0.12))
-        .position({ x: meta.centerX, y: meta.centerY })
-        .rotation(meta.rotation)
+        .position({ ...bg.position })
+        .rotation(0)
         .layer('ATTACHMENT')
         .attachedTo(meta.tokenId)
         .locked(true)
@@ -514,18 +519,13 @@ export default function App() {
         OBR.scene.items.getItems(),
       ])
       const width = bounds.width
-      const height = clamp(width * 0.14, 12, 40)
-      const centerX = bounds.center.x
-      const centerY = bounds.max.y - height * 0.9
+      const height = clamp(width * 0.12, 10, 32)
+      const centerX = bounds.min.x
+      const centerY = bounds.max.y - height * 1.1
       const pct = s.maxHp > 0 ? clamp(s.hp / s.maxHp, 0, 1) : 0
       const fillWidth = Math.max(0.1, width * pct)
-      const rotation = token.rotation
-      const shift = (fillWidth - width) / 2
-      const radians = rotation * Math.PI / 180
-      const fillPosition = {
-        x: centerX + shift * Math.cos(radians),
-        y: centerY + shift * Math.sin(radians),
-      }
+      const rotation = 0
+      const fillPosition = { x: centerX, y: centerY }
       const baseMeta: Omit<HpBarMeta, 'kind'> = {
         ownerId,
         slot: store.active,
@@ -686,7 +686,8 @@ export default function App() {
     const updateAttachedBar = async () => {
       if (!(await OBR.scene.isReady())) return
       const ownerId = await OBR.player.getId()
-      const fills = (await OBR.scene.items.getItems()).filter((item) => {
+      const all = await OBR.scene.items.getItems()
+      const fills = all.filter((item) => {
         const meta = getHpMeta(item)
         return meta?.kind === 'fill' && meta.ownerId === ownerId && meta.slot === store.active
       })
@@ -697,13 +698,12 @@ export default function App() {
           if (!meta || draft.type !== 'SHAPE') continue
           const pct = s.maxHp > 0 ? clamp(s.hp / s.maxHp, 0, 1) : 0
           const fillWidth = Math.max(0.1, meta.width * pct)
-          const shift = (fillWidth - meta.width) / 2
-          const radians = meta.rotation * Math.PI / 180
+          const bg = all.find((item) => {
+            const m = getHpMeta(item)
+            return m?.kind === 'background' && m.tokenId === meta.tokenId && m.ownerId === meta.ownerId && m.slot === meta.slot
+          })
           draft.width = fillWidth
-          draft.position = {
-            x: meta.centerX + shift * Math.cos(radians),
-            y: meta.centerY + shift * Math.sin(radians),
-          }
+          if (bg) draft.position = { ...bg.position }
           draft.style.fillColor = hpColor(s.hp, s.maxHp)
           draft.style.fillOpacity = pct > 0 ? 1 : 0
           draft.metadata[HP_META] = { ...meta, hp: s.hp, maxHp: s.maxHp }
