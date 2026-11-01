@@ -265,6 +265,8 @@ type Feature = {
 type CharacterSize = "Small" | "Medium"
 type AbilityMethod = "manual" | "standard" | "point-buy" | "roll"
 type Sheet = {
+  id: string
+  restOperations: string[]
   name: string
   cls: string
   race: string
@@ -305,9 +307,11 @@ type Sheet = {
   dismissedFeatures: string[]
   inventory: InventoryItem[]
   notes: string
-  skillNotes: Record<string, string>
-  defenseNotes: string
   coins: Record<"CP" | "SP" | "EP" | "GP" | "PP", number>
+}
+
+function characterId() {
+  return `character-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
 }
 
 function featureId() {
@@ -2678,6 +2682,8 @@ function syncLevelTraits(sheet: Sheet): Sheet {
 }
 
 const initial: Sheet = {
+  id: characterId(),
+  restOperations: [],
   name: "New Character",
   cls: "Barbarian",
   subclass: "Subclass",
@@ -2730,9 +2736,21 @@ const initial: Sheet = {
   dismissedFeatures: [],
   inventory: [],
   notes: "",
-  skillNotes: { Perception: "", Insight: "", Investigation: "", Vision: "" },
-  defenseNotes: "",
   coins: { CP: 0, SP: 0, EP: 0, GP: 0, PP: 0 },
+}
+
+function freshSheet(): Sheet {
+  return {
+    ...initial,
+    id: characterId(),
+    restOperations: [],
+    selectedSpells: [],
+    traits: initial.traits.map((feature) => ({ ...feature })),
+    activeEffects: [],
+    activeConditions: [],
+    customAttacks: [],
+    inventory: [],
+  }
 }
 
 const CLASS_DIE: Record<string, number> = {
@@ -2908,6 +2926,63 @@ function spellSelectionLimits(sheet: Sheet, source: SpellcastingSource) {
         : Number.POSITIVE_INFINITY),
     prepared: Number.POSITIVE_INFINITY,
   }
+}
+
+function canRitualCastSpell(
+  sheet: Sheet,
+  selected: SelectedSpell,
+  source: SpellcastingSource,
+  entry: ContentEntry,
+) {
+  const meta = entry.feature.meta ?? {}
+  if (meta.ritual !== "true" || (Number(meta.level) || 0) <= 0) return false
+  if (source.spellList === "Wizard")
+    return source.mode === "spellbook"
+  if (source.spellList === "Bard")
+    return source.mode === "known" && selected.prepared
+  if (source.spellList === "Cleric" || source.spellList === "Druid")
+    return source.mode === "prepared" && selected.prepared
+  const featurePermission = sheet.traits.some((feature) => {
+    const name = feature.name.trim().toLowerCase()
+    const structuredNotes = (
+      feature.effects?.spellcasting.notes ?? ""
+    ).toLowerCase()
+    return (
+      name === "ritual casting" ||
+      name === "book of ancient secrets" ||
+      structuredNotes.includes("ritual casting") ||
+      structuredNotes.includes("book of ancient secrets")
+    )
+  })
+  return featurePermission && selected.prepared
+}
+
+function ritualCastingTime(castingTime: string) {
+  return `${castingTime || "Normal casting time"} + 10 minutes`
+}
+
+const STANDARD_DAMAGE_TYPES = [
+  "acid",
+  "bludgeoning",
+  "cold",
+  "fire",
+  "force",
+  "lightning",
+  "necrotic",
+  "piercing",
+  "poison",
+  "psychic",
+  "radiant",
+  "slashing",
+  "thunder",
+] as const
+
+function spellDamageLabel(damageType: string | undefined) {
+  const normalized = damageType?.trim().toLowerCase() ?? ""
+  const standard = STANDARD_DAMAGE_TYPES.find((type) => type === normalized)
+  return standard
+    ? `${standard[0].toUpperCase()}${standard.slice(1)} damage`
+    : "Spell damage"
 }
 
 function scaledSpellFormula(
@@ -3182,6 +3257,7 @@ function hasSpellcasting(sheet: Sheet) {
 }
 
 type Roll = {
+  kind?: "roll" | "activity"
   label: string
   die: string
   face: number
@@ -3194,21 +3270,92 @@ type Roll = {
   faces?: number[]
   note?: string
 }
-type Tab = "main" | "combat" | "spells" | "gear" | "traits" | "content" | "log"
+type Tab =
+  | "main"
+  | "combat"
+  | "spells"
+  | "gear"
+  | "traits"
+  | "notes"
+  | "content"
+  | "log"
 
 const SLOTS = 5
-const CHARACTER_SCHEMA_VERSION = 3
+const CHARACTER_SCHEMA_VERSION = 4
 const CONTENT_PACK_SCHEMA_VERSION = 1
 const MAX_IMPORT_BYTES = 2 * 1024 * 1024
 const NAME_MAX = 30
 const CHANNEL = "dnd5e.sheet.share"
 const ROLL_CHANNEL = "dnd5e.roll.share"
+const REST_CHANNEL = "dnd5e.rest.sync"
+const REST_BROWSER_CHANNEL = "dnd5e-rest-sync"
 const ROLL_STORAGE = "dnd5e-roll-log"
 const HP_META = "dnd5e.sheet.hp-bar"
 const HP_LABEL_META = "dnd5e.sheet.hp-label"
 type Store = { active: number; slots: (Sheet | null)[] }
 type Person = { id: string; name: string }
 type ShareMsg = { to: string; fromName: string; sheet: Sheet }
+type RestKind = "short" | "long" | "dawn"
+type RestPatch = {
+  hp?: number
+  tempHp?: number
+  deathS?: number
+  deathF?: number
+  hitDiceUsed?: number
+  slots?: Sheet["slots"]
+  pactSlots?: PactSlots
+  traitUses: { id: string; used: number }[]
+  itemCharges: { id: string; charges: number }[]
+  removedEffectIds: string[]
+  removedConditionIds: string[]
+}
+type RestMessage = {
+  characterId: string
+  operationId: string
+  kind: RestKind
+  senderRole: "GM"
+  patch: RestPatch
+}
+
+function isRestMessage(value: unknown): value is RestMessage {
+  if (!value || typeof value !== "object") return false
+  const message = value as Partial<RestMessage>
+  const patch = message.patch as Partial<RestPatch> | undefined
+  return (
+    typeof message.characterId === "string" &&
+    message.characterId.length > 0 &&
+    typeof message.operationId === "string" &&
+    message.operationId.length > 0 &&
+    (message.kind === "short" ||
+      message.kind === "long" ||
+      message.kind === "dawn") &&
+    message.senderRole === "GM" &&
+    !!patch &&
+    Array.isArray(patch.traitUses) &&
+    patch.traitUses.every(
+      (entry) =>
+        !!entry &&
+        typeof entry.id === "string" &&
+        typeof entry.used === "number" &&
+        Number.isFinite(entry.used),
+    ) &&
+    Array.isArray(patch.itemCharges) &&
+    patch.itemCharges.every(
+      (entry) =>
+        !!entry &&
+        typeof entry.id === "string" &&
+        typeof entry.charges === "number" &&
+        Number.isFinite(entry.charges),
+    ) &&
+    Array.isArray(patch.removedEffectIds) &&
+    patch.removedEffectIds.every((id) => typeof id === "string") &&
+    Array.isArray(patch.removedConditionIds) &&
+    patch.removedConditionIds.every((id) => typeof id === "string") &&
+    (!patch.slots || Array.isArray(patch.slots)) &&
+    (!patch.pactSlots || typeof patch.pactSlots === "object")
+  )
+}
+
 type HpBarMeta = {
   kind: "background" | "fill"
   ownerId: string
@@ -3673,6 +3820,156 @@ function restoreInventoryCharges(
       ? rechargeCharges(item, recharges)
       : item,
   )
+}
+
+function applyRestToSheet(
+  sheet: Sheet,
+  kind: RestKind,
+  operationId: string,
+) {
+  if (sheet.restOperations.includes(operationId)) return sheet
+  const recharges: Recharge[] =
+    kind === "short"
+      ? ["short"]
+      : kind === "long"
+        ? ["short", "long"]
+        : ["dawn"]
+  const next: Sheet = {
+    ...sheet,
+    traits: restoreUses(sheet, recharges),
+    inventory: restoreInventoryCharges(sheet.inventory, recharges),
+    activeEffects: sheet.activeEffects.filter((effect) =>
+      kind === "long"
+        ? effect.endOn !== "short" && effect.endOn !== "long"
+        : effect.endOn !== kind,
+    ),
+    activeConditions: sheet.activeConditions.filter((condition) =>
+      kind === "long"
+        ? condition.expiration !== "short" &&
+          condition.expiration !== "long"
+        : condition.expiration !== kind,
+    ),
+    restOperations: [...sheet.restOperations, operationId].slice(-20),
+  }
+  if (kind === "short")
+    return { ...next, pactSlots: { ...sheet.pactSlots, used: 0 } }
+  if (kind === "dawn") return next
+  return {
+    ...next,
+    hp: effectiveMaxHp(sheet.maxHp, sheet.exhaustionLevel),
+    tempHp: 0,
+    deathS: 0,
+    deathF: 0,
+    hitDiceUsed: Math.max(
+      0,
+      sheet.hitDiceUsed - Math.max(1, Math.floor(sheet.level / 2)),
+    ),
+    slots: sheet.slots.map((slot) => ({ ...slot, used: 0 })),
+    pactSlots: { ...sheet.pactSlots, used: 0 },
+  }
+}
+
+function createRestPatch(before: Sheet, after: Sheet, kind: RestKind): RestPatch {
+  const changedTraits = after.traits.filter(
+    (feature) =>
+      (feature.used ?? 0) !==
+      (before.traits.find((entry) => entry.id === feature.id)?.used ?? 0),
+  )
+  const changedItems = after.inventory.filter(
+    (item) =>
+      item.category === "adventuring-gear" &&
+      item.charges !==
+        (
+          before.inventory.find(
+            (entry) =>
+              entry.id === item.id && entry.category === "adventuring-gear",
+          ) as GearItem | undefined
+        )?.charges,
+  )
+  const patch: RestPatch = {
+    traitUses: changedTraits.map((feature) => ({
+      id: feature.id,
+      used: feature.used ?? 0,
+    })),
+    itemCharges: changedItems.map((item) => ({
+      id: item.id,
+      charges: (item as GearItem).charges,
+    })),
+    removedEffectIds: before.activeEffects
+      .filter(
+        (effect) => !after.activeEffects.some((entry) => entry.id === effect.id),
+      )
+      .map((effect) => effect.id),
+    removedConditionIds: before.activeConditions
+      .filter(
+        (condition) =>
+          !after.activeConditions.some((entry) => entry.id === condition.id),
+      )
+      .map((condition) => condition.id),
+  }
+  if (kind === "short") patch.pactSlots = after.pactSlots
+  if (kind === "long") {
+    patch.hp = after.hp
+    patch.tempHp = after.tempHp
+    patch.deathS = after.deathS
+    patch.deathF = after.deathF
+    patch.hitDiceUsed = after.hitDiceUsed
+    patch.slots = after.slots
+    patch.pactSlots = after.pactSlots
+  }
+  return patch
+}
+
+function applyRestPatch(sheet: Sheet, message: RestMessage) {
+  if (
+    sheet.id !== message.characterId ||
+    sheet.restOperations.includes(message.operationId)
+  )
+    return sheet
+  const traitUses = new Map(
+    message.patch.traitUses.map((entry) => [entry.id, entry.used]),
+  )
+  const itemCharges = new Map(
+    message.patch.itemCharges.map((entry) => [entry.id, entry.charges]),
+  )
+  return {
+    ...sheet,
+    ...(message.patch.hp !== undefined ? { hp: message.patch.hp } : {}),
+    ...(message.patch.tempHp !== undefined
+      ? { tempHp: message.patch.tempHp }
+      : {}),
+    ...(message.patch.deathS !== undefined
+      ? { deathS: message.patch.deathS }
+      : {}),
+    ...(message.patch.deathF !== undefined
+      ? { deathF: message.patch.deathF }
+      : {}),
+    ...(message.patch.hitDiceUsed !== undefined
+      ? { hitDiceUsed: message.patch.hitDiceUsed }
+      : {}),
+    ...(message.patch.slots ? { slots: message.patch.slots } : {}),
+    ...(message.patch.pactSlots
+      ? { pactSlots: message.patch.pactSlots }
+      : {}),
+    traits: sheet.traits.map((feature) =>
+      traitUses.has(feature.id)
+        ? { ...feature, used: traitUses.get(feature.id) }
+        : feature,
+    ),
+    inventory: sheet.inventory.map((item) =>
+      itemCharges.has(item.id) && item.category === "adventuring-gear"
+        ? { ...item, charges: itemCharges.get(item.id) ?? item.charges }
+        : item,
+    ),
+    activeEffects: sheet.activeEffects.filter(
+      (effect) => !message.patch.removedEffectIds.includes(effect.id),
+    ),
+    activeConditions: sheet.activeConditions.filter(
+      (condition) =>
+        !message.patch.removedConditionIds.includes(condition.id),
+    ),
+    restOperations: [...sheet.restOperations, message.operationId].slice(-20),
+  }
 }
 
 const COMBAT_EFFECT_TYPES: CombatEffectType[] = [
@@ -4741,6 +5038,12 @@ function normalize(saved: Partial<Sheet> & Record<string, any>): Sheet {
   }
   return syncLevelTraits({
     ...initial,
+    id: typeof saved.id === "string" ? saved.id : characterId(),
+    restOperations: Array.isArray(saved.restOperations)
+      ? saved.restOperations
+          .filter((value): value is string => typeof value === "string")
+          .slice(-20)
+      : [],
     subclass:
       typeof saved.subclass === "string" ? saved.subclass : initial.subclass,
     background:
@@ -4841,9 +5144,6 @@ function normalize(saved: Partial<Sheet> & Record<string, any>): Sheet {
     dismissedFeatures,
     inventory,
     hitDie,
-    defenseNotes:
-      typeof saved.defenseNotes === "string" ? saved.defenseNotes : "",
-    skillNotes: { ...initial.skillNotes, ...saved.skillNotes },
   })
 }
 
@@ -4861,7 +5161,7 @@ function loadStore(): Store {
   } catch {
     /* fall through */
   }
-  return { active: 0, slots: [initial, ...Array(SLOTS - 1).fill(null)] }
+  return { active: 0, slots: [freshSheet(), ...Array(SLOTS - 1).fill(null)] }
 }
 
 function loadRolls(): Roll[] {
@@ -5152,6 +5452,8 @@ export default function App() {
   const restRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const contentFileRef = useRef<HTMLInputElement>(null)
+  const restBrowserRef = useRef<BroadcastChannel | null>(null)
+  const gmConnectionIdsRef = useRef<Set<string>>(new Set())
   const noticeTimer = useRef<number>(0)
   const playerIdRef = useRef("local")
   const playerNameRef = useRef("You")
@@ -5163,6 +5465,27 @@ export default function App() {
     window.clearTimeout(noticeTimer.current)
     noticeTimer.current = window.setTimeout(() => setNotice(""), 2600)
   }
+
+  const applyIncomingRest = (value: unknown) => {
+    if (!isRestMessage(value)) return
+    setStore((current) => ({
+      ...current,
+      slots: current.slots.map((sheet) =>
+        sheet ? applyRestPatch(sheet, value) : sheet,
+      ),
+    }))
+  }
+
+  useEffect(() => {
+    if (typeof BroadcastChannel === "undefined") return
+    const channel = new BroadcastChannel(REST_BROWSER_CHANNEL)
+    restBrowserRef.current = channel
+    channel.onmessage = (event) => applyIncomingRest(event.data)
+    return () => {
+      channel.close()
+      restBrowserRef.current = null
+    }
+  }, [])
 
   const inObr = OBR.isAvailable
   useEffect(() => {
@@ -5177,8 +5500,21 @@ export default function App() {
       setRole(currentRole)
       playerIdRef.current = playerId
       playerNameRef.current = playerName || "Player"
-      const toPeople = (ps: { id: string; name: string }[]) =>
+      const toPeople = (
+        ps: {
+          id: string
+          name: string
+          connectionId: string
+          role: "GM" | "PLAYER"
+        }[],
+      ) => {
+        gmConnectionIdsRef.current = new Set(
+          ps
+            .filter((player) => player.role === "GM")
+            .map((player) => player.connectionId),
+        )
         setPlayers(ps.map((p) => ({ id: p.id, name: p.name || "Player" })))
+      }
       toPeople(await OBR.party.getPlayers())
       off.push(OBR.party.onChange(toPeople))
       off.push(
@@ -5208,6 +5544,12 @@ export default function App() {
                 : [d as Roll, ...current].slice(0, 40),
             )
           }
+        }),
+      )
+      off.push(
+        OBR.broadcast.onMessage(REST_CHANNEL, (ev) => {
+          if (gmConnectionIdsRef.current.has(ev.connectionId))
+            applyIncomingRest(ev.data)
         }),
       )
       const syncLabels = () => void queueHpLabelRefresh()
@@ -5419,7 +5761,7 @@ export default function App() {
     else {
       setStore((st) => ({
         active: i,
-        slots: st.slots.map((x, k) => (k === i ? initial : x)),
+        slots: st.slots.map((x, k) => (k === i ? freshSheet() : x)),
       }))
       setTab("main")
     }
@@ -5448,7 +5790,7 @@ export default function App() {
       const slots = st.slots.map((x, k) => (k === i ? null : x))
       const active = slots[st.active] ? st.active : slots.findIndex(Boolean)
       return active < 0
-        ? { active: 0, slots: [initial, ...Array(SLOTS - 1).fill(null)] }
+        ? { active: 0, slots: [freshSheet(), ...Array(SLOTS - 1).fill(null)] }
         : { active, slots }
     })
   }
@@ -6208,6 +6550,7 @@ export default function App() {
   ) => {
     const entry: Roll = {
       ...r,
+      kind: "roll",
       id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       playerId: playerIdRef.current,
       playerName: playerNameRef.current,
@@ -6218,6 +6561,28 @@ export default function App() {
       OBR.broadcast
         .sendMessage(ROLL_CHANNEL, entry, { destination: "REMOTE" })
         .catch(() => flash("Roll saved locally, but could not be shared"))
+    }
+  }
+
+  const pushActivity = (label: string, note: string) => {
+    const entry: Roll = {
+      kind: "activity",
+      label,
+      note,
+      die: "",
+      face: 0,
+      mod: 0,
+      total: 0,
+      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      playerId: playerIdRef.current,
+      playerName: playerNameRef.current,
+      characterName: s.name.trim(),
+    }
+    setRolls((current) => [entry, ...current].slice(0, 40))
+    if (inObr && OBR.isReady) {
+      OBR.broadcast
+        .sendMessage(ROLL_CHANNEL, entry, { destination: "REMOTE" })
+        .catch(() => flash("Activity saved locally, but could not be shared"))
     }
   }
 
@@ -6826,64 +7191,51 @@ export default function App() {
     queueMicrotask(() => outcome && flash(outcome))
   }
 
-  const longRest = () =>
-    setS((p) => ({
-      ...p,
-      hp: effectiveMaxHp(p.maxHp, p.exhaustionLevel),
-      tempHp: 0,
-      deathS: 0,
-      deathF: 0,
-      hitDiceUsed: Math.max(
-        0,
-        p.hitDiceUsed - Math.max(1, Math.floor(p.level / 2)),
-      ),
-      slots: p.slots.map((x) => ({ ...x, used: 0 })),
-      pactSlots: { ...p.pactSlots, used: 0 },
-      traits: restoreUses(p, ["short", "long"]),
-      inventory: restoreInventoryCharges(p.inventory, ["short", "long"]),
-      activeConditions: p.activeConditions.filter(
-        (condition) =>
-          condition.expiration !== "short" &&
-          condition.expiration !== "long",
-      ),
-      activeEffects: p.activeEffects.filter(
-        (effect) => effect.endOn !== "short" && effect.endOn !== "long",
-      ),
-    }))
-
-  const shortRest = () => {
-    setS((p) => ({
-      ...p,
-      pactSlots: { ...p.pactSlots, used: 0 },
-      traits: restoreUses(p, ["short"]),
-      inventory: restoreInventoryCharges(p.inventory, ["short"]),
-      activeConditions: p.activeConditions.filter(
-        (condition) => condition.expiration !== "short",
-      ),
-      activeEffects: p.activeEffects.filter(
-        (effect) => effect.endOn !== "short",
-      ),
-    }))
+  const performRest = (kind: RestKind) => {
+    if (role !== "GM") {
+      flash("Only the GM can apply rests and Dawn recovery")
+      return
+    }
+    const operationId = `rest-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+    let message: RestMessage | null = null
+    setStore((current) => {
+      const before = current.slots[current.active]
+      if (!before) return current
+      const after = applyRestToSheet(before, kind, operationId)
+      message = {
+        characterId: before.id,
+        operationId,
+        kind,
+        senderRole: "GM",
+        patch: createRestPatch(before, after, kind),
+      }
+      return {
+        ...current,
+        slots: current.slots.map((sheet, index) =>
+          index === current.active ? after : sheet,
+        ),
+      }
+    })
+    queueMicrotask(() => {
+      if (!message) return
+      restBrowserRef.current?.postMessage(message)
+      if (inObr && OBR.isReady)
+        OBR.broadcast
+          .sendMessage(REST_CHANNEL, message, { destination: "REMOTE" })
+          .catch(() => flash("Rest applied locally, but sync failed"))
+    })
     flash(
-      s.pactSlots.max > 0
-        ? "Short rest: pact slots restored"
-        : "Short rest: spend hit dice in the Combat tab",
+      kind === "long"
+        ? "Long rest: HP, slots and configured resources restored"
+        : kind === "short"
+          ? "Short rest: Pact Magic and configured resources restored"
+          : "Dawn: configured daily resources restored",
     )
   }
-  const dawn = () => {
-    setS((p) => ({
-      ...p,
-      traits: restoreUses(p, ["dawn"]),
-      inventory: restoreInventoryCharges(p.inventory, ["dawn"]),
-      activeConditions: p.activeConditions.filter(
-        (condition) => condition.expiration !== "dawn",
-      ),
-      activeEffects: p.activeEffects.filter(
-        (effect) => effect.endOn !== "dawn",
-      ),
-    }))
-    flash("Dawn: daily features recharged")
-  }
+
+  const longRest = () => performRest("long")
+  const shortRest = () => performRest("short")
+  const dawn = () => performRest("dawn")
 
   const upAttack = (id: string, patch: Partial<CustomAttack>) =>
     set(
@@ -6961,9 +7313,9 @@ export default function App() {
 
   const barScale = Math.max(s.maxHp, s.hp + s.tempHp)
   const hpPct = s.maxHp ? clamp((s.hp / s.maxHp) * 100, 0, 100) : 0
-  const lastRoll = rolls[0]
+  const lastRoll = rolls.find((entry) => entry.kind !== "activity")
   const [hiddenRollId, setHiddenRollId] = useState<string | undefined>(
-    () => rolls[0]?.id,
+    () => lastRoll?.id,
   )
   useEffect(() => {
     const id = lastRoll?.id
@@ -6977,6 +7329,7 @@ export default function App() {
     ["spells", "Spells"],
     ["gear", "Gear"],
     ["traits", "Traits"],
+    ["notes", "Notes"],
     ["content", "Content"],
     ["log", "Log"],
   ]
@@ -6984,8 +7337,9 @@ export default function App() {
     main: "Saves, skills & senses",
     combat: "Weapons, attacks & conditions",
     spells: "Slots & prepared spells",
-    gear: "Inventory, coins & notes",
+    gear: "Inventory & coins",
     traits: "Racial & class features",
+    notes: "Character notes",
     content: "SRD options & custom builders",
     log: "Shared room rolls",
   }
@@ -7110,22 +7464,43 @@ export default function App() {
     selected: SelectedSpell,
     source: SpellcastingSource,
     castLevel: number,
+    mode: "normal" | "ritual" = "normal",
   ) => {
     let outcome = ""
+    let didCast = false
     setS((sheet) => {
-      const current = sheet.selectedSpells.find(
+      const stored = sheet.selectedSpells.find(
         (spell) =>
           spell.contentId === selected.contentId &&
           spell.sourceId === selected.sourceId,
       )
-      if (!current || !current.prepared) {
+      const granted = source.grantedSpells.some(
+        (name) => name.toLowerCase() === entry.feature.name.toLowerCase(),
+      )
+      const current = stored ?? (granted ? selected : undefined)
+      if (!current) {
+        outcome = "Spell is not available to this character"
+        return sheet
+      }
+      if (mode === "normal" && !current.prepared) {
         outcome = "Spell is not prepared"
         return sheet
       }
       const spellLevel = Number(entry.feature.meta?.level) || 0
+      if (
+        mode === "ritual" &&
+        !canRitualCastSpell(sheet, current, source, entry)
+      ) {
+        outcome = "This spell is not eligible for ritual casting"
+        return sheet
+      }
       let slots = sheet.slots
       let pactSlots = sheet.pactSlots
-      if (spellLevel > 0 && source.progression !== "custom") {
+      if (
+        mode === "normal" &&
+        spellLevel > 0 &&
+        source.progression !== "custom"
+      ) {
         const consumed = consumeSpellResource(
           slots,
           pactSlots,
@@ -7144,6 +7519,7 @@ export default function App() {
         pactSlots = consumed.pactSlots
         castLevel = consumed.castLevel
       }
+      if (mode === "ritual") castLevel = spellLevel
       const meta = entry.feature.meta ?? {}
       const concentration = meta.concentration === "true"
       const duration = meta.duration || "Instantaneous"
@@ -7201,10 +7577,32 @@ export default function App() {
         )
         activeEffects.push(active)
       }
-      outcome = `${entry.feature.name} cast at level ${castLevel || 0}`
+      didCast = true
+      outcome =
+        mode === "ritual"
+          ? `${entry.feature.name} cast as a ritual (${ritualCastingTime(meta.castingTime ?? "")})`
+          : `${entry.feature.name} cast at level ${castLevel || 0}`
       return { ...sheet, slots, pactSlots, activeEffects }
     })
-    queueMicrotask(() => outcome && flash(outcome))
+    queueMicrotask(() => {
+      if (outcome) flash(outcome)
+      if (!didCast) return
+      if (mode === "ritual") {
+        pushActivity(
+          `${entry.feature.name} · Ritual cast`,
+          `Casting time: ${ritualCastingTime(entry.feature.meta?.castingTime ?? "")}`,
+        )
+        return
+      }
+      pushRoll({
+        label: `${entry.feature.name} · Spell cast`,
+        die: "d0",
+        face: 0,
+        mod: 0,
+        total: 0,
+        note: `Level ${castLevel || 0}`,
+      })
+    })
   }
   const useSpellFormula = (
     entry: ContentEntry,
@@ -7212,6 +7610,7 @@ export default function App() {
     castLevel: number,
     healing: boolean,
     damageIndex = 0,
+    damageType?: string,
   ) => {
     const formula = scaledSpellFormula(
       entry,
@@ -7223,7 +7622,7 @@ export default function App() {
     )
     const parts = spellFormulaParts(formula)
     if (!healing) {
-      rollDamage(`${entry.feature.name} damage`, parts.dice, parts.bonus)
+      rollDamage(spellDamageLabel(damageType), parts.dice, parts.bonus)
       return
     }
     const match = parts.dice.match(/(\d+)d(\d+)/i)
@@ -7473,7 +7872,6 @@ export default function App() {
                   <MenuItem
                     onClick={() => {
                       longRest()
-                      flash("Long rest: HP, slots and hit dice restored")
                       setRestOpen(false)
                     }}
                   >
@@ -10906,12 +11304,6 @@ export default function App() {
                             No structured defenses granted.
                           </p>
                         )}
-                      {s.defenseNotes && (
-                        <p className="border-t border-rule pt-1 text-muted">
-                          <span className="font-semibold">Notes:</span>{" "}
-                          {s.defenseNotes}
-                        </p>
-                      )}
                     </div>
                   </div>
                   <div className="@2xl:col-start-2 @2xl:row-span-2 @2xl:row-start-1">
@@ -10960,27 +11352,16 @@ export default function App() {
                                 {10 + b}
                               </span>
                             </div>
-                            {s.skillNotes[n] && (
-                              <p className="mt-1 whitespace-pre-wrap text-[13px] text-muted">
-                                {s.skillNotes[n]}
-                              </p>
-                            )}
                           </div>
                         )
                       })}
                       <div className="rounded-md border border-rule bg-card p-2">
                         <span className="text-sm font-medium">
-                          Other Senses
+                          Granted senses
                         </span>
                         <p className="mt-1 whitespace-pre-wrap text-sm leading-snug">
-                          {[
-                            s.skillNotes.Vision,
-                            ...movementFeatures
-                              .map(
-                                (feature) => feature.effects?.movement.senses,
-                              )
-                              .filter(Boolean),
-                          ]
+                          {movementFeatures
+                            .map((feature) => feature.effects?.movement.senses)
                             .filter(Boolean)
                             .join("\n") || (
                             <span className="text-muted">None</span>
@@ -11248,11 +11629,14 @@ export default function App() {
                         className="rounded-md border border-rule bg-card p-2"
                       >
                         <div className="flex items-center gap-2">
-                          <Edit
-                            v={at.name}
-                            on={(v) => upAttack(at.id, { name: v })}
-                            className="font-medium"
-                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate font-medium">{at.name}</div>
+                            <div className="truncate text-[10px] text-muted">
+                              {[at.source || "Custom", at.attackType, at.range]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </div>
+                          </div>
                           <button
                             onClick={() =>
                               roll(`${at.name} attack`, attackBonus, "attack")
@@ -11275,198 +11659,28 @@ export default function App() {
                           >
                             DMG {at.damageFormula || "0"}
                           </button>
-                          <button
-                            onClick={() =>
-                              set(
-                                "customAttacks",
-                                s.customAttacks.filter((x) => x.id !== at.id),
-                              )
-                            }
-                            className="text-muted hover:text-danger"
-                            aria-label="Remove attack"
-                          >
-                            ×
-                          </button>
                         </div>
-                        <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                          <select
-                            value={at.attackMode}
-                            onChange={(event) =>
-                              upAttack(at.id, {
-                                attackMode: event.target
-                                  .value as CustomAttack["attackMode"],
-                              })
-                            }
-                            className="border-b border-rule"
-                          >
-                            <option value="fixed">Fixed attack bonus</option>
-                            <option value="ability">Ability calculation</option>
-                          </select>
-                          {at.attackMode === "ability" ? (
-                            <div className="flex gap-2">
-                              <select
-                                value={at.ability}
-                                onChange={(event) =>
-                                  upAttack(at.id, {
-                                    ability: event.target.value as Ab,
-                                  })
-                                }
-                                className="flex-1 border-b border-rule"
-                              >
-                                {ABILITIES.map((ability) => (
-                                  <option key={ability}>{ability}</option>
-                                ))}
-                              </select>
-                              <label className="flex items-center gap-1">
-                                <input
-                                  type="checkbox"
-                                  checked={at.proficient}
-                                  onChange={(event) =>
-                                    upAttack(at.id, {
-                                      proficient: event.target.checked,
-                                    })
-                                  }
-                                />
-                                Prof.
-                              </label>
-                            </div>
-                          ) : (
-                            <IntInput
-                              value={at.attackBonus}
-                              onChange={(attackBonus) =>
-                                upAttack(at.id, { attackBonus })
-                              }
-                              className="border-b border-rule text-left"
-                            />
-                          )}
-                          <select
-                            value={at.attackType}
-                            onChange={(event) =>
-                              upAttack(at.id, {
-                                attackType: event.target
-                                  .value as CustomAttack["attackType"],
-                              })
-                            }
-                            className="border-b border-rule"
-                          >
-                            <option value="melee">Melee attack</option>
-                            <option value="ranged">Ranged attack</option>
-                            <option value="special">Special attack</option>
-                          </select>
-                          {at.attackMode === "ability" && (
-                            <input
-                              value={String(at.attackBonus)}
-                              onChange={(event) =>
-                                upAttack(at.id, {
-                                  attackBonus:
-                                    parseInt(event.target.value, 10) || 0,
-                                })
-                              }
-                              placeholder="Misc attack bonus"
-                              className="border-b border-rule"
-                            />
-                          )}
-                          <input
-                            value={at.damageFormula}
-                            onChange={(event) =>
-                              upAttack(at.id, {
-                                damageFormula: event.target.value,
-                              })
-                            }
-                            placeholder="Damage, e.g. 1d8 + 3"
-                            className="border-b border-rule"
-                          />
-                          <input
-                            value={at.damageType}
-                            onChange={(event) =>
-                              upAttack(at.id, {
-                                damageType: event.target.value,
-                              })
-                            }
-                            placeholder="Damage type"
-                            className="border-b border-rule"
-                          />
-                          <input
-                            value={at.range}
-                            onChange={(event) =>
-                              upAttack(at.id, { range: event.target.value })
-                            }
-                            placeholder="Range"
-                            className="border-b border-rule"
-                          />
-                          <input
-                            value={at.source}
-                            onChange={(event) =>
-                              upAttack(at.id, { source: event.target.value })
-                            }
-                            placeholder="Source"
-                            className="border-b border-rule"
-                          />
-                          <input
-                            value={at.conditions}
-                            onChange={(event) =>
-                              upAttack(at.id, {
-                                conditions: event.target.value,
-                              })
-                            }
-                            placeholder="Conditions"
-                            className="border-b border-rule"
-                          />
-                          <input
-                            value={at.description}
-                            onChange={(event) =>
-                              upAttack(at.id, {
-                                description: event.target.value,
-                              })
-                            }
-                            placeholder="Description / effects"
-                            className="border-b border-rule"
-                          />
-                          <input
-                            value={at.effects}
-                            onChange={(event) =>
-                              upAttack(at.id, { effects: event.target.value })
-                            }
-                            placeholder="Mechanical or situational effects"
-                            className="border-b border-rule"
-                          />
-                        </div>
+                        {(at.damageType ||
+                          at.conditions ||
+                          at.description ||
+                          at.effects) && (
                         <p className="mt-1 text-[10px] text-muted">
-                          {[at.source || "Custom", at.attackType, at.range, at.damageType]
+                          {[
+                            at.damageType,
+                            at.conditions,
+                            at.description,
+                            at.effects,
+                          ]
                             .filter(Boolean)
                             .join(" · ")}
                         </p>
+                        )}
                       </div>
                     )})}
                   </div>
-                  <button
-                    onClick={() =>
-                      set("customAttacks", [
-                        ...s.customAttacks,
-                        {
-                          id: featureId(),
-                          name: "New attack",
-                          attackMode: "fixed",
-                          attackBonus: 0,
-                          ability: "STR",
-                          proficient: false,
-                          damageFormula: "1d6",
-                          damageType: "",
-                          range: "5 ft.",
-                          attackType: "melee",
-                          description: "",
-                          source: "Custom",
-                          sourceType: "custom",
-                          ownerId: s.name || "character",
-                          conditions: "",
-                          effects: "",
-                        },
-                      ])
-                    }
-                    className="mt-2 text-xs font-medium text-accent hover:underline"
-                  >
-                    + Add attack
-                  </button>
+                  <p className="mt-2 text-[11px] text-muted">
+                    Manage custom attacks on the Traits tab.
+                  </p>
                 </div>
 
                 {combatSections.map(([section, features]) => (
@@ -11733,6 +11947,12 @@ export default function App() {
                             selected.prepared &&
                             (spellLevel === 0 ||
                               eligibleLevels.includes(castLevel))
+                          const canCastAsRitual = canRitualCastSpell(
+                            s,
+                            selected,
+                            source,
+                            entry,
+                          )
                           const castingAbility = mod(scores[source.ability])
                           return (
                             <div
@@ -11840,6 +12060,24 @@ export default function App() {
                                 >
                                   Cast
                                 </button>
+                                {canCastAsRitual && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      castSpell(
+                                        entry,
+                                        selected,
+                                        source,
+                                        spellLevel,
+                                        "ritual",
+                                      )
+                                    }
+                                    className="rounded border border-accent px-3 py-1 text-xs font-semibold text-accent hover:bg-accent-soft"
+                                    title={`Casting time: ${ritualCastingTime(meta.castingTime ?? "")}`}
+                                  >
+                                    Cast as Ritual
+                                  </button>
+                                )}
                                 {damageFormulas.map((formula, index) =>
                                   formula ? (
                                     <button
@@ -11853,6 +12091,7 @@ export default function App() {
                                           castLevel,
                                           false,
                                           index,
+                                          damageParts[index]?.type,
                                         )
                                       }
                                       className={
@@ -11860,10 +12099,10 @@ export default function App() {
                                         " px-3 text-xs disabled:opacity-40"
                                       }
                                     >
-                                      Damage {formula}
-                                      {damageParts[index]?.type
-                                        ? ` ${damageParts[index].type}`
-                                        : ""}
+                                      {spellDamageLabel(
+                                        damageParts[index]?.type,
+                                      )}{" "}
+                                      {formula}
                                     </button>
                                   ) : null,
                                 )}
@@ -12570,49 +12809,25 @@ export default function App() {
                     </div>
                   )}
                 </div>
-                <div>
-                  <Heading>Skill details</Heading>
-                  <div className="space-y-1.5">
-                    {[...DETAIL_SKILLS.map(([n]) => n), "Vision"].map((n) => (
-                      <label
-                        key={n}
-                        className="flex items-center gap-2 rounded-md border border-rule bg-card px-2 py-1"
-                      >
-                        <span className="w-24 shrink-0 text-xs text-muted">
-                          {n === "Vision" ? "Other Senses" : n}
-                        </span>
-                        <input
-                          value={s.skillNotes[n] ?? ""}
-                          onChange={(e) =>
-                            set("skillNotes", {
-                              ...s.skillNotes,
-                              [n]: e.target.value,
-                            })
-                          }
-                          placeholder={
-                            n === "Vision"
-                              ? "e.g. Darkvision 60 ft., Sunlight Sensitivity"
-                              : "e.g. advantage on..."
-                          }
-                          className="w-full min-w-0"
-                        />
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                <Area
-                  label="Defense notes"
-                  v={s.defenseNotes}
-                  on={(v) => set("defenseNotes", v)}
-                  rows={3}
-                />
-                <Area
-                  label="Notes"
-                  v={s.notes}
-                  on={(v) => set("notes", v)}
-                  rows={4}
-                />
               </>
+            )}
+
+            {tab === "notes" && (
+              <section className="mx-auto w-full max-w-4xl">
+                <Heading>Character notes</Heading>
+                <div className="rounded-lg border border-rule bg-card p-3">
+                  <p className="mb-2 text-xs text-muted">
+                    Freeform notes are stored with this character and do not
+                    change rolls, defenses, senses, or other mechanics.
+                  </p>
+                  <Area
+                    label="Notes"
+                    v={s.notes}
+                    on={(v) => set("notes", v)}
+                    rows={18}
+                  />
+                </div>
+              </section>
             )}
 
             {tab === "traits" && (
@@ -12627,6 +12842,14 @@ export default function App() {
                     Subclass.
                   </p>
                 </div>
+                <CustomAttackManager
+                  attacks={s.customAttacks}
+                  ownerId={s.name || "character"}
+                  onChange={(customAttacks) =>
+                    set("customAttacks", customAttacks)
+                  }
+                  onUpdate={upAttack}
+                />
                 <div className="grid items-start gap-4 @3xl:grid-cols-2">
                   {([
                     ["racial", "Racial Traits"],
@@ -13041,20 +13264,26 @@ export default function App() {
                       <span className="truncate text-xs font-semibold">
                         {r.characterName || r.playerName}
                       </span>
-                      <span
-                        className={`row-span-2 self-center font-mono text-xs ${
-                          r.die === "d20" && r.face === 20
-                            ? "text-accent"
-                            : r.die === "d20" && r.face === 1
-                              ? "text-danger"
-                              : "text-muted"
-                        }`}
-                      >
-                        {rollExpr(r)}{" "}
-                        <span className="text-xl font-bold text-ink">
-                          {r.total}
+                      {r.kind === "activity" ? (
+                        <span className="row-span-2 self-center rounded bg-accent-soft px-2 py-1 text-[10px] font-semibold uppercase text-accent">
+                          Activity
                         </span>
-                      </span>
+                      ) : (
+                        <span
+                          className={`row-span-2 self-center font-mono text-xs ${
+                            r.die === "d20" && r.face === 20
+                              ? "text-accent"
+                              : r.die === "d20" && r.face === 1
+                                ? "text-danger"
+                                : "text-muted"
+                          }`}
+                        >
+                          {rollExpr(r)}{" "}
+                          <span className="text-xl font-bold text-ink">
+                            {r.total}
+                          </span>
+                        </span>
+                      )}
                       <span className="truncate text-[11px] text-muted">
                         {r.label}
                         {r.note && ` · ${r.note}`}
@@ -14813,6 +15042,185 @@ function Padlock({
   )
 }
 
+function CustomAttackManager({
+  attacks,
+  ownerId,
+  onChange,
+  onUpdate,
+}: {
+  attacks: CustomAttack[]
+  ownerId: string
+  onChange: (attacks: CustomAttack[]) => void
+  onUpdate: (id: string, patch: Partial<CustomAttack>) => void
+}) {
+  const addAttack = () =>
+    onChange([
+      ...attacks,
+      {
+        id: featureId(),
+        name: "New attack",
+        attackMode: "fixed",
+        attackBonus: 0,
+        ability: "STR",
+        proficient: false,
+        damageFormula: "1d6",
+        damageType: "",
+        range: "5 ft.",
+        attackType: "melee",
+        description: "",
+        source: "Custom",
+        sourceType: "custom",
+        ownerId,
+        conditions: "",
+        effects: "",
+      },
+    ])
+  return (
+    <section>
+      <Heading right={`${attacks.length} custom`}>Custom attacks</Heading>
+      <div className="space-y-2">
+        {attacks.map((attack) => (
+          <details
+            key={attack.id}
+            className="group rounded-md border border-rule bg-card"
+          >
+            <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2">
+              <span className="flex-1 font-medium">{attack.name}</span>
+              <span className="text-[10px] uppercase text-muted">
+                {attack.attackType}
+              </span>
+            </summary>
+            <div className="grid grid-cols-2 gap-2 border-t border-rule p-3 text-xs @2xl:grid-cols-3">
+              <input
+                value={attack.name}
+                onChange={(event) =>
+                  onUpdate(attack.id, { name: event.target.value })
+                }
+                placeholder="Attack name"
+                aria-label="Attack name"
+                className="border-b border-rule"
+              />
+              <select
+                value={attack.attackMode}
+                onChange={(event) =>
+                  onUpdate(attack.id, {
+                    attackMode: event.target
+                      .value as CustomAttack["attackMode"],
+                  })
+                }
+                aria-label="Attack calculation"
+                className="border-b border-rule"
+              >
+                <option value="fixed">Fixed attack bonus</option>
+                <option value="ability">Ability calculation</option>
+              </select>
+              <select
+                value={attack.attackType}
+                onChange={(event) =>
+                  onUpdate(attack.id, {
+                    attackType: event.target
+                      .value as CustomAttack["attackType"],
+                  })
+                }
+                aria-label="Attack type"
+                className="border-b border-rule"
+              >
+                <option value="melee">Melee attack</option>
+                <option value="ranged">Ranged attack</option>
+                <option value="special">Special attack</option>
+              </select>
+              {attack.attackMode === "ability" ? (
+                <label className="flex items-center gap-2">
+                  <select
+                    value={attack.ability}
+                    onChange={(event) =>
+                      onUpdate(attack.id, {
+                        ability: event.target.value as Ab,
+                      })
+                    }
+                    aria-label="Attack ability"
+                    className="min-w-0 flex-1 border-b border-rule"
+                  >
+                    {ABILITIES.map((ability) => (
+                      <option key={ability}>{ability}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="checkbox"
+                    checked={attack.proficient}
+                    onChange={(event) =>
+                      onUpdate(attack.id, {
+                        proficient: event.target.checked,
+                      })
+                    }
+                  />
+                  Proficient
+                </label>
+              ) : null}
+              <input
+                type="number"
+                value={attack.attackBonus}
+                onChange={(event) =>
+                  onUpdate(attack.id, {
+                    attackBonus: parseInt(event.target.value, 10) || 0,
+                  })
+                }
+                placeholder="Attack bonus"
+                aria-label="Attack bonus"
+                className="border-b border-rule"
+              />
+              {(
+                [
+                  ["damageFormula", "Damage formula"],
+                  ["damageType", "Damage type"],
+                  ["range", "Range"],
+                  ["source", "Source"],
+                  ["conditions", "Conditions"],
+                  ["description", "Description"],
+                  ["effects", "Mechanical or situational effects"],
+                ] as [keyof CustomAttack, string][]
+              ).map(([field, placeholder]) => (
+                <input
+                  key={field}
+                  value={String(attack[field] ?? "")}
+                  onChange={(event) =>
+                    onUpdate(attack.id, { [field]: event.target.value })
+                  }
+                  placeholder={placeholder}
+                  aria-label={placeholder}
+                  className="border-b border-rule"
+                />
+              ))}
+              <button
+                type="button"
+                onClick={() =>
+                  onChange(attacks.filter((item) => item.id !== attack.id))
+                }
+                className="justify-self-start text-danger hover:underline"
+              >
+                Remove custom attack
+              </button>
+            </div>
+          </details>
+        ))}
+        {!attacks.length && (
+          <div className="rounded-md border border-dashed border-rule bg-card px-3 py-4 text-center text-xs text-muted">
+            No custom attacks. Equipped weapons and granted attacks remain
+            available automatically in Combat.
+          </div>
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={addAttack}
+        className="mt-2 text-xs font-medium text-accent hover:underline"
+      >
+        + Add custom attack
+      </button>
+    </section>
+  )
+}
+
 function SectionIcon({ tab, className = "" }: { tab: Tab; className?: string }) {
   const paths: Record<Tab, React.ReactNode> = {
     content: <path d="M5 4h10l4 4v12H5zM14 4v5h5M8 13h8M8 17h6" />,
@@ -14847,6 +15255,12 @@ function SectionIcon({ tab, className = "" }: { tab: Tab; className?: string }) 
       <>
         <path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H12v18H7.5A3.5 3.5 0 0 0 4 23V5.5Z" />
         <path d="M20 5.5A3.5 3.5 0 0 0 16.5 2H12v18h4.5A3.5 3.5 0 0 1 20 23V5.5Z" />
+      </>
+    ),
+    notes: (
+      <>
+        <path d="M4 20h4L19 9l-4-4L4 16v4Z" />
+        <path d="m13.5 6.5 4 4M4 12V4h8M10 20h10v-8" />
       </>
     ),
     log: (
