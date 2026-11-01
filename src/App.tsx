@@ -432,6 +432,7 @@ function createFeature(
     tools?: string
     languages?: string
     skills?: string[]
+    expertisePick?: number
     level?: number
     className?: string
     subclassName?: string
@@ -456,6 +457,7 @@ function createFeature(
   if (opts?.tools) p.tools = opts.tools
   if (opts?.languages) p.languages = opts.languages
   if (opts?.skills) p.skills = opts.skills
+  if (opts?.expertisePick) p.expertisePick = opts.expertisePick
 
   const src = emptyFeatureSource()
   if (opts?.level) src.level = opts.level
@@ -1546,6 +1548,17 @@ function detailedClassTraits(classIdOrName: string, name?: string): Feature[] {
           specificWeapons: "hand crossbow, longsword, rapier, shortsword",
           armor: ["Light"],
           tools: "Thieves' tools",
+          expertisePick: 2,
+        },
+      ),
+      createFeature(
+        "srd-trait-rogue-expertise-6",
+        "class",
+        "Expertise (2nd)",
+        "At 6th level, choose two additional proficient skills or thieves' tools for Expertise.",
+        {
+          level: 6,
+          expertisePick: 2,
         },
       ),
       createFeature(
@@ -2964,6 +2977,20 @@ function ritualCastingTime(castingTime: string) {
   return `${castingTime || "Normal casting time"} + 10 minutes`
 }
 
+type SpellCastingSection =
+  | "Action"
+  | "Bonus Action"
+  | "Reaction"
+  | "Extended Casting"
+
+function spellCastingSection(castingTime: string): SpellCastingSection {
+  const normalized = castingTime.trim().toLowerCase()
+  if (normalized.includes("reaction")) return "Reaction"
+  if (normalized.includes("bonus action")) return "Bonus Action"
+  if (/minute|hour/.test(normalized)) return "Extended Casting"
+  return "Action"
+}
+
 const STANDARD_DAMAGE_TYPES = [
   "acid",
   "bludgeoning",
@@ -3057,6 +3084,20 @@ function scaledSpellFormula(
     String(mod(effectiveScores(sheet)[source.ability])),
   )
   return flat ? `${formula} + ${flat}` : formula
+}
+
+function spellEffectFormula(entry: ContentEntry, slotLevel: number) {
+  try {
+    const map = JSON.parse(
+      entry.feature.meta?.effectRollBySlot || "{}",
+    ) as Record<string, string>
+    return (
+      formulaAtLevel(map, slotLevel) ||
+      (entry.feature.meta?.effectRollFormula ?? "")
+    )
+  } catch {
+    return entry.feature.meta?.effectRollFormula ?? ""
+  }
 }
 
 function spellFormulaParts(formula: string) {
@@ -3450,14 +3491,6 @@ function grantedSkillLevels(sheet: Sheet, excludeFeatureId?: string) {
 
 function skillLevel(sheet: Sheet, name: string): 0 | 1 | 2 {
   return (grantedSkillLevels(sheet).get(name) ?? 0) as 0 | 1 | 2
-}
-
-function skillLevelWithoutFeature(
-  sheet: Sheet,
-  name: string,
-  featureId: string,
-): 0 | 1 | 2 {
-  return (grantedSkillLevels(sheet, featureId).get(name) ?? 0) as 0 | 1 | 2
 }
 
 function grantedSavingThrows(sheet: Sheet) {
@@ -3980,8 +4013,9 @@ function normalizeFeature(value: unknown): Feature | null {
               ? Math.max(0, Math.min(4, Math.floor(p.expertisePick)))
               : 0,
           expertiseChosen: Array.isArray(p.expertiseChosen)
-            ? p.expertiseChosen.filter((n): n is string =>
-                ALL_SKILLS.includes(n),
+            ? p.expertiseChosen.filter(
+                (n): n is string =>
+                  ALL_SKILLS.includes(n) || n === "Thieves' Tools",
               )
             : [],
           toolPick:
@@ -4370,6 +4404,8 @@ const BUILTIN_CONTENT: ContentEntry[] = [
           .join(", "),
         damageParts: JSON.stringify(damageParts),
         healingBySlot: JSON.stringify(spell.healingBySlot),
+        effectRollBySlot: JSON.stringify(spell.effectRollBySlot ?? {}),
+        effectRollLabel: spell.effectRollLabel ?? "",
         saveAbility: spell.saveAbility,
         saveSuccess: spell.saveSuccess,
         spellAttack: String(!!spell.attackType),
@@ -5894,6 +5930,12 @@ export default function App() {
         p.skillPick > 0 &&
         p.skillChosen.slice(0, p.skillPick).filter(Boolean).length < p.skillPick
           ? 1
+          : 0) +
+        (p &&
+        p.expertisePick > 0 &&
+        p.expertiseChosen.slice(0, p.expertisePick).filter(Boolean).length <
+          p.expertisePick
+          ? 1
           : 0)
       )
     }, 0) +
@@ -7289,6 +7331,21 @@ export default function App() {
       }
     })
   })
+  const combatSpellGroups = (
+    ["Action", "Bonus Action", "Reaction", "Extended Casting"] as const
+  ).map(
+    (section) =>
+      [
+        section,
+        selectedSpellEntries.filter(
+          ({ selected, entry, source }) =>
+            (selected.prepared ||
+              canRitualCastSpell(s, selected, source, entry)) &&
+            spellCastingSection(entry.feature.meta?.castingTime ?? "") ===
+              section,
+        ),
+      ] as const,
+  ).filter(([, spells]) => spells.length > 0)
   const spellsForSource = (source: SpellcastingSource) =>
     spellEntries.filter((entry) => {
       const level = Number(entry.feature.meta?.level) || 0
@@ -7930,7 +7987,9 @@ export default function App() {
                     <b>{inbox.sheet.name || "the incoming character"}</b>.
                   </p>
                   <p className="mt-1 text-[11px] text-danger">
-                    This cannot be undone.
+                    This replaces the complete local copy. Review any newer HP,
+                    notes, inventory, or preparation changes before continuing;
+                    they are not merged automatically.
                   </p>
                   <div className="mt-3 flex gap-2">
                     <Btn tone="red" onClick={() => saveIncoming(overwriteSlot)}>
@@ -8708,6 +8767,27 @@ export default function App() {
                                 setMeta({ damageType: event.target.value })
                               }
                               className="w-full border-b border-rule pb-1 text-sm"
+                            />
+                          </label>
+                          <label className="col-span-2 flex items-center gap-2 text-xs">
+                            <span className="min-w-32">Effect roll formula</span>
+                            <input
+                              value={meta.effectRollFormula ?? ""}
+                              onChange={(event) =>
+                                setMeta({
+                                  effectRollFormula: event.target.value,
+                                })
+                              }
+                              placeholder="e.g. 6d10"
+                              className="min-w-0 flex-1 border-b border-rule pb-1"
+                            />
+                            <input
+                              value={meta.effectRollLabel ?? ""}
+                              onChange={(event) =>
+                                setMeta({ effectRollLabel: event.target.value })
+                              }
+                              placeholder="HP threshold"
+                              className="min-w-0 flex-1 border-b border-rule pb-1"
                             />
                           </label>
                           <label className="col-span-2 flex items-center gap-2 text-xs">
@@ -11157,22 +11237,9 @@ export default function App() {
                   </span>
                 </button>
                 <div className="mx-auto mt-0.5 w-fit rounded-full bg-paper px-2 py-px">
-                  {s.abilityMethod !== "manual" ? (
-                    <span className="inline-block w-7 text-center font-mono text-xs text-muted">
-                      {scores[a]}
-                    </span>
-                  ) : (
-                    <NumIn
-                      v={scores[a]}
-                      on={(v) =>
-                        set("scores", {
-                          ...s.scores,
-                          [a]: clamp(v - (scores[a] - s.scores[a]), 1, 30),
-                        })
-                      }
-                      className="w-7 text-xs text-muted"
-                    />
-                  )}
+                  <span className="inline-block w-7 text-center font-mono text-xs text-muted">
+                    {scores[a]}
+                  </span>
                 </div>
               </div>
             ))}
@@ -11475,7 +11542,7 @@ export default function App() {
             {tab === "combat" && (
               <>
                 <div>
-                  <Heading>Attacks</Heading>
+                  <Heading>Action</Heading>
                   <div className="grid gap-2 @2xl:grid-cols-2">
                     {hasFreeHand && (
                       <div className="rounded-md border border-rule bg-card p-2">
@@ -11694,9 +11761,6 @@ export default function App() {
                       </div>
                     )})}
                   </div>
-                  <p className="mt-2 text-[11px] text-muted">
-                    Manage custom attacks on the Traits tab.
-                  </p>
                 </div>
 
                 {combatSections.map(([section, features]) => (
@@ -11899,11 +11963,11 @@ export default function App() {
                   </div>
                 ))}
 
-                {selectedSpellEntries.length > 0 && (
-                  <div>
-                    <Heading>Spells</Heading>
+                {combatSpellGroups.map(([spellSection, combatSpells]) => (
+                  <div key={spellSection}>
+                    <Heading>{spellSection} · Spells</Heading>
                     <div className="grid gap-2 @2xl:grid-cols-2">
-                      {selectedSpellEntries.map(
+                      {combatSpells.map(
                         ({ selected, entry, source }) => {
                           const meta = entry.feature.meta ?? {}
                           const spellLevel = Number(meta.level) || 0
@@ -11962,6 +12026,10 @@ export default function App() {
                             s,
                             castLevel,
                             true,
+                          )
+                          const effectFormula = spellEffectFormula(
+                            entry,
+                            castLevel,
                           )
                           const canCastSpell =
                             selected.prepared &&
@@ -12145,6 +12213,24 @@ export default function App() {
                                     Heal {healingFormula}
                                   </button>
                                 )}
+                                {effectFormula && (
+                                  <button
+                                    type="button"
+                                    disabled={!selected.prepared}
+                                    onClick={() => {
+                                      const parts =
+                                        spellFormulaParts(effectFormula)
+                                      rollDamage(
+                                        `Effect Roll · ${meta.effectRollLabel || "Spell effect"}`,
+                                        parts.dice,
+                                        parts.bonus,
+                                      )
+                                    }}
+                                    className="rounded border border-accent bg-accent-soft px-3 py-1 text-xs font-semibold text-accent disabled:opacity-40"
+                                  >
+                                    Effect Roll {effectFormula}
+                                  </button>
+                                )}
                               </div>
                             </div>
                           )
@@ -12152,7 +12238,7 @@ export default function App() {
                       )}
                     </div>
                   </div>
-                )}
+                ))}
 
                 {s.activeEffects.length > 0 && (
                   <div>
@@ -12507,9 +12593,20 @@ export default function App() {
                   </div>
                 )}
                 {spellSources.map((source) => {
-                  const available = spellsForSource(source)
                   const selectedForSource = s.selectedSpells.filter(
                     (spell) => spell.sourceId === source.id,
+                  )
+                  const available = spellsForSource(source).filter(
+                    (entry) =>
+                      role === "GM" ||
+                      selectedForSource.some(
+                        (spell) => spell.contentId === entry.id,
+                      ) ||
+                      source.grantedSpells.some(
+                        (name) =>
+                          name.toLowerCase() ===
+                          entry.feature.name.toLowerCase(),
+                      ),
                   )
                   const limits = spellSelectionLimits(s, source)
                   const prepared = selectedForSource.filter(
@@ -12533,6 +12630,11 @@ export default function App() {
                     <div key={source.id}>
                       <Heading>{source.spellList} spell selection</Heading>
                       <div className="rounded-md border border-rule bg-card p-2">
+                        <p className="mb-2 text-[11px] text-muted">
+                          {role === "GM"
+                            ? "DM management: authorize or remove spells for this character."
+                            : "Your DM controls available spells; manage preparation here."}
+                        </p>
                         <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted">
                           <span>
                             {source.mode === "prepared"
@@ -12638,6 +12740,7 @@ export default function App() {
                                       >
                                         <button
                                           type="button"
+                                          disabled={role !== "GM"}
                                           aria-pressed={!!selected}
                                           onClick={() =>
                                             toggleSelectedSpell(entry, source)
@@ -12646,7 +12749,7 @@ export default function App() {
                                             selected
                                               ? "bg-accent-soft text-accent"
                                               : "text-muted"
-                                          }`}
+                                          } disabled:cursor-default`}
                                         >
                                           {entry.feature.name}
                                           {Number(entry.feature.meta?.level)
@@ -13188,15 +13291,21 @@ export default function App() {
                                               )}
                                             <div className="grid gap-1.5">
                                               <button
+                                                disabled={
+                                                  entry.type === "spell" &&
+                                                  role !== "GM"
+                                                }
                                                 onClick={() =>
                                                   applyContent(entry)
                                                 }
-                                                className="w-full rounded bg-pink px-3 py-1.5 text-xs font-semibold text-onpink"
+                                                className="w-full rounded bg-pink px-3 py-1.5 text-xs font-semibold text-onpink disabled:opacity-40"
                                               >
                                                 {entry.type === "item"
                                                   ? "Add to inventory"
                                                   : entry.type === "spell"
-                                                    ? "Add to spell list"
+                                                    ? role === "GM"
+                                                      ? "Add to spell list"
+                                                      : "DM authorization required"
                                                     : "Apply to character"}
                                               </button>
                                               {!entry.builtin && (
@@ -13759,6 +13868,91 @@ function SkillChoices({
   )
 }
 
+function ExpertiseChoices({
+  sheet,
+  feature,
+  onChange,
+}: {
+  sheet: Sheet
+  feature: Feature
+  onChange: (chosen: string[]) => void
+}) {
+  const p = feature.proficiencies
+  if (!p || p.expertisePick <= 0) return null
+  const chosen = p.expertiseChosen.slice(0, p.expertisePick).filter(Boolean)
+  const selectedElsewhere = new Set(
+    sheet.traits
+      .filter((entry) => entry.id !== feature.id)
+      .flatMap((entry) => [
+        ...(entry.proficiencies?.expertise ?? []),
+        ...(entry.proficiencies?.expertiseChosen ?? []),
+      ]),
+  )
+  const trainedSkills = new Set(
+    sheet.traits.flatMap((entry) => {
+      const training = entry.proficiencies
+      if (!training) return []
+      return [
+        ...training.skills,
+        ...training.skillChosen.slice(0, training.skillPick).filter(Boolean),
+        ...training.expertise,
+      ]
+    }),
+  )
+  const skills = ALL_SKILLS.filter(
+    (skill) => trainedSkills.has(skill) || chosen.includes(skill),
+  )
+  const knowsThievesTools = proficiencyTraining(sheet).tools.some(
+    (tool) => tool.toLowerCase() === "thieves' tools",
+  )
+  const options = knowsThievesTools ? [...skills, "Thieves' Tools"] : skills
+  const full = chosen.length >= p.expertisePick
+  return (
+    <div className="mt-2 border-t border-rule pt-2">
+      <div className="mb-1 flex justify-between text-[11px]">
+        <span className="font-semibold">Expertise eligibility</span>
+        <span className="text-muted">
+          {chosen.length}/{p.expertisePick}
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-1">
+        {options.map((option) => {
+          const on = chosen.includes(option)
+          const blocked = !on && (full || selectedElsewhere.has(option))
+          return (
+            <button
+              key={option}
+              type="button"
+              disabled={blocked}
+              aria-pressed={on}
+              onClick={() =>
+                onChange(
+                  on
+                    ? chosen.filter((entry) => entry !== option)
+                    : [...chosen, option],
+                )
+              }
+              className={`rounded-full border px-2 py-0.5 text-[11px] ${
+                on
+                  ? "border-accent bg-accent-soft text-accent"
+                  : "border-rule text-muted"
+              } disabled:opacity-40`}
+            >
+              {option}
+            </button>
+          )
+        })}
+      </div>
+      {!options.length && (
+        <p className="text-[11px] text-muted">
+          Gain a skill or Thieves&apos; Tools proficiency before choosing
+          Expertise.
+        </p>
+      )}
+    </div>
+  )
+}
+
 function AbilitySetup({
   s,
   update,
@@ -13807,6 +14001,9 @@ function AbilitySetup({
   const skillFeatures = s.traits.filter(
     (f) => (f.proficiencies?.skillPick ?? 0) > 0,
   )
+  const expertiseFeatures = s.traits.filter(
+    (f) => (f.proficiencies?.expertisePick ?? 0) > 0,
+  )
   const setAsi = (id: string, value: string) =>
     update((p) => ({ ...p, asiChoices: { ...p.asiChoices, [id]: value } }))
   const setChosen = (id: string, skillChosen: string[]) =>
@@ -13816,6 +14013,21 @@ function AbilitySetup({
         f.id === id && f.proficiencies
           ? { ...f, proficiencies: { ...f.proficiencies, skillChosen } }
           : f,
+      ),
+    }))
+  const setExpertise = (id: string, expertiseChosen: string[]) =>
+    update((p) => ({
+      ...p,
+      traits: p.traits.map((feature) =>
+        feature.id === id && feature.proficiencies
+          ? {
+              ...feature,
+              proficiencies: {
+                ...feature.proficiencies,
+                expertiseChosen,
+              },
+            }
+          : feature,
       ),
     }))
   const abSelect = (value: Ab, onChange: (a: Ab) => void) => (
@@ -13943,9 +14155,35 @@ function AbilitySetup({
           </div>
         )}
         {method === "manual" && (
-          <p className="text-[11px] text-muted">
-            Edit the small score under each ability directly.
-          </p>
+          <div className="mt-2">
+            <Heading>Manual score entry</Heading>
+            <div className="grid grid-cols-3 gap-2 @2xl:grid-cols-6">
+              {ABILITIES.map((ability) => (
+                <label
+                  key={ability}
+                  className="rounded border border-rule bg-paper p-2 text-center"
+                >
+                  <span className="block text-[10px] font-semibold text-muted">
+                    {ability}
+                  </span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={s.scores[ability]}
+                    onChange={(event) =>
+                      setScores({
+                        ...s.scores,
+                        [ability]: clamp(Number(event.target.value), 1, 30),
+                      })
+                    }
+                    aria-label={`Manual ${ability} score`}
+                    className="w-full bg-transparent text-center font-mono"
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
         )}
       </div>
 
@@ -13960,6 +14198,26 @@ function AbilitySetup({
                   feature={f}
                   taken={grantedSkillLevels(s, f.id)}
                   onChange={(c) => setChosen(f.id, c)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {expertiseFeatures.length > 0 && (
+        <div>
+          <Heading>Expertise choices</Heading>
+          <div className="space-y-3">
+            {expertiseFeatures.map((feature) => (
+              <div
+                key={feature.id}
+                className="rounded-md border border-rule p-2"
+              >
+                <div className="text-xs font-semibold">{feature.name}</div>
+                <ExpertiseChoices
+                  sheet={s}
+                  feature={feature}
+                  onChange={(chosen) => setExpertise(feature.id, chosen)}
                 />
               </div>
             ))}

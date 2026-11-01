@@ -28,6 +28,8 @@ export type SrdSpell = {
   area: string
   damage: SrdSpellDamage[]
   healingBySlot: Record<string, string>
+  effectRollBySlot?: Record<string, string>
+  effectRollLabel?: string
 }
 
 export const SRD_SPELLS: SrdSpell[] = [
@@ -1252,6 +1254,18 @@ export const SRD_SPELLS: SrdSpell[] = [
     area: "15-foot cone",
     damage: [],
     healingBySlot: {},
+    effectRollLabel: "HP threshold",
+    effectRollBySlot: {
+      "1": "6d10",
+      "2": "8d10",
+      "3": "10d10",
+      "4": "12d10",
+      "5": "14d10",
+      "6": "16d10",
+      "7": "18d10",
+      "8": "20d10",
+      "9": "22d10",
+    },
   },
   {
     id: "spell-command",
