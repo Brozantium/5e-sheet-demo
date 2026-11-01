@@ -79,6 +79,7 @@ type ItemBase = {
   weight: number
   value: number
   description: string
+  contentId?: string
   combatFeatureId?: string
 }
 type WeaponClass = "simple" | "martial"
@@ -169,6 +170,7 @@ type FeatureSource = {
   hitDie: number
   speed: number
   size: CharacterSize
+  creatureType: string
 }
 type ContentType = "feat" | "background" | "race" | "subrace" | "class" | "subclass" | "item" | "spell" | "selection" | "invocation" | "pact-boon"
 type ContentEntry = {
@@ -266,7 +268,6 @@ type CharacterSize = "Small" | "Medium"
 type AbilityMethod = "manual" | "standard" | "point-buy" | "roll"
 type Sheet = {
   id: string
-  restOperations: string[]
   name: string
   cls: string
   race: string
@@ -278,7 +279,7 @@ type Sheet = {
   background: string
   alignment: string
   size: CharacterSize
-  creatureType: "Humanoid"
+  creatureType: string
   level: number
   subclass: string
   scores: Record<Ab, number>
@@ -306,6 +307,7 @@ type Sheet = {
   activeEffects: ActiveEffect[]
   dismissedFeatures: string[]
   inventory: InventoryItem[]
+  attachedContent: ContentEntry[]
   notes: string
   coins: Record<"CP" | "SP" | "EP" | "GP" | "PP", number>
 }
@@ -400,6 +402,7 @@ function emptyFeatureSource(): FeatureSource {
     hitDie: 8,
     speed: 30,
     size: "Medium",
+    creatureType: "Humanoid",
   }
 }
 
@@ -2683,7 +2686,6 @@ function syncLevelTraits(sheet: Sheet): Sheet {
 
 const initial: Sheet = {
   id: characterId(),
-  restOperations: [],
   name: "New Character",
   cls: "Barbarian",
   subclass: "Subclass",
@@ -2735,6 +2737,7 @@ const initial: Sheet = {
   activeEffects: [],
   dismissedFeatures: [],
   inventory: [],
+  attachedContent: [],
   notes: "",
   coins: { CP: 0, SP: 0, EP: 0, GP: 0, PP: 0 },
 }
@@ -2743,13 +2746,13 @@ function freshSheet(): Sheet {
   return {
     ...initial,
     id: characterId(),
-    restOperations: [],
     selectedSpells: [],
     traits: initial.traits.map((feature) => ({ ...feature })),
     activeEffects: [],
     activeConditions: [],
     customAttacks: [],
     inventory: [],
+    attachedContent: [],
   }
 }
 
@@ -2983,6 +2986,14 @@ function spellDamageLabel(damageType: string | undefined) {
   return standard
     ? `${standard[0].toUpperCase()}${standard.slice(1)} damage`
     : "Spell damage"
+}
+
+function supportsHigherLevelCasting(entry: ContentEntry) {
+  const meta = entry.feature.meta ?? {}
+  return (
+    meta.higherLevelEnabled === "true" ||
+    (!!meta.higherLevel?.trim() && meta.higherLevelEnabled !== "false")
+  )
 }
 
 function scaledSpellFormula(
@@ -3281,14 +3292,13 @@ type Tab =
   | "log"
 
 const SLOTS = 5
-const CHARACTER_SCHEMA_VERSION = 4
+const CHARACTER_SCHEMA_VERSION = 5
 const CONTENT_PACK_SCHEMA_VERSION = 1
 const MAX_IMPORT_BYTES = 2 * 1024 * 1024
 const NAME_MAX = 30
 const CHANNEL = "dnd5e.sheet.share"
 const ROLL_CHANNEL = "dnd5e.roll.share"
-const REST_CHANNEL = "dnd5e.rest.sync"
-const REST_BROWSER_CHANNEL = "dnd5e-rest-sync"
+const ITEM_GRANT_CHANNEL = "dnd5e.inventory.grant"
 const ROLL_STORAGE = "dnd5e-roll-log"
 const HP_META = "dnd5e.sheet.hp-bar"
 const HP_LABEL_META = "dnd5e.sheet.hp-label"
@@ -3296,64 +3306,9 @@ type Store = { active: number; slots: (Sheet | null)[] }
 type Person = { id: string; name: string }
 type ShareMsg = { to: string; fromName: string; sheet: Sheet }
 type RestKind = "short" | "long" | "dawn"
-type RestPatch = {
-  hp?: number
-  tempHp?: number
-  deathS?: number
-  deathF?: number
-  hitDiceUsed?: number
-  slots?: Sheet["slots"]
-  pactSlots?: PactSlots
-  traitUses: { id: string; used: number }[]
-  itemCharges: { id: string; charges: number }[]
-  removedEffectIds: string[]
-  removedConditionIds: string[]
-}
-type RestMessage = {
+type ItemGrantMessage = {
   characterId: string
-  operationId: string
-  kind: RestKind
-  senderRole: "GM"
-  patch: RestPatch
-}
-
-function isRestMessage(value: unknown): value is RestMessage {
-  if (!value || typeof value !== "object") return false
-  const message = value as Partial<RestMessage>
-  const patch = message.patch as Partial<RestPatch> | undefined
-  return (
-    typeof message.characterId === "string" &&
-    message.characterId.length > 0 &&
-    typeof message.operationId === "string" &&
-    message.operationId.length > 0 &&
-    (message.kind === "short" ||
-      message.kind === "long" ||
-      message.kind === "dawn") &&
-    message.senderRole === "GM" &&
-    !!patch &&
-    Array.isArray(patch.traitUses) &&
-    patch.traitUses.every(
-      (entry) =>
-        !!entry &&
-        typeof entry.id === "string" &&
-        typeof entry.used === "number" &&
-        Number.isFinite(entry.used),
-    ) &&
-    Array.isArray(patch.itemCharges) &&
-    patch.itemCharges.every(
-      (entry) =>
-        !!entry &&
-        typeof entry.id === "string" &&
-        typeof entry.charges === "number" &&
-        Number.isFinite(entry.charges),
-    ) &&
-    Array.isArray(patch.removedEffectIds) &&
-    patch.removedEffectIds.every((id) => typeof id === "string") &&
-    Array.isArray(patch.removedConditionIds) &&
-    patch.removedConditionIds.every((id) => typeof id === "string") &&
-    (!patch.slots || Array.isArray(patch.slots)) &&
-    (!patch.pactSlots || typeof patch.pactSlots === "object")
-  )
+  content: ContentEntry
 }
 
 type HpBarMeta = {
@@ -3825,9 +3780,7 @@ function restoreInventoryCharges(
 function applyRestToSheet(
   sheet: Sheet,
   kind: RestKind,
-  operationId: string,
 ) {
-  if (sheet.restOperations.includes(operationId)) return sheet
   const recharges: Recharge[] =
     kind === "short"
       ? ["short"]
@@ -3849,7 +3802,6 @@ function applyRestToSheet(
           condition.expiration !== "long"
         : condition.expiration !== kind,
     ),
-    restOperations: [...sheet.restOperations, operationId].slice(-20),
   }
   if (kind === "short")
     return { ...next, pactSlots: { ...sheet.pactSlots, used: 0 } }
@@ -3866,109 +3818,6 @@ function applyRestToSheet(
     ),
     slots: sheet.slots.map((slot) => ({ ...slot, used: 0 })),
     pactSlots: { ...sheet.pactSlots, used: 0 },
-  }
-}
-
-function createRestPatch(before: Sheet, after: Sheet, kind: RestKind): RestPatch {
-  const changedTraits = after.traits.filter(
-    (feature) =>
-      (feature.used ?? 0) !==
-      (before.traits.find((entry) => entry.id === feature.id)?.used ?? 0),
-  )
-  const changedItems = after.inventory.filter(
-    (item) =>
-      item.category === "adventuring-gear" &&
-      item.charges !==
-        (
-          before.inventory.find(
-            (entry) =>
-              entry.id === item.id && entry.category === "adventuring-gear",
-          ) as GearItem | undefined
-        )?.charges,
-  )
-  const patch: RestPatch = {
-    traitUses: changedTraits.map((feature) => ({
-      id: feature.id,
-      used: feature.used ?? 0,
-    })),
-    itemCharges: changedItems.map((item) => ({
-      id: item.id,
-      charges: (item as GearItem).charges,
-    })),
-    removedEffectIds: before.activeEffects
-      .filter(
-        (effect) => !after.activeEffects.some((entry) => entry.id === effect.id),
-      )
-      .map((effect) => effect.id),
-    removedConditionIds: before.activeConditions
-      .filter(
-        (condition) =>
-          !after.activeConditions.some((entry) => entry.id === condition.id),
-      )
-      .map((condition) => condition.id),
-  }
-  if (kind === "short") patch.pactSlots = after.pactSlots
-  if (kind === "long") {
-    patch.hp = after.hp
-    patch.tempHp = after.tempHp
-    patch.deathS = after.deathS
-    patch.deathF = after.deathF
-    patch.hitDiceUsed = after.hitDiceUsed
-    patch.slots = after.slots
-    patch.pactSlots = after.pactSlots
-  }
-  return patch
-}
-
-function applyRestPatch(sheet: Sheet, message: RestMessage) {
-  if (
-    sheet.id !== message.characterId ||
-    sheet.restOperations.includes(message.operationId)
-  )
-    return sheet
-  const traitUses = new Map(
-    message.patch.traitUses.map((entry) => [entry.id, entry.used]),
-  )
-  const itemCharges = new Map(
-    message.patch.itemCharges.map((entry) => [entry.id, entry.charges]),
-  )
-  return {
-    ...sheet,
-    ...(message.patch.hp !== undefined ? { hp: message.patch.hp } : {}),
-    ...(message.patch.tempHp !== undefined
-      ? { tempHp: message.patch.tempHp }
-      : {}),
-    ...(message.patch.deathS !== undefined
-      ? { deathS: message.patch.deathS }
-      : {}),
-    ...(message.patch.deathF !== undefined
-      ? { deathF: message.patch.deathF }
-      : {}),
-    ...(message.patch.hitDiceUsed !== undefined
-      ? { hitDiceUsed: message.patch.hitDiceUsed }
-      : {}),
-    ...(message.patch.slots ? { slots: message.patch.slots } : {}),
-    ...(message.patch.pactSlots
-      ? { pactSlots: message.patch.pactSlots }
-      : {}),
-    traits: sheet.traits.map((feature) =>
-      traitUses.has(feature.id)
-        ? { ...feature, used: traitUses.get(feature.id) }
-        : feature,
-    ),
-    inventory: sheet.inventory.map((item) =>
-      itemCharges.has(item.id) && item.category === "adventuring-gear"
-        ? { ...item, charges: itemCharges.get(item.id) ?? item.charges }
-        : item,
-    ),
-    activeEffects: sheet.activeEffects.filter(
-      (effect) => !message.patch.removedEffectIds.includes(effect.id),
-    ),
-    activeConditions: sheet.activeConditions.filter(
-      (condition) =>
-        !message.patch.removedConditionIds.includes(condition.id),
-    ),
-    restOperations: [...sheet.restOperations, message.operationId].slice(-20),
   }
 }
 
@@ -4175,6 +4024,11 @@ function normalizeFeature(value: unknown): Feature | null {
               : 30,
           size:
             raw.source.size === "Small" ? "Small" as const : "Medium" as const,
+          creatureType:
+            typeof raw.source.creatureType === "string" &&
+            raw.source.creatureType.trim()
+              ? raw.source.creatureType.trim()
+              : "Humanoid",
         }
       : undefined
   const defaults = emptyFeatureEffects()
@@ -4225,6 +4079,20 @@ function normalizeFeature(value: unknown): Feature | null {
           ) as Record<string, string>,
         }
       : {}),
+  }
+}
+
+function normalizeContentEntry(value: unknown): ContentEntry | null {
+  if (!value || typeof value !== "object") return null
+  const raw = value as Partial<ContentEntry>
+  if (!raw.type || !CONTENT_TYPE_ORDER.includes(raw.type)) return null
+  const feature = normalizeFeature(raw.feature)
+  if (!feature) return null
+  return {
+    id: typeof raw.id === "string" ? raw.id : feature.id,
+    type: raw.type,
+    builtin: false,
+    feature,
   }
 }
 
@@ -4457,6 +4325,15 @@ const BUILTIN_CONTENT: ContentEntry[] = [
       primaryDamage?.byCharacterLevel["1"] ??
       ""
     const baseHealing = spell.healingBySlot[String(spell.level)] ?? ""
+    const higherDamage = damageParts.some((part) =>
+      Object.keys(part.bySlot).some((level) => Number(level) > spell.level),
+    )
+    const higherHealing = Object.keys(spell.healingBySlot).some(
+      (level) => Number(level) > spell.level,
+    )
+    const higherLevelEnabled =
+      spell.level > 0 &&
+      (!!spell.higherLevel.trim() || higherDamage || higherHealing)
     const rulesText = [spell.description, spell.higherLevel]
       .filter(Boolean)
       .join("\n\n")
@@ -4474,6 +4351,14 @@ const BUILTIN_CONTENT: ContentEntry[] = [
         duration: spell.duration,
         text: spell.description,
         higherLevel: spell.higherLevel,
+        higherLevelEnabled: String(higherLevelEnabled),
+        higherLevelMode: higherDamage
+          ? "damage"
+          : higherHealing
+            ? "healing"
+            : higherLevelEnabled
+              ? "other"
+              : "none",
         classes: spell.classes.join(","),
         concentration: String(spell.concentration),
         ritual: String(spell.ritual),
@@ -4845,6 +4730,7 @@ function normalizeItem(value: unknown): InventoryItem | null {
     value:
       typeof raw.value === "number" ? Math.max(0, Math.round(raw.value)) : 0,
     description: typeof raw.description === "string" ? raw.description : "",
+    ...(typeof raw.contentId === "string" ? { contentId: raw.contentId } : {}),
     ...(fallback.category === "adventuring-gear"
       ? {
           charges: clamp(Number((raw as Partial<GearItem>).charges) || 0, 0, Math.max(0, Number((raw as Partial<GearItem>).maxCharges) || 0)),
@@ -4864,6 +4750,38 @@ function normalizeItem(value: unknown): InventoryItem | null {
         }
       : {}),
   } as InventoryItem
+}
+
+function inventoryItemFromContent(entry: ContentEntry): InventoryItem | null {
+  if (entry.type !== "item") return null
+  const meta = entry.feature.meta ?? {}
+  const category = ITEM_CATEGORIES.some((item) => item.value === meta.itemCategory)
+    ? meta.itemCategory as ItemCategory
+    : "other"
+  const base = newInventoryItem(category, itemId())
+  return normalizeItem({
+    ...base,
+    ...meta,
+    id: base.id,
+    category,
+    contentId: entry.id,
+    name: entry.feature.name,
+    description: entry.feature.description,
+    quantity: Math.max(1, Math.round(Number(meta.quantity) || 1)),
+    weight: Math.max(0, Number(meta.weight) || 0),
+    value: Math.max(0, Math.round((Number(meta.value) || 0) * 100)),
+    equipped: false,
+    weaponKind: meta.weaponKind === "ranged" ? "ranged" : "melee",
+    weaponClass: meta.weaponClass === "martial" ? "martial" : "simple",
+    props: (meta.props ?? "").split(",").map((value) => value.trim()),
+    armorMode: meta.armorMode === "bonus" ? "bonus" : "base",
+    baseAc: Number(meta.baseAc) || 10,
+    acBonus: Number(meta.acBonus) || 0,
+    charges: Number(meta.charges) || Number(meta.maxCharges) || 0,
+    maxCharges: Number(meta.maxCharges) || 0,
+    chargeCost: Math.max(1, Number(meta.chargeCost) || 1),
+    chargeRecharge: meta.chargeRecharge || "manual",
+  })
 }
 
 function normalizeCondition(value: unknown): ActiveCondition | null {
@@ -5039,11 +4957,6 @@ function normalize(saved: Partial<Sheet> & Record<string, any>): Sheet {
   return syncLevelTraits({
     ...initial,
     id: typeof saved.id === "string" ? saved.id : characterId(),
-    restOperations: Array.isArray(saved.restOperations)
-      ? saved.restOperations
-          .filter((value): value is string => typeof value === "string")
-          .slice(-20)
-      : [],
     subclass:
       typeof saved.subclass === "string" ? saved.subclass : initial.subclass,
     background:
@@ -5139,10 +5052,18 @@ function normalize(saved: Partial<Sheet> & Record<string, any>): Sheet {
         : initial.name,
     cls,
     size,
-    creatureType: "Humanoid",
+    creatureType:
+      typeof saved.creatureType === "string" && saved.creatureType.trim()
+        ? saved.creatureType.trim()
+        : "Humanoid",
     traits,
     dismissedFeatures,
     inventory,
+    attachedContent: Array.isArray(saved.attachedContent)
+      ? saved.attachedContent
+          .map(normalizeContentEntry)
+          .filter((entry): entry is ContentEntry => !!entry)
+      : [],
     hitDie,
   })
 }
@@ -5452,7 +5373,6 @@ export default function App() {
   const restRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const contentFileRef = useRef<HTMLInputElement>(null)
-  const restBrowserRef = useRef<BroadcastChannel | null>(null)
   const gmConnectionIdsRef = useRef<Set<string>>(new Set())
   const noticeTimer = useRef<number>(0)
   const playerIdRef = useRef("local")
@@ -5465,27 +5385,6 @@ export default function App() {
     window.clearTimeout(noticeTimer.current)
     noticeTimer.current = window.setTimeout(() => setNotice(""), 2600)
   }
-
-  const applyIncomingRest = (value: unknown) => {
-    if (!isRestMessage(value)) return
-    setStore((current) => ({
-      ...current,
-      slots: current.slots.map((sheet) =>
-        sheet ? applyRestPatch(sheet, value) : sheet,
-      ),
-    }))
-  }
-
-  useEffect(() => {
-    if (typeof BroadcastChannel === "undefined") return
-    const channel = new BroadcastChannel(REST_BROWSER_CHANNEL)
-    restBrowserRef.current = channel
-    channel.onmessage = (event) => applyIncomingRest(event.data)
-    return () => {
-      channel.close()
-      restBrowserRef.current = null
-    }
-  }, [])
 
   const inObr = OBR.isAvailable
   useEffect(() => {
@@ -5547,9 +5446,49 @@ export default function App() {
         }),
       )
       off.push(
-        OBR.broadcast.onMessage(REST_CHANNEL, (ev) => {
-          if (gmConnectionIdsRef.current.has(ev.connectionId))
-            applyIncomingRest(ev.data)
+        OBR.broadcast.onMessage(ITEM_GRANT_CHANNEL, (ev) => {
+          if (!gmConnectionIdsRef.current.has(ev.connectionId)) return
+          const value = ev.data as Partial<ItemGrantMessage>
+          if (typeof value.characterId !== "string") return
+          const content = normalizeContentEntry(value.content)
+          if (!content || content.type !== "item") return
+          setStore((current) => ({
+            ...current,
+            slots: current.slots.map((sheet) => {
+              if (!sheet || sheet.id !== value.characterId) return sheet
+              if (sheet.inventory.some((item) => item.contentId === content.id))
+                return sheet
+              const item = inventoryItemFromContent(content)
+              if (!item) return sheet
+              const attachedContent = content.builtin
+                ? sheet.attachedContent
+                : [
+                    ...sheet.attachedContent.filter(
+                      (entry) => entry.id !== content.id,
+                    ),
+                    content,
+                  ]
+              const linked = isCombatFeature(content.feature)
+                ? {
+                    ...content.feature,
+                    id: `applied-${content.id}-${item.id}`,
+                    category: "other" as const,
+                    source: {
+                      ...emptyFeatureSource(),
+                      parentName: `Item: ${content.feature.name}`,
+                    },
+                  }
+                : null
+              if (linked) item.combatFeatureId = linked.id
+              return {
+                ...sheet,
+                inventory: [...sheet.inventory, item],
+                attachedContent,
+                traits: linked ? [...sheet.traits, linked] : sheet.traits,
+              }
+            }),
+          }))
+          flash(`${content.feature.name} was added by the GM`)
         }),
       )
       const syncLabels = () => void queueHpLabelRefresh()
@@ -6067,10 +6006,18 @@ export default function App() {
       let nextHitDie = sheet.hitDie
       let nextSpeed = sheet.speed
       let nextSize = sheet.size
+      let nextCreatureType = sheet.creatureType
       let nextHpDice = sheet.hpDice
       let nextHpLock = sheet.hpLock
       let nextInventory = sheet.inventory
       let nextSelectedSpells = sheet.selectedSpells
+      let nextAttachedContent = sheet.attachedContent
+      if (!entry.builtin) {
+        nextAttachedContent = [
+          ...nextAttachedContent.filter((content) => content.id !== entry.id),
+          entry,
+        ]
+      }
 
       if (entry.type === "race" || entry.type === "subrace") {
         nextTraits = nextTraits.filter((f) => f.category !== "racial")
@@ -6121,6 +6068,10 @@ export default function App() {
           (entry.builtin && name === "Wood Elf" ? 5 : 0)
         nextSize =
           parent?.feature.source?.size ?? entry.feature.source?.size ?? "Medium"
+        nextCreatureType =
+          parent?.feature.source?.creatureType ??
+          entry.feature.source?.creatureType ??
+          "Humanoid"
       } else if (entry.type === "class") {
         nextTraits = nextTraits.filter(
           (f) =>
@@ -6219,48 +6170,19 @@ export default function App() {
           nextTraits = nextTraits.filter((f) => f.category !== "pact-boon")
         nextTraits = [...nextTraits.filter((f) => f.id !== applied.id), applied]
       } else if (entry.type === "item") {
-        const m = entry.feature.meta ?? {}
-        const category: ItemCategory = ITEM_CATEGORIES.some(
-          (c) => c.value === m.itemCategory,
+        const item = inventoryItemFromContent(entry)
+        if (!item) return sheet
+        if (isCombatFeature(entry.feature))
+          item.combatFeatureId = `applied-${entry.id}-${item.id}`
+        nextInventory = nextInventory.some(
+          (owned) => owned.contentId === entry.id,
         )
-          ? m.itemCategory as ItemCategory
-          : "other"
-        const base = newInventoryItem(category, itemId())
-        const extra: Record<string, unknown> = {}
-        if (category === "weapon") {
-          const kind: WeaponKind =
-            m.weaponKind === "ranged" ? "ranged" : "melee"
-          Object.assign(extra, {
-            weaponKind: kind,
-            weaponClass: m.weaponClass === "martial" ? "martial" : "simple",
-            damageDice: m.damageDice ?? "",
-            damageType: m.damageType ?? "",
-          })
-        }
-        if (category === "armor") {
-          Object.assign(extra, {
-            armorMode: m.armorMode === "bonus" ? "bonus" : "base",
-            baseAc: Number(m.baseAc) || 10,
-            acBonus: m.armorMode === "bonus" ? Number(m.baseAc) || 0 : 0,
-          })
-        }
-        const item = {
-          ...base,
-          ...extra,
-          ...(isCombatFeature(entry.feature)
-            ? { combatFeatureId: `applied-${entry.id}-${base.id}` }
-            : {}),
-          name: entry.feature.name,
-          description: entry.feature.description,
-          quantity: Math.max(1, Math.round(Number(m.quantity) || 1)),
-          weight: Math.max(0, Math.round(Number(m.weight) || 0)),
-          value: Math.max(0, Math.round((Number(m.value) || 0) * 100)),
-        } as InventoryItem
-        nextInventory = [...nextInventory, item]
+          ? nextInventory
+          : [...nextInventory, item]
         if (isCombatFeature(entry.feature)) {
           const linked: Feature = {
             ...entry.feature,
-            id: `applied-${entry.id}-${base.id}`,
+            id: `applied-${entry.id}-${item.id}`,
             category: "other",
             source: {
               ...emptyFeatureSource(),
@@ -6329,9 +6251,11 @@ export default function App() {
         hitDie: nextHitDie,
         speed: nextSpeed,
         size: nextSize,
+        creatureType: nextCreatureType,
         hpDice: nextHpDice,
         hpLock: nextHpLock,
         inventory: nextInventory,
+        attachedContent: nextAttachedContent,
         selectedSpells: nextSelectedSpells,
         traits: nextTraits,
         activeEffects: sheet.activeEffects.filter((effect) =>
@@ -6339,6 +6263,17 @@ export default function App() {
         ),
       }
     })
+    if (entry.type === "item" && role === "GM" && inObr && OBR.isReady) {
+      const message: ItemGrantMessage = {
+        characterId: s.id,
+        content: entry,
+      }
+      OBR.broadcast
+        .sendMessage(ITEM_GRANT_CHANNEL, message, { destination: "REMOTE" })
+        .catch(() =>
+          flash("Item added locally, but could not be delivered to the owner"),
+        )
+    }
     flash(`Applied ${name}`)
   }
   const deleteContent = (entry: ContentEntry) => {
@@ -7192,38 +7127,7 @@ export default function App() {
   }
 
   const performRest = (kind: RestKind) => {
-    if (role !== "GM") {
-      flash("Only the GM can apply rests and Dawn recovery")
-      return
-    }
-    const operationId = `rest-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
-    let message: RestMessage | null = null
-    setStore((current) => {
-      const before = current.slots[current.active]
-      if (!before) return current
-      const after = applyRestToSheet(before, kind, operationId)
-      message = {
-        characterId: before.id,
-        operationId,
-        kind,
-        senderRole: "GM",
-        patch: createRestPatch(before, after, kind),
-      }
-      return {
-        ...current,
-        slots: current.slots.map((sheet, index) =>
-          index === current.active ? after : sheet,
-        ),
-      }
-    })
-    queueMicrotask(() => {
-      if (!message) return
-      restBrowserRef.current?.postMessage(message)
-      if (inObr && OBR.isReady)
-        OBR.broadcast
-          .sendMessage(REST_CHANNEL, message, { destination: "REMOTE" })
-          .catch(() => flash("Rest applied locally, but sync failed"))
-    })
+    setS((sheet) => applyRestToSheet(sheet, kind))
     flash(
       kind === "long"
         ? "Long rest: HP, slots and configured resources restored"
@@ -7343,7 +7247,15 @@ export default function App() {
     content: "SRD options & custom builders",
     log: "Shared room rolls",
   }
-  const contentEntries = [...BUILTIN_CONTENT, ...customContent]
+  const contentEntries = [
+    ...BUILTIN_CONTENT,
+    ...customContent,
+    ...s.attachedContent.filter(
+      (attached) =>
+        !customContent.some((local) => local.id === attached.id) &&
+        !BUILTIN_CONTENT.some((builtin) => builtin.id === attached.id),
+    ),
+  ]
   const spellSources = spellcastingSources(s)
   const spellEntries = contentEntries.filter((entry) => entry.type === "spell")
   const selectedSpellEntries = s.selectedSpells.flatMap((selected) => {
@@ -7594,14 +7506,21 @@ export default function App() {
         )
         return
       }
-      pushRoll({
-        label: `${entry.feature.name} · Spell cast`,
-        die: "d0",
-        face: 0,
-        mod: 0,
-        total: 0,
-        note: `Level ${castLevel || 0}`,
-      })
+      const meta = entry.feature.meta ?? {}
+      if (meta.attackType && !meta.saveAbility) {
+        roll(
+          `${entry.feature.name} spell attack`,
+          pb + mod(scores[source.ability]),
+          "attack",
+        )
+        return
+      }
+      pushActivity(
+        `${entry.feature.name} · Spell cast`,
+        meta.saveAbility
+          ? `Target makes a ${meta.saveAbility} save against DC ${8 + pb + mod(scores[source.ability])}`
+          : `Level ${castLevel || 0}`,
+      )
     })
   }
   const useSpellFormula = (
@@ -7838,13 +7757,12 @@ export default function App() {
           <h1 className="min-w-0 flex-1 truncate text-lg font-medium">
             D&amp;D 5e
           </h1>
-          {role === "GM" && (
-            <div ref={restRef}>
+          <div ref={restRef}>
               <button
                 onClick={() => setRestOpen((o) => !o)}
-                aria-label="DM tools"
+                aria-label="Rest and recovery"
                 aria-expanded={restOpen}
-                title="DM tools: rest"
+                title="Rest and recovery"
                 className={`grid h-8 w-8 place-items-center rounded-full transition-colors ${
                   restOpen ? "bg-white/25" : "hover:bg-white/20"
                 }`}
@@ -7866,7 +7784,7 @@ export default function App() {
               {restOpen && (
                 <div
                   role="dialog"
-                  aria-label="DM tools"
+                  aria-label="Rest and recovery"
                   className="absolute right-2 top-11 z-30 w-44 rounded-lg border border-white/25 bg-card/60 p-2 text-ink shadow-[0_12px_40px_-8px_rgba(0,0,0,0.6)] backdrop-blur-md"
                 >
                   <MenuItem
@@ -7896,7 +7814,6 @@ export default function App() {
                 </div>
               )}
             </div>
-          )}
         </header>
 
         {notice && (
@@ -8292,6 +8209,22 @@ export default function App() {
                               min={0}
                               onChange={(speed) => setSource({ speed })}
                               className="w-full border-b border-rule pb-1 text-left"
+                            />
+                          </label>
+                          <label className="col-span-2 block">
+                            <span className="block text-[10px] text-muted">
+                              Creature type
+                            </span>
+                            <input
+                              value={source.creatureType}
+                              onChange={(event) =>
+                                setSource({
+                                  creatureType:
+                                    event.target.value || "Humanoid",
+                                })
+                              }
+                              placeholder="Humanoid"
+                              className="w-full border-b border-rule pb-1 text-sm"
                             />
                           </label>
                         </div>
@@ -8705,6 +8638,25 @@ export default function App() {
                           </label>
                           <label className="block">
                             <span className="block text-[10px] text-muted">
+                              Spell attack
+                            </span>
+                            <select
+                              value={meta.attackType ?? ""}
+                              onChange={(event) =>
+                                setMeta({
+                                  attackType: event.target.value,
+                                  spellAttack: String(!!event.target.value),
+                                })
+                              }
+                              className="w-full border-b border-rule pb-1 text-sm"
+                            >
+                              <option value="">None</option>
+                              <option value="melee">Melee spell attack</option>
+                              <option value="ranged">Ranged spell attack</option>
+                            </select>
+                          </label>
+                          <label className="block">
+                            <span className="block text-[10px] text-muted">
                               Save ability
                             </span>
                             <select
@@ -8758,6 +8710,68 @@ export default function App() {
                               className="w-full border-b border-rule pb-1 text-sm"
                             />
                           </label>
+                          <label className="col-span-2 flex items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={meta.higherLevelEnabled === "true"}
+                              onChange={(event) =>
+                                setMeta({
+                                  higherLevelEnabled: String(
+                                    event.target.checked,
+                                  ),
+                                })
+                              }
+                            />
+                            Supports higher-level casting
+                          </label>
+                          {meta.higherLevelEnabled === "true" && (
+                            <>
+                          <label className="block">
+                            <span className="block text-[10px] text-muted">
+                              Higher-level behavior
+                            </span>
+                            <select
+                              value={meta.higherLevelMode ?? "other"}
+                              onChange={(event) =>
+                                setMeta({ higherLevelMode: event.target.value })
+                              }
+                              className="w-full border-b border-rule pb-1 text-sm"
+                            >
+                              <option value="damage">Additional damage</option>
+                              <option value="healing">Additional healing</option>
+                              <option value="targets">Additional targets</option>
+                              <option value="threshold">Slot thresholds</option>
+                              <option value="other">Other explicit effect</option>
+                            </select>
+                          </label>
+                          <label className="block">
+                            <span className="block text-[10px] text-muted">
+                              Slot thresholds
+                            </span>
+                            <input
+                              value={meta.higherLevelThresholds ?? ""}
+                              onChange={(event) =>
+                                setMeta({
+                                  higherLevelThresholds: event.target.value,
+                                })
+                              }
+                              placeholder="e.g. 3,5,7"
+                              className="w-full border-b border-rule pb-1 text-sm"
+                            />
+                          </label>
+                          <label className="col-span-2 block">
+                            <span className="block text-[10px] text-muted">
+                              Higher-level effect
+                            </span>
+                            <textarea
+                              value={meta.higherLevel ?? ""}
+                              onChange={(event) =>
+                                setMeta({ higherLevel: event.target.value })
+                              }
+                              rows={3}
+                              className="w-full rounded border border-rule p-2 text-sm"
+                            />
+                          </label>
                           <label className="block">
                             <span className="block text-[10px] text-muted">
                               Upcast dice per level
@@ -8784,6 +8798,8 @@ export default function App() {
                               className="w-full border-b border-rule pb-1 text-sm"
                             />
                           </label>
+                            </>
+                          )}
                         </div>
                       </div>
                     )}
@@ -11905,6 +11921,8 @@ export default function App() {
                               ? [{ type: meta.damageType }]
                               : []
                           })()
+                          const higherLevelCasting =
+                            supportsHigherLevelCasting(entry)
                           const eligibleLevels =
                             spellLevel === 0
                               ? [0]
@@ -11917,6 +11935,8 @@ export default function App() {
                                   ? [spellLevel]
                                   : s.slots.flatMap((slot, index) =>
                                       index + 1 >= spellLevel &&
+                                      (index + 1 === spellLevel ||
+                                        higherLevelCasting) &&
                                       slot.used < slot.max
                                         ? [index + 1]
                                         : [],
@@ -12019,7 +12039,9 @@ export default function App() {
                                 )}
                               </details>
                               <div className="mt-2 flex flex-wrap gap-1.5">
-                                {spellLevel > 0 && (
+                                {spellLevel > 0 &&
+                                  higherLevelCasting &&
+                                  eligibleLevels.length > 1 && (
                                   <select
                                     value={castLevel}
                                     onChange={(event) =>
