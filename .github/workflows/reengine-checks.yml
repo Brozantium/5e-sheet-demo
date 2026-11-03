@@ -5,13 +5,10 @@ on:
   # including application-only changes outside the Reengine folder.
   push:
     branches: [main]
+  # Keep this check present on every PR targeting main so it can be required
+  # by branch protection without being skipped by path filters.
   pull_request:
-    paths:
-      - "reengine/**"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - ".github/workflows/reengine-checks.yml"
-      - ".github/workflows/deploy.yml"
+    branches: [main]
   workflow_dispatch:
 
 permissions:
