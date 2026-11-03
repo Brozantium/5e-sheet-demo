@@ -105,7 +105,7 @@ test("known-option prerequisites validate both the selection and selected option
 test("option set ruleset must match its consuming feature unless either side is shared", () => {
   const registry = new ContentRegistry();
   registry.registerOptionSet(makeOptionSet("options-2024", [], "2024"));
-  registry.registerFeature(makeFeature("2014-feature", [makeSelection("pick", "options-2024")], "2014"));
+  registry.registerFeature(makeFeature("feature-2014", [makeSelection("pick", "options-2024")], "2014"));
 
   assert.ok(registry.validateReferences().some((issue) => issue.code === "incompatible-ruleset"));
 });
