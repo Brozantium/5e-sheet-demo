@@ -6,11 +6,17 @@ export interface SpellModifierValidation {
   issues: string[];
 }
 
+export interface SpellModifierResourceState {
+  maximum: number;
+  current: number;
+}
+
 export function validateSpellModifierApplication(
   mechanic: SpellModifierMechanic,
   selectedOptionIds: string[],
   knownOptionIds: string[],
   options: OptionDefinition[],
+  resources: Record<string, SpellModifierResourceState> = {},
 ): SpellModifierValidation {
   const issues: string[] = [];
   const uniqueIds = [...new Set(selectedOptionIds)];
@@ -37,7 +43,21 @@ export function validateSpellModifierApplication(
       issues.push(option.name + " does not use the configured resource pool.");
       continue;
     }
-    cost += option.resourceCost.amount;
+    const optionCost = option.resourceCost.amount;
+    if (!Number.isFinite(optionCost) || optionCost <= 0) {
+      issues.push(option.name + " has an invalid resource cost.");
+      continue;
+    }
+    cost += optionCost;
+  }
+
+  if (cost > 0) {
+    const resource = resources[mechanic.resourceId];
+    if (!resource) {
+      issues.push("Resource pool " + mechanic.resourceId + " is missing.");
+    } else if (!Number.isFinite(resource.current) || resource.current < cost) {
+      issues.push("Not enough " + mechanic.resourceId + " remaining.");
+    }
   }
 
   return { valid: issues.length === 0, cost, issues };

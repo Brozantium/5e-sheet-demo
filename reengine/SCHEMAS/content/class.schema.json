@@ -6,22 +6,44 @@
   "additionalProperties": false,
   "required": ["id", "name", "ruleset", "hitDie", "features", "progression"],
   "properties": {
-    "id": { "type": "string" },
-    "name": { "type": "string" },
+    "id": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 },
     "ruleset": { "enum": ["2014", "2024", "shared"] },
-    "source": { "type": "object" },
     "hitDie": { "type": "integer", "enum": [6, 8, 10, 12] },
-    "primaryAbilities": { "type": "array", "items": { "enum": ["str", "dex", "con", "int", "wis", "cha"] } },
-    "features": { "type": "array", "items": { "$ref": "feature.schema.json" } },
-    "progression": {
+    "primaryAbilities": {
       "type": "array",
-      "items": { "type": "object", "required": ["level", "values"], "properties": {
-        "level": { "type": "integer", "minimum": 1, "maximum": 20 },
-        "values": { "type": "object", "additionalProperties": { "type": ["integer", "string", "boolean"] } }
-      }, "additionalProperties": false }
+      "items": { "enum": ["str", "dex", "con", "int", "wis", "cha"] }
     },
-    "subclass": { "type": "object", "properties": {
-      "label": { "type": "string" }, "level": { "type": "integer", "minimum": 1 }
-    }, "additionalProperties": false }
+    "features": { "type": "array", "items": { "$ref": "feature.schema.json" } },
+    "progression": { "$ref": "#/$defs/progressionTable" }
+  },
+  "$defs": {
+    "progressionTable": {
+      "type": "object",
+      "required": ["id", "classId", "rows"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "classId": { "type": "string", "minLength": 1 },
+        "levelFromClassId": { "type": "string", "minLength": 1 },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["level", "values"],
+            "properties": {
+              "level": { "type": "integer", "minimum": 1, "maximum": 20 },
+              "values": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": ["integer", "string", "boolean", "null"]
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
   }
 }

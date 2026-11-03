@@ -3,8 +3,9 @@
 ## Completed
 
 - RE-001 — read-only audit of the current app and reengine workspace.
-- RE-002 — isolated TypeScript checking and Node test harness for reengine.
-- RE-003 (weapon-property parity slice) — legacy weapon property lock/clean behavior ported to a pure item engine and covered by exhaustive regression tests.
+- RE-002 — isolated TypeScript checking and Node test harness established.
+- RE-003 (weapon-property parity slice) — legacy weapon property lock/clean behavior ported with exhaustive regression tests.
+- RE-004 (core engine correction slice) — sparse/subclass progression, draft and batch-aware selection validation, assignment limits, recovery hierarchy, spell-modifier resource checks, registry duplicate/reference checks, and schema/type alignment.
 
 ## Phase 0 — Archaeology and boundaries
 - Inventory legacy bundles and map their responsibilities.

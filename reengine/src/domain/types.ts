@@ -4,7 +4,13 @@ export type Recovery = "short-rest" | "long-rest" | "dawn" | "manual" | "special
 
 export type ProgressionValue =
   | { kind: "fixed"; value: number }
-  | { kind: "class-table"; classId: string; column: string; fallback?: number };
+  | {
+      kind: "class-table";
+      tableId: string;
+      column: string;
+      levelFromClassId?: string;
+      fallback?: number;
+    };
 
 export type Requirement =
   | { kind: "class-level"; classId: string; minimum: number }
@@ -47,7 +53,10 @@ export interface ProgressionRow {
 
 export interface ProgressionTable {
   id: string;
+  /** Class or progression owner used as the default level source. */
   classId: string;
+  /** Override when this table advances from another class, such as a subclass table. */
+  levelFromClassId?: string;
   rows: ProgressionRow[];
 }
 
@@ -68,6 +77,8 @@ export interface AssignmentMechanic {
   targetKind: "inventory-item" | "creature" | "spell";
   capacity: ProgressionValue;
   maxPerTarget: number;
+  /** Optional upper bound for how often one selected option may be assigned. */
+  maxPerOption?: number;
   resetOn?: "short-rest" | "long-rest" | "never";
   eligibleItemTags?: string[];
 }
@@ -117,7 +128,7 @@ export interface FeatureDefinition {
   description: string;
   ruleset: Ruleset | "shared";
   optional?: boolean;
-  source?: { book?: string; page?: string | number };
+  source?: { book?: string; page?: string | number; publisher?: string; license?: string };
   mechanics: FeatureMechanic[];
   tags?: string[];
 }

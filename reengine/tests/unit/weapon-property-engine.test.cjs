@@ -136,3 +136,17 @@ test("changing weapon kind applies legacy kind-specific cleanup", () => {
   assert.deepEqual(changeWeaponKind("ranged", ["finesse", "reach", "versatile", "thrown"]), ["thrown"]);
   assert.deepEqual(changeWeaponKind("melee", ["ammunition", "loading", "reach"]), ["reach"]);
 });
+
+
+test("Light blocks Heavy and Two-Handed through the real toggle sequence", () => {
+  const withLight = toggleWeaponProperty("melee", [], "light");
+  assert.deepEqual(withLight, ["light"]);
+  assert.deepEqual(toggleWeaponProperty("melee", withLight, "heavy"), ["light"]);
+  assert.deepEqual(toggleWeaponProperty("melee", withLight, "two-handed"), ["light"]);
+});
+
+test("Heavy automatically adds Two-Handed and blocks Light through the real toggle sequence", () => {
+  const withHeavy = toggleWeaponProperty("melee", [], "heavy");
+  assert.deepEqual(withHeavy, ["heavy", "two-handed"]);
+  assert.deepEqual(toggleWeaponProperty("melee", withHeavy, "light"), ["heavy", "two-handed"]);
+});
