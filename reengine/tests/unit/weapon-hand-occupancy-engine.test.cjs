@@ -43,7 +43,7 @@ test("a one-handed weapon can be held with a shield in the other hand", () => {
   assert.deepEqual(result.occupiedHands, { main: "sword", off: "shield" });
 });
 
-test("two Light melee weapons may occupy separate hands", () => {
+test("two Light melee weapons qualify for the Light extra attack in both rulesets", () => {
   const result = validateWeaponHandOccupancy({
     ruleset: "2024",
     heldItems: [
@@ -52,10 +52,11 @@ test("two Light melee weapons may occupy separate hands", () => {
     ],
   });
   assert.equal(result.valid, true);
+  assert.equal(result.lightWeaponExtraAttackEligible, true);
   assert.equal(result.issues.length, 0);
 });
 
-test("dual wielding a non-Light melee weapon is rejected", () => {
+test("two non-Light weapons may be held but do not qualify for the Light extra attack", () => {
   const result = validateWeaponHandOccupancy({
     ruleset: "2014",
     heldItems: [
@@ -63,11 +64,11 @@ test("dual wielding a non-Light melee weapon is rejected", () => {
       { instanceId: "dagger", definition: weapon("dagger", ["light"]), hands: ["off"] },
     ],
   });
-  assert.equal(result.valid, false);
-  assert.ok(result.issues.some((issue) => issue.code === "two-weapon-wielding-requires-light-melee-weapons"));
+  assert.equal(result.valid, true);
+  assert.equal(result.lightWeaponExtraAttackEligible, false);
 });
 
-test("dual wielding requires two melee weapons, not two ranged weapons", () => {
+test("2014 Light extra attacks require melee weapons, while 2024 accepts Light ranged weapons", () => {
   const result = validateWeaponHandOccupancy({
     ruleset: "2014",
     heldItems: [
@@ -75,8 +76,18 @@ test("dual wielding requires two melee weapons, not two ranged weapons", () => {
       { instanceId: "hand-crossbow-b", definition: weapon("hand-crossbow-b", ["light"], "ranged"), hands: ["off"] },
     ],
   });
-  assert.equal(result.valid, false);
-  assert.ok(result.issues.some((issue) => issue.code === "two-weapon-wielding-requires-light-melee-weapons"));
+  assert.equal(result.valid, true);
+  assert.equal(result.lightWeaponExtraAttackEligible, false);
+
+  const rules2024 = validateWeaponHandOccupancy({
+    ruleset: "2024",
+    heldItems: [
+      { instanceId: "hand-crossbow-a", definition: weapon("hand-crossbow-a", ["light"], "ranged"), hands: ["main"] },
+      { instanceId: "hand-crossbow-b", definition: weapon("hand-crossbow-b", ["light"], "ranged"), hands: ["off"] },
+    ],
+  });
+  assert.equal(rules2024.valid, true);
+  assert.equal(rules2024.lightWeaponExtraAttackEligible, true);
 });
 
 test("Heavy and Two-Handed weapons must occupy both hands", () => {
