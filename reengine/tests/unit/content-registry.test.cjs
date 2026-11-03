@@ -104,8 +104,8 @@ test("known-option prerequisites validate both the selection and selected option
 
 test("option set ruleset must match its consuming feature unless either side is shared", () => {
   const registry = new ContentRegistry();
-  registry.registerOptionSet(makeOptionSet("2024-options", [], "2024"));
-  registry.registerFeature(makeFeature("2014-feature", [makeSelection("pick", "2024-options")], "2014"));
+  registry.registerOptionSet(makeOptionSet("options-2024", [], "2024"));
+  registry.registerFeature(makeFeature("2014-feature", [makeSelection("pick", "options-2024")], "2014"));
 
   assert.ok(registry.validateReferences().some((issue) => issue.code === "incompatible-ruleset"));
 });
@@ -143,7 +143,9 @@ test("class registration indexes its progression table and rejects duplicate tab
   registry.registerClass(makeClass("fighter"));
 
   assert.ok(registry.getProgressionTable("fighter-progression"));
-  assert.throws(() => registry.registerClass(makeClass("champion")), /Duplicate progression table id/);
+  const duplicateTableClass = makeClass("champion");
+  duplicateTableClass.progression.id = "fighter-progression";
+  assert.throws(() => registry.registerClass(duplicateTableClass), /Duplicate progression table id/);
   assert.equal(registry.getClass("champion"), undefined);
 });
 
@@ -257,14 +259,14 @@ test("item registry reports missing base items and cross-ruleset item links", ()
     },
   });
   mismatch.registerItem({
-    id: "magic-item:2024-blade",
+    id: "magic-item:blade-2024",
     name: "2024 Blade",
     ruleset: "2024",
     category: "magic-item",
     baseItemId: "weapon:base-blade",
   });
   assert.ok(mismatch.validateReferences().some((issue) =>
-    issue.code === "incompatible-ruleset" && issue.subjectId === "magic-item:2024-blade",
+    issue.code === "incompatible-ruleset" && issue.subjectId === "magic-item:blade-2024",
   ));
 });
 
