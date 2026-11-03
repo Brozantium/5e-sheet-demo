@@ -1,54 +1,110 @@
-# Reengineering Roadmap
+# Revised Reengineering Roadmap
 
-## Completed
+This roadmap is the implementation order for the clean-room `reengine/` workspace. Keep the existing application stable while the new contracts and engines are developed independently.
 
-- RE-001 — read-only audit of the current app and reengine workspace.
-- RE-002 — isolated TypeScript checking and Node test harness established.
-- RE-003 (weapon-property parity slice) — legacy weapon property lock/clean behavior ported with exhaustive regression tests.
-- RE-004 (core engine correction slice) — sparse/subclass progression, draft and batch-aware selection validation, assignment limits, recovery hierarchy, spell-modifier resource checks, registry duplicate/reference checks, and schema/type alignment.
-- RE-005 (content registry integrity slice) — unique mechanic IDs, atomic class registration, selection/assignment and prerequisite option references, ruleset compatibility, and progression table/column validation.
+## RE-001 — Read-only Audit Baseline
 
-## Phase 0 — Archaeology and boundaries
-- Inventory legacy bundles and map their responsibilities.
-- Record verified behavior and gaps in REVERSE_ENGINEERING/findings.
-- Keep all legacy code/data out of the new runtime.
+- Inventory the current app, legacy bundles, data sources, and reengine boundary.
+- Record verified behavior and confidence levels.
+- Keep legacy `/assets`, `/data`, and `/data/2024` as archaeology references only.
 
-## Phase 1 — Domain contracts and tooling
-- Finalize content, option-set, feature-mechanic, progression, item, and character-state schemas.
-- Define structured prerequisite predicates.
-- Define stable IDs and source metadata.
-- Keep reengine TypeScript checking and Node tests in CI.
+Status: complete.
 
-## Phase 2 — Core engine corrections
-- Fix progression carry-forward and subclass progression resolution.
-- Add draft/complete selection validation and batch-aware prerequisite evaluation.
-- Enforce assignment capacity per option and target.
-- Implement rest recovery hierarchy and per-resource recovery policies.
-- Validate spell-modifier resource availability.
-- Make ContentRegistry reject duplicate IDs and invalid references.
-- Synchronize JSON schemas and TypeScript contracts.
+## RE-002 — Testing Foundation
 
-## Phase 3 — Preserve current app behavior
-- Complete weapon, armor, shield, inventory, equipment, AC, and attack calculations.
-- Port combat, conditions, exhaustion, death saves, HP, and rest rules with regression tests.
-- Port spell slots, pact magic, spell preparation, and spell resource consumption.
-- Preserve serialization and content-pack compatibility through explicit migrations.
+Priority: establish reliable verification before implementing more behavior.
 
-## Phase 4 — New feature mechanics
-- Warlock Invocations and Pact Boon.
-- Rune Knight.
-- Artificer Infusions (2014) and Replicate Magic Item (2024).
-- Sorcerer Metamagic (2014/2024).
-- Actions, triggers, passive effects, and magic item attunement.
-- Maneuvers, Elemental Disciplines, and Weapon Masteries after further archaeology.
+- Add an isolated TypeScript configuration for `/reengine/`.
+- Add a test runner and CI workflow.
+- Add regression fixtures and tests for reengine behavior.
 
-## Phase 5 — Content and application
-- Populate canonical 2014, 2024, shared, and Homebrew content.
-- Build Builder orchestration and UI on top of the tested engines.
-- Build Character Sheet, Actions, and inventory presentation.
-- Add explicit character migrations and Owlbear adapters.
+Status: complete. The isolated TypeScript check, Node test harness, and CI workflow are present.
 
-## Phase 6 — Integration and retirement
-- Integrate the new runtime behind a controlled feature flag.
-- Verify old character data and Owlbear interactions.
-- Retire legacy dependencies deliberately, not by silently changing saved characters.
+## RE-003 — Weapon & Equipment Engine
+
+- Port weapon-property locking and normalization.
+- Preserve parity across the 2,048 kind/property combinations.
+- Continue with armor, shields, AC, equip/unequip, and inventory behavior.
+
+Status: weapon-property parity slice complete. Armor, shields, AC, equipment, and inventory remain in the later calculation/equipment scope.
+
+## RE-004 — Core Engine Corrections
+
+- Fix F1–F8 findings with regression tests.
+- Cover progression, selection, assignment, resources, and spell-modifier validation.
+- Keep the TypeScript contracts and JSON Schema synchronized as part of the correction work.
+
+Status: the documented F1–F8 correction slice is complete, with tests. Further contract/schema alignment belongs to RE-005.
+
+## RE-005 — Schema & Content Validation
+
+Scope:
+
+- Align TypeScript domain contracts and JSON Schema definitions.
+- Define and validate stable content IDs.
+- Standardize ruleset metadata for `2014`, `2024`, and `shared` content.
+- Validate references between content records, mechanics, options, progression tables, and prerequisites.
+- Add regression tests for invalid schemas, IDs, metadata, duplicate identifiers, and unresolved references.
+- Keep the registry's in-memory validation consistent with the canonical JSON contracts.
+
+Current status: in progress, not complete.
+
+Already implemented in the initial RE-005 slice:
+
+- Duplicate mechanic ID protection and atomic class registration.
+- Assignment-to-selection reference checks.
+- Option-set/ruleset compatibility checks.
+- Structured prerequisite checks for class, feature, selection, and option references.
+- Progression table and column reference checks.
+
+Remaining before RE-005 can be marked complete:
+
+- Add the missing Option Set JSON Schema.
+- Define a canonical content ID policy and apply it consistently in TypeScript, schemas, registry validation, and fixtures.
+- Reconcile the remaining TypeScript/schema shape differences, including progression numeric constraints and source/ruleset metadata.
+- Introduce a canonical item domain contract; the current `domain/item.ts` only defines weapon editor property controls, not a full item definition.
+- Tighten the item schema so it validates a real contract rather than accepting broadly permissive objects.
+- Add schema-validation tests for actual canonical fixtures and negative cases.
+- Verify the final schema/type/reference contract together before moving the phase to complete.
+
+## RE-006 — Rules & Character Calculation
+
+- Combat and attack calculations.
+- Saving throws and skills.
+- Conditions, HP, death saves, rest, and exhaustion.
+- Armor class and other character-derived calculations.
+- Equipment interactions needed by the character sheet.
+
+## RE-007 — Spellcasting Engine
+
+- Spell slots and pact magic.
+- Spell preparation and known spells.
+- Multiclass spell progression.
+- Spell resource consumption and casting validation.
+- Metamagic application and resource costs.
+
+## RE-008 — Action, Trigger & Effect Engine
+
+- Player-activated actions.
+- Event-driven triggers and reactions.
+- Magic item actions and effects.
+- Passive and conditional effects.
+- Explicit event payloads and effect application contracts.
+
+## RE-009 and later — Migration, Content, UI, and Integration
+
+- Character-state migration and compatibility.
+- Canonical content pilot packs for 2014, 2024, shared, and Homebrew.
+- Owlbear adapters and persistence integration.
+- Builder orchestration and UI.
+- Character Sheet and Actions presentation.
+- Controlled integration behind a feature flag, regression against existing characters, and deliberate retirement of legacy dependencies.
+
+## Non-negotiable boundaries
+
+- The new runtime must not import legacy JavaScript from `/assets`.
+- The new runtime must not read `/data` or `/data/2024` directly.
+- Legacy sources are evidence for reverse engineering, not runtime dependencies.
+- Preserve edition identity in metadata; never infer the ruleset from display text.
+- Descriptions are display content, not the sole source of mechanical behavior.
+- Do not mark a roadmap slice complete until its acceptance tests and CI checks support that status.

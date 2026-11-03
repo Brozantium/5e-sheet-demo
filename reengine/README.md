@@ -14,7 +14,7 @@ This directory is the clean-room workspace for the new 5e content model, builder
 ## Workspace map
 
 - ARCHITECTURE.md — target runtime and data flow.
-- ROADMAP.md — reverse-engineering and implementation order.
+- ROADMAP.md — revised implementation order from audit through integration.
 - REVERSE_ENGINEERING/ — verified observations from the legacy app.
 - SCHEMAS/ — JSON contracts for canonical content and character state.
 - content/ — the only canonical content location for the new builder.
@@ -39,9 +39,14 @@ The test suite uses Node's built-in test runner and TypeScript compilation to a 
 
 ## Current status
 
-- RE-001: complete as a read-only audit baseline.
-- RE-002: TypeScript check and Node test harness established.
-- RE-003: weapon property lock rules ported with exhaustive parity tests (2,048 kind/property combinations).
-- RE-004: core engine corrections and schema/type alignment completed for this slice, with regression tests added.
-- RE-005: content registry integrity checks extended for unique mechanics, assignment/selection links, prerequisite option references, ruleset compatibility, and progression table references. The canonical content folders remain intentionally unpopulated; content ingestion is a later phase.
-- The new engine is not yet wired into the current application. No runtime import from reengine is added to src/main.tsx or src/App.tsx.
+- RE-001: read-only audit baseline complete.
+- RE-002: isolated TypeScript check, Node test harness, and CI workflow established.
+- RE-003: weapon property locking/normalization has exhaustive parity coverage for 2,048 kind/property combinations. Armor, shield, AC, equip, and inventory work remain.
+- RE-004: documented F1–F8 core engine correction slice completed with regression tests.
+- RE-005: in progress. Registry reference checks have been added, but schema/type alignment, stable ID policy, complete item contract, option-set schema, and schema validation tests remain.
+- RE-006: rules and character calculation.
+- RE-007: spellcasting engine.
+- RE-008: action, trigger, and effect engine.
+- RE-009+: migration, canonical content pilot, Owlbear adapter, Builder, Sheet, and final integration.
+
+The new engine is not yet wired into the current application. No runtime import from reengine is added to src/main.tsx or src/App.tsx.
