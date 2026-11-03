@@ -1,0 +1,39 @@
+name: Reengine checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "reengine/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/reengine-checks.yml"
+  pull_request:
+    paths:
+      - "reengine/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/reengine-checks.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reengine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck:reengine
+      - run: pnpm test:reengine

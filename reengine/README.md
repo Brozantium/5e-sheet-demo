@@ -20,12 +20,26 @@ This directory is the clean-room workspace for the new 5e content model, builder
 - content/ — the only canonical content location for the new builder.
 - src/domain/ — domain types with no UI dependencies.
 - src/registry/ — content lookup and indexing.
-- src/engines/ — choices, prerequisites, progression, resources, assignment, and spell modification.
+- src/engines/ — choices, prerequisites, progression, resources, assignment, item, and spell modification.
 - src/builder/ — builder-facing orchestration contracts.
 - src/adapters/ — controlled import/migration boundaries; never runtime dependencies on legacy folders.
 - src/ui/ — future builder and sheet presentation.
 - tests/ — behavior fixtures and regression tests.
 
+## Tooling and tests
+
+The reengine is type-checked independently from the existing application:
+
+```sh
+pnpm typecheck:reengine
+pnpm test:reengine
+```
+
+The test suite uses Node's built-in test runner and TypeScript compilation to a disposable CommonJS directory. It introduces no additional runtime dependency. Generated test output is ignored by git.
+
 ## Current status
 
-This is an additive foundation. It is not yet wired into src/App.tsx and does not change the running application. The examples under tests/fixtures are focused mechanics fixtures, not a complete reproduction of official sourcebooks.
+- RE-001: complete as a read-only audit baseline.
+- RE-002: TypeScript check and Node test harness established.
+- RE-003: weapon property lock rules ported with exhaustive parity tests (2,048 kind/property combinations).
+- The new engine is not yet wired into the current application. No runtime import from reengine is added to src/main.tsx or src/App.tsx.
