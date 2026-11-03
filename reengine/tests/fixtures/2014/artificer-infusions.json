@@ -16,7 +16,7 @@
       "id": "artificer-2014:infusions-known",
       "optionSetId": "artificer-2014:infusions",
       "mode": "multiple",
-      "count": { "kind": "class-table", "classId": "artificer", "column": "infusionsKnown" },
+      "count": { "kind": "class-table", "tableId": "artificer", "column": "infusionsKnown" },
       "allowDuplicates": false,
       "replacement": { "when": "class-level-gained", "count": 1 }
     },
@@ -25,7 +25,7 @@
       "id": "artificer-2014:infused-items",
       "selectionId": "artificer-2014:infusions-known",
       "targetKind": "inventory-item",
-      "capacity": { "kind": "class-table", "classId": "artificer", "column": "infusedItems" },
+      "capacity": { "kind": "class-table", "tableId": "artificer", "column": "infusedItems" },
       "maxPerTarget": 1,
       "eligibleItemTags": ["nonmagical", "infusion-eligible"]
     }

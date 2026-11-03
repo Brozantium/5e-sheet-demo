@@ -25,7 +25,7 @@
       "id": "warlock-2014:eldritch-invocations",
       "optionSetId": "warlock-2014:invocations",
       "mode": "multiple",
-      "count": { "kind": "class-table", "classId": "warlock", "column": "invocationsKnown" },
+      "count": { "kind": "class-table", "tableId": "warlock", "column": "invocationsKnown" },
       "allowDuplicates": false,
       "replacement": { "when": "class-level-gained", "count": 1 }
     }

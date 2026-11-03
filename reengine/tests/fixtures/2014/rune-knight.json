@@ -15,7 +15,7 @@
       "id": "fighter-rune-knight:rune-carver:known",
       "optionSetId": "fighter-rune-knight:runes",
       "mode": "multiple",
-      "count": { "kind": "class-table", "classId": "fighter-rune-knight", "column": "runesKnown" },
+      "count": { "kind": "class-table", "tableId": "fighter-rune-knight", "levelFromClassId": "fighter", "column": "runesKnown" },
       "allowDuplicates": false,
       "replacement": { "when": "class-level-gained", "count": 1 }
     },
@@ -24,7 +24,7 @@
       "id": "fighter-rune-knight:rune-carver:inscription",
       "selectionId": "fighter-rune-knight:rune-carver:known",
       "targetKind": "inventory-item",
-      "capacity": { "kind": "class-table", "classId": "fighter-rune-knight", "column": "runesKnown" },
+      "capacity": { "kind": "class-table", "tableId": "fighter-rune-knight", "levelFromClassId": "fighter", "column": "runesKnown" },
       "maxPerTarget": 1,
       "resetOn": "long-rest",
       "eligibleItemTags": ["weapon", "armor", "shield", "jewelry", "wearable", "held"]
@@ -33,7 +33,7 @@
       "kind": "resource-pool",
       "id": "fighter-rune-knight:rune-uses",
       "resourceId": "rune-uses",
-      "maximum": { "kind": "class-table", "classId": "fighter-rune-knight", "column": "usesPerRune" },
+      "maximum": { "kind": "class-table", "tableId": "fighter-rune-knight", "levelFromClassId": "fighter", "column": "usesPerRune" },
       "recovery": "short-rest"
     }
   ],

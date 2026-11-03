@@ -14,7 +14,7 @@
       "id": "sorcerer-2014:metamagic-known",
       "optionSetId": "sorcerer-2014:metamagic",
       "mode": "multiple",
-      "count": { "kind": "class-table", "classId": "sorcerer", "column": "metamagicKnown" },
+      "count": { "kind": "class-table", "tableId": "sorcerer", "column": "metamagicKnown" },
       "allowDuplicates": false,
       "replacement": { "when": "class-level-gained", "count": 1 }
     },
@@ -22,7 +22,7 @@
       "kind": "resource-pool",
       "id": "sorcerer-2014:sorcery-points",
       "resourceId": "sorcery-points",
-      "maximum": { "kind": "class-table", "classId": "sorcerer", "column": "sorceryPoints" },
+      "maximum": { "kind": "class-table", "tableId": "sorcerer", "column": "sorceryPoints" },
       "recovery": "long-rest"
     },
     {

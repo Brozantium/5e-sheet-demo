@@ -64,7 +64,7 @@ test("sparse progression rows carry the last defined value forward", () => {
 
 test("progression table identity is independent from its class-level source", () => {
   const table = {
-    subclass: {
+    "fighter-rune-knight": {
       id: "fighter-rune-knight",
       classId: "fighter-rune-knight",
       levelFromClassId: "fighter",
@@ -101,8 +101,9 @@ test("draft selections may be incomplete while complete selections require exact
   };
 
   assert.deepEqual(
-    validateSelection(mechanic, ["careful"], optionSet, baseState(), {}),
-  [],);
+    validateSelection(mechanic, ["careful"], optionSet, baseState(), {}, { mode: "draft" }),
+    [],
+  );
   assert.ok(
     validateSelection(mechanic, ["careful"], optionSet, baseState(), {}, { mode: "draft" })
       .every((issue) => issue.code !== "selection-count"),
