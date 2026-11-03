@@ -133,6 +133,6 @@ test("toggle ignores locked properties and normalizes accepted changes", () => {
 });
 
 test("changing weapon kind applies legacy kind-specific cleanup", () => {
-  assert.deepEqual(changeWeaponKind("ranged", ["finesse", "reach", "versatile", "thrown"]), ["finesse", "thrown"]);
+  assert.deepEqual(changeWeaponKind("ranged", ["finesse", "reach", "versatile", "thrown"]), ["thrown"]);
   assert.deepEqual(changeWeaponKind("melee", ["ammunition", "loading", "reach"]), ["reach"]);
 });
