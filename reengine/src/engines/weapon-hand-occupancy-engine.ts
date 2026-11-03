@@ -19,9 +19,10 @@ function getWeaponProfile(definition: ItemDefinition): WeaponProfile | undefined
 }
 
 /**
- * Validates physical hand occupancy for a held loadout. A Shield can occupy
- * one hand while a one-handed weapon occupies the other. Two one-handed
- * weapons may be held together only when both are Light melee weapons.
+ * Validates physical hand occupancy independently from combat benefits.
+ * Two weapons may be held in separate hands even when they do not qualify
+ * for the Light-property extra attack. That eligibility is returned separately
+ * and follows the 2014/2024 ruleset distinction.
  */
 export function validateWeaponHandOccupancy(
   input: WeaponHandOccupancyInput,
@@ -113,26 +114,23 @@ export function validateWeaponHandOccupancy(
     }
   }
 
-  if (
+  const hasTwoWeaponsInSeparateHands =
     heldWeapons.length === 2 &&
     heldWeapons.every((weapon) => weapon.hands.length === 1) &&
-    heldWeapons[0].hands[0] !== heldWeapons[1].hands[0]
-  ) {
-    const isValidPair = heldWeapons.every((weapon) =>
-      weapon.profile.weaponType === "melee" &&
-      (weapon.definition.properties ?? []).includes("light"),
-    );
-    if (!isValidPair) {
-      issues.push({
-        code: "two-weapon-wielding-requires-light-melee-weapons",
-        message: "Two-weapon wielding requires two Light melee weapons, one in each hand.",
-      });
-    }
-  }
+    heldWeapons[0].hands[0] !== heldWeapons[1].hands[0];
+  const bothWeaponsAreLight = heldWeapons.every((weapon) =>
+    (weapon.definition.properties ?? []).includes("light"),
+  );
+  const lightWeaponExtraAttackEligible =
+    hasTwoWeaponsInSeparateHands &&
+    bothWeaponsAreLight &&
+    (input.ruleset === "2024" ||
+      heldWeapons.every((weapon) => weapon.profile.weaponType === "melee"));
 
   return {
     valid: issues.length === 0,
     occupiedHands,
+    lightWeaponExtraAttackEligible,
     issues,
   };
 }
