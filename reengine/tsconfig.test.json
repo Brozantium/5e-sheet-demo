@@ -10,8 +10,14 @@
     "outDir": ".test-dist",
     "declaration": false,
     "sourceMap": false,
-    "types": []
+    "types": [],
+    "allowImportingTsExtensions": false
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["tests/**", ".test-dist/**"]
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "tests/**",
+    ".test-dist/**"
+  ]
 }
