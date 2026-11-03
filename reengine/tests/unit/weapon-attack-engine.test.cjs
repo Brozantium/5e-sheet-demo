@@ -41,7 +41,7 @@ test("melee defaults to Strength and Finesse selects the higher Dexterity modifi
   const finesse = attack({ abilityScores: scores({ str: 12, dex: 18 }) });
 
   assert.equal(ordinary.ability, "str");
-  assert.equal(ordinary.attackBonus, 5);
+  assert.equal(ordinary.attackBonus, 4);
   assert.equal(finesse.ability, "dex");
   assert.equal(finesse.abilityModifier, 4);
   assert.equal(finesse.attackBonus, 7);
