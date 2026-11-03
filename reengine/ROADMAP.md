@@ -67,11 +67,21 @@ Bounded references intentionally extended by later phases:
 
 ## RE-006 — Rules & Character Calculation
 
+Scope:
+
 - Combat and attack calculations.
 - Saving throws and skills.
 - Conditions, HP, death saves, rest, and exhaustion.
 - Armor class and other character-derived calculations.
 - Equipment interactions needed by the character sheet.
+
+Implemented in the current RE-006A slice:
+
+- Pure calculation contracts for the 18 standard skills and normalized proficiency ranks.
+- Ability modifier, multiclass total level, proficiency bonus, skill, saving throw, initiative, and passive Perception calculations.
+- Unit tests for ability-score bounds, multiclass proficiency breakpoints, half proficiency, Expertise, and calculation input validation.
+
+Status: in progress. Armor/equipment/attack, HP/rest/death saves, and ruleset-aware condition/exhaustion behavior remain.
 
 ## RE-007 — Spellcasting Engine
 
@@ -104,5 +114,5 @@ Bounded references intentionally extended by later phases:
 - The new runtime must not read `/data` or `/data/2024` directly.
 - Legacy sources are evidence for reverse engineering, not runtime dependencies.
 - Preserve edition identity in metadata; never infer the ruleset from display text.
-- Descriptions are display content, not the sole source of mechanical behavior.
+- Descriptions are display content, not the sole source for a mechanical behavior.
 - Do not mark a roadmap slice complete until its acceptance tests and CI checks support that status.
