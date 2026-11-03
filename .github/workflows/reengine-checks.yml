@@ -1,29 +1,33 @@
 name: Reengine checks
 
 on:
+  # Run on every main-branch push so every deployment has a matching gate,
+  # including application-only changes outside the Reengine folder.
   push:
     branches: [main]
-    paths:
-      - "reengine/**"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - ".github/workflows/reengine-checks.yml"
   pull_request:
     paths:
       - "reengine/**"
       - "package.json"
       - "pnpm-lock.yaml"
       - ".github/workflows/reengine-checks.yml"
+      - ".github/workflows/deploy.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: reengine-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   reengine:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: pnpm/action-setup@v6
         with:
