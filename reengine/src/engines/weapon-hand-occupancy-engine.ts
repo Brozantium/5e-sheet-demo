@@ -64,7 +64,7 @@ export function validateWeaponHandOccupancy(
     if (!Array.isArray(entry.hands) || entry.hands.length < 1 || entry.hands.length > 2) {
       throw new RangeError("Each held item must occupy one or two hands.");
     }
-    const hands = [...entry.hands];
+    const hands: WeaponHand[] = [...entry.hands];
     if (hands.some((hand) => hand !== "main" && hand !== "off")) {
       throw new RangeError("Unknown hand assignment.");
     }
