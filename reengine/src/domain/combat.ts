@@ -73,8 +73,7 @@ export interface WeaponHandOccupancyInput {
 export type WeaponHandOccupancyIssueCode =
   | "incompatible-ruleset-item"
   | "hand-already-occupied"
-  | "weapon-requires-two-hands"
-  | "two-weapon-wielding-requires-light-melee-weapons";
+  | "weapon-requires-two-hands";
 
 export interface WeaponHandOccupancyIssue {
   code: WeaponHandOccupancyIssueCode;
@@ -85,5 +84,7 @@ export interface WeaponHandOccupancyIssue {
 export interface WeaponHandOccupancyResult {
   valid: boolean;
   occupiedHands: Record<WeaponHand, string | null>;
+  /** Whether the held pair qualifies for the ruleset's Light-property extra attack. */
+  lightWeaponExtraAttackEligible: boolean;
   issues: WeaponHandOccupancyIssue[];
 }
