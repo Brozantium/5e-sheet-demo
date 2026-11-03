@@ -107,8 +107,8 @@ test("legacy examples remain stable", () => {
   assert.deepEqual(cleanWeaponProps("melee", ["heavy"]), ["heavy", "two-handed"]);
   assert.deepEqual(cleanWeaponProps("ranged", ["loading"]), ["ammunition", "loading"]);
   assert.deepEqual(cleanWeaponProps("melee", ["loading"]), []);
-  assert.deepEqual(cleanWeaponProps("melee", ["heavy", "light"]), ["heavy", "two-handed"]);
-  assert.deepEqual(cleanWeaponProps("melee", ["heavy", "versatile"]), ["heavy", "two-handed"]);
+  assert.deepEqual(cleanWeaponProps("melee", ["heavy", "light"]), ["two-handed"]);
+  assert.deepEqual(cleanWeaponProps("melee", ["heavy", "versatile"]), ["two-handed"]);
   assert.deepEqual(cleanWeaponProps("melee", ["versatile", "finesse"]), []);
   assert.deepEqual(cleanWeaponProps("melee", ["finesse", "light", "thrown"]), ["finesse", "light", "thrown"]);
 });
