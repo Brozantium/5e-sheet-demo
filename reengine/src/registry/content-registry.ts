@@ -12,7 +12,11 @@ import type {
   SelectionMechanic,
 } from "../domain/types";
 import { assertContentId, assertContentRuleset } from "../domain/identity";
-import type { ItemDefinition as CanonicalItemDefinition } from "../domain/item";
+import type {
+  ArmorProfile,
+  ItemDefinition as CanonicalItemDefinition,
+  WeaponProfile,
+} from "../domain/item";
 
 export class ContentRegistry {
   private readonly classes = new Map<string, ClassDefinition>();
@@ -268,68 +272,75 @@ export class ContentRegistry {
   }
 
   private assertItemProfile(definition: CanonicalItemDefinition): void {
+    // Read the raw profile slots separately from the discriminated union. This
+    // also catches malformed parsed JSON passed through an unsafe cast.
+    const profiles = definition as unknown as {
+      weaponProfile?: WeaponProfile;
+      armorProfile?: ArmorProfile;
+    };
+
     this.assertNonBlank(definition.name, "item name");
     this.assertSource(definition.source, "item source");
     this.assertUniqueStrings(definition.properties, "item properties");
     this.assertUniqueStrings(definition.tags, "item tags");
 
     if (definition.category === "weapon") {
-      if (!definition.weaponProfile) {
+      if (!profiles.weaponProfile) {
         throw new Error("Weapon item " + definition.id + " requires a weapon profile.");
       }
-      if (definition.armorProfile) {
+      if (profiles.armorProfile) {
         throw new Error("Weapon item " + definition.id + " cannot define an armor profile.");
       }
     }
     if (definition.category === "armor") {
-      if (!definition.armorProfile || definition.armorProfile.armorCategory === "shield") {
+      if (!profiles.armorProfile || profiles.armorProfile.armorCategory === "shield") {
         throw new Error("Armor item " + definition.id + " requires a non-shield armor profile.");
       }
-      if (definition.weaponProfile) {
+      if (profiles.weaponProfile) {
         throw new Error("Armor item " + definition.id + " cannot define a weapon profile.");
       }
     }
     if (definition.category === "shield") {
-      if (definition.armorProfile?.armorCategory !== "shield") {
+      if (profiles.armorProfile?.armorCategory !== "shield") {
         throw new Error("Shield item " + definition.id + " requires a shield armor profile.");
       }
-      if (definition.weaponProfile) {
+      if (profiles.weaponProfile) {
         throw new Error("Shield item " + definition.id + " cannot define a weapon profile.");
       }
     }
     if (
       ["gear", "tool", "ammunition", "consumable"].includes(definition.category) &&
-      (definition.weaponProfile || definition.armorProfile)
+      (profiles.weaponProfile || profiles.armorProfile)
     ) {
       throw new Error("Non-combat item " + definition.id + " cannot define weapon or armor profiles.");
     }
 
-    if (definition.weaponProfile) {
-      if (definition.weaponProfile.damage.length === 0) {
+    if (profiles.weaponProfile) {
+      if (profiles.weaponProfile.damage.length === 0) {
         throw new Error("Weapon item " + definition.id + " requires at least one damage component.");
       }
-      for (const component of definition.weaponProfile.damage) {
+      for (const component of profiles.weaponProfile.damage) {
         this.assertNonBlank(component.formula, "weapon damage formula");
         this.assertNonBlank(component.damageType, "weapon damage type");
       }
-      if (definition.weaponProfile.range) {
-        this.assertNonNegativeInteger(definition.weaponProfile.range.normal, "weapon normal range");
-        if (definition.weaponProfile.range.long !== undefined) {
-          this.assertNonNegativeInteger(definition.weaponProfile.range.long, "weapon long range");
+      if (profiles.weaponProfile.range) {
+        this.assertNonNegativeInteger(profiles.weaponProfile.range.normal, "weapon normal range");
+        if (profiles.weaponProfile.range.long !== undefined) {
+          this.assertNonNegativeInteger(profiles.weaponProfile.range.long, "weapon long range");
         }
       }
     }
 
-    if (definition.armorProfile) {
-      this.assertNonNegativeInteger(definition.armorProfile.baseAC, "armor base AC");
+    if (profiles.armorProfile) {
+      this.assertNonNegativeInteger(profiles.armorProfile.baseAC, "armor base AC");
       if (
-        definition.armorProfile.maxDexterityModifier !== undefined &&
-        definition.armorProfile.maxDexterityModifier !== null
+        profiles.armorProfile.maxDexterityModifier !== undefined &&
+        profiles.armorProfile.maxDexterityModifier !== null
       ) {
-        this.assertNonNegativeInteger(definition.armorProfile.maxDexterityModifier, "maximum Dexterity modifier");
+        this.assertNonNegativeInteger(profiles.armorProfile.maxDexterityModifier, "maximum Dexterity modifier");
       }
-      if (definition.armorProfile.strengthRequirement !== undefined) {
-        this.assertNonNegativeInteger(definition.armorProfile.strengthRequirement, "armor Strength requirement");
+      if (profiles.armorProfile.strengthRequirement !== undefined) {
+        this.assertNonNegativeInteger(profiles.armorProfile.strengthRequirement, "armor Strength requirement");
       }
     }
   }
