@@ -44,16 +44,18 @@ test("a one-handed weapon can be held with a shield in the other hand", () => {
 });
 
 test("two Light melee weapons qualify for the Light extra attack in both rulesets", () => {
-  const result = validateWeaponHandOccupancy({
-    ruleset: "2024",
-    heldItems: [
-      { instanceId: "dagger-a", definition: weapon("dagger-a", ["light"]), hands: ["main"] },
-      { instanceId: "dagger-b", definition: weapon("dagger-b", ["light"]), hands: ["off"] },
-    ],
-  });
-  assert.equal(result.valid, true);
-  assert.equal(result.lightWeaponExtraAttackEligible, true);
-  assert.equal(result.issues.length, 0);
+  for (const ruleset of ["2014", "2024"]) {
+    const result = validateWeaponHandOccupancy({
+      ruleset,
+      heldItems: [
+        { instanceId: "dagger-a", definition: weapon("dagger-a", ["light"]), hands: ["main"] },
+        { instanceId: "dagger-b", definition: weapon("dagger-b", ["light"]), hands: ["off"] },
+      ],
+    });
+    assert.equal(result.valid, true);
+    assert.equal(result.lightWeaponExtraAttackEligible, true);
+    assert.equal(result.issues.length, 0);
+  }
 });
 
 test("two non-Light weapons may be held but do not qualify for the Light extra attack", () => {
