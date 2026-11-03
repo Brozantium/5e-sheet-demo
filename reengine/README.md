@@ -43,4 +43,5 @@ The test suite uses Node's built-in test runner and TypeScript compilation to a 
 - RE-002: TypeScript check and Node test harness established.
 - RE-003: weapon property lock rules ported with exhaustive parity tests (2,048 kind/property combinations).
 - RE-004: core engine corrections and schema/type alignment completed for this slice, with regression tests added.
+- RE-005: content registry integrity checks extended for unique mechanics, assignment/selection links, prerequisite option references, ruleset compatibility, and progression table references. The canonical content folders remain intentionally unpopulated; content ingestion is a later phase.
 - The new engine is not yet wired into the current application. No runtime import from reengine is added to src/main.tsx or src/App.tsx.

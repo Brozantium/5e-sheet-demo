@@ -6,6 +6,7 @@
 - RE-002 — isolated TypeScript checking and Node test harness established.
 - RE-003 (weapon-property parity slice) — legacy weapon property lock/clean behavior ported with exhaustive regression tests.
 - RE-004 (core engine correction slice) — sparse/subclass progression, draft and batch-aware selection validation, assignment limits, recovery hierarchy, spell-modifier resource checks, registry duplicate/reference checks, and schema/type alignment.
+- RE-005 (content registry integrity slice) — unique mechanic IDs, atomic class registration, selection/assignment and prerequisite option references, ruleset compatibility, and progression table/column validation.
 
 ## Phase 0 — Archaeology and boundaries
 - Inventory legacy bundles and map their responsibilities.
