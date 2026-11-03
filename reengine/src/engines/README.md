@@ -13,7 +13,7 @@ Current first-pass modules:
 - character-calculation-engine: calculates ability modifiers, total character level, proficiency bonus, saving throws, skills, initiative, and passive Perception.
 - armor-class-engine: calculates unarmored, armor, and shield AC from canonical item profiles and character training.
 - weapon-attack-engine: resolves attack ability, category/item proficiency, attack bonus, damage modifier, and Versatile damage dice.
-- weapon-hand-occupancy-engine: validates main/off-hand occupancy, two-handed requirements, shields, and Light melee dual-wield pairs.
+- weapon-hand-occupancy-engine: validates main/off-hand occupancy, two-handed requirements, and shields; separately reports ruleset-specific Light-property extra-attack eligibility.
 
 Weapon calculations consume normalized character ability scores, proficiency grants, and item definitions. They do not read class, feat, or legacy data directly; builder/content layers resolve those grants before calling the engines.
 
@@ -21,7 +21,6 @@ Planned modules / extensions:
 - effect-engine
 - action-engine
 - trigger-engine
-- weapon attack and damage calculations, including finesse and weapon proficiency
-- equipment hand occupancy and weapon equip validation
+- equipment inventory state, equip/unequip persistence, and weapon equip validation
 - character HP, death saves, rest, and condition/exhaustion policies
 - spellcasting-engine
