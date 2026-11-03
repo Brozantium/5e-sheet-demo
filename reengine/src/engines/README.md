@@ -12,6 +12,10 @@ Current first-pass modules:
 - item-engine: normalizes weapon-property combinations with exhaustive legacy parity coverage.
 - character-calculation-engine: calculates ability modifiers, total character level, proficiency bonus, saving throws, skills, initiative, and passive Perception.
 - armor-class-engine: calculates unarmored, armor, and shield AC from canonical item profiles and character training.
+- weapon-attack-engine: resolves attack ability, category/item proficiency, attack bonus, damage modifier, and Versatile damage dice.
+- weapon-hand-occupancy-engine: validates main/off-hand occupancy, two-handed requirements, shields, and Light melee dual-wield pairs.
+
+Weapon calculations consume normalized character ability scores, proficiency grants, and item definitions. They do not read class, feat, or legacy data directly; builder/content layers resolve those grants before calling the engines.
 
 Planned modules / extensions:
 - effect-engine

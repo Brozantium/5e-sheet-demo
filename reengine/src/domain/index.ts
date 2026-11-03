@@ -3,3 +3,4 @@ export * from "./item";
 export * from "./identity";
 export * from "./character";
 export * from "./equipment";
+export * from "./combat";

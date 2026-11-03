@@ -38,7 +38,8 @@
             "required": ["formula", "damageType"],
             "properties": {
               "formula": { "type": "string", "minLength": 1 },
-              "damageType": { "type": "string", "minLength": 1 }
+              "damageType": { "type": "string", "minLength": 1 },
+              "versatileFormula": { "type": "string", "minLength": 1 }
             },
             "additionalProperties": false
           }

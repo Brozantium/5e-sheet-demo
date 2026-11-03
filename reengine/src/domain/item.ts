@@ -45,6 +45,8 @@ export type ItemCategory =
 export interface ItemDamageComponent {
   formula: string;
   damageType: string;
+  /** Alternate die expression when a Versatile weapon is wielded in two hands. */
+  versatileFormula?: string;
 }
 
 export interface WeaponProfile {

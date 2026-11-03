@@ -87,7 +87,21 @@ Current acceptance checks:
 - Strength requirements, Stealth disadvantage, ruleset compatibility, and invalid equipment combinations are surfaced.
 - Canonical item schema and TypeScript contracts require a numeric Dexterity cap for capped armor.
 
-Status: in progress. Weapon attack/damage, hand occupancy, armor training consequences, HP/rest/death saves, and ruleset-aware condition/exhaustion behavior remain.
+Implemented:
+
+- RE-006B2: weapon attack ability selection, weapon/category proficiency, attack bonuses, damage modifiers, Versatile damage dice, and held-item hand occupancy validation.
+
+RE-006B2 acceptance coverage:
+
+- Melee weapons use Strength; Finesse melee weapons use the higher Strength/Dexterity modifier; ranged weapons use Dexterity.
+- Thrown melee weapons retain the melee ability rule.
+- Category and exact/base-item weapon proficiency are supported; non-proficient attacks omit PB without being prohibited.
+- Attack and damage adjustments are explicit; the ability modifier is applied once to the primary damage component.
+- Versatile weapons use their alternate primary damage formula only when wielded in two hands.
+- Heavy/Two-Handed weapons require both hands; shields can occupy one hand; two Light melee weapons can be held in separate hands.
+- Ruleset mismatches and malformed equipment states are surfaced rather than silently normalized.
+
+Status: in progress. Armor training consequences, HP/rest/death saves, and ruleset-aware condition/exhaustion behavior remain.
 
 ## RE-007 — Spellcasting Engine
 
