@@ -1,0 +1,41 @@
+{
+  "fixture": "fighter-rune-knight-2014",
+  "purpose": "Verify known runes, item inscription capacity, saving throw DC inputs, and the level 15 usage upgrade.",
+  "ruleset": "2014",
+  "classId": "fighter",
+  "progression": [
+    { "level": 3, "values": { "runesKnown": 2 } },
+    { "level": 7, "values": { "runesKnown": 3 } },
+    { "level": 10, "values": { "runesKnown": 4 } },
+    { "level": 15, "values": { "runesKnown": 5, "usesPerRune": 2 } }
+  ],
+  "mechanics": [
+    {
+      "kind": "selection",
+      "id": "fighter-rune-knight:rune-carver:known",
+      "optionSetId": "fighter-rune-knight:runes",
+      "mode": "multiple",
+      "count": { "kind": "class-table", "classId": "fighter-rune-knight", "column": "runesKnown" },
+      "allowDuplicates": false,
+      "replacement": { "when": "class-level-gained", "count": 1 }
+    },
+    {
+      "kind": "assignment",
+      "id": "fighter-rune-knight:rune-carver:inscription",
+      "selectionId": "fighter-rune-knight:rune-carver:known",
+      "targetKind": "inventory-item",
+      "capacity": { "kind": "class-table", "classId": "fighter-rune-knight", "column": "runesKnown" },
+      "maxPerTarget": 1,
+      "resetOn": "long-rest",
+      "eligibleItemTags": ["weapon", "armor", "shield", "jewelry", "wearable", "held"]
+    },
+    {
+      "kind": "resource-pool",
+      "id": "fighter-rune-knight:rune-uses",
+      "resourceId": "rune-uses",
+      "maximum": { "kind": "class-table", "classId": "fighter-rune-knight", "column": "usesPerRune" },
+      "recovery": "short-rest"
+    }
+  ],
+  "saveDC": { "formula": "8 + proficiencyBonus + abilityModifier", "ability": "con" }
+}

@@ -1,0 +1,58 @@
+import type { CharacterMechanicsState, EngineIssue, OptionDefinition, OptionSetDefinition, ProgressionTable, SelectionMechanic } from "../domain/types";
+import { evaluateRequirement } from "./prerequisite-engine";
+import { resolveProgression } from "./progression-engine";
+
+export function validateSelection(
+  mechanic: SelectionMechanic,
+  selectedIds: string[],
+  optionSet: OptionSetDefinition,
+  state: CharacterMechanicsState,
+  tables: Record<string, ProgressionTable>,
+): EngineIssue[] {
+  const issues: EngineIssue[] = [];
+  const expected = resolveProgression(mechanic.count, state.classLevels, tables);
+  const counts = new Map<string, number>();
+
+  for (const id of selectedIds) counts.set(id, (counts.get(id) ?? 0) + 1);
+
+  if (selectedIds.length !== expected) {
+    issues.push({
+      code: "selection-count",
+      message: "Choose exactly " + expected + " option(s); currently selected: " + selectedIds.length + ".",
+      subjectId: mechanic.id,
+    });
+  }
+
+  for (const [id, count] of counts) {
+    const option = optionSet.options.find((candidate) => candidate.id === id);
+    if (!option) {
+      issues.push({ code: "unknown-option", message: "Option " + id + " is not in " + optionSet.id + ".", subjectId: id });
+      continue;
+    }
+    if (!mechanic.allowDuplicates && count > 1) {
+      issues.push({ code: "duplicate-option", message: option.name + " cannot be selected more than once.", subjectId: id });
+    }
+    if (mechanic.allowDuplicates && !option.repeatable && count > 1) {
+      issues.push({ code: "not-repeatable", message: option.name + " is not repeatable.", subjectId: id });
+    }
+    for (const requirement of option.prerequisites ?? []) {
+      const result = evaluateRequirement(requirement, state);
+      if (!result.met) issues.push({
+        code: "prerequisite-not-met",
+        message: option.name + ": " + (result.reason ?? "prerequisite not met"),
+        subjectId: id,
+      });
+    }
+  }
+
+  return issues;
+}
+
+export function getEligibleOptions(
+  options: OptionDefinition[],
+  state: CharacterMechanicsState,
+): OptionDefinition[] {
+  return options.filter((option) =>
+    (option.prerequisites ?? []).every((requirement) => evaluateRequirement(requirement, state).met),
+  );
+}

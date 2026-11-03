@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/reengine/schemas/character-state.schema.json",
+  "title": "Canonical Character Mechanics State",
+  "type": "object",
+  "required": ["id", "ruleset", "classLevels", "abilityScores", "selections", "assignments", "resources"],
+  "properties": {
+    "id": { "type": "string" },
+    "ruleset": { "enum": ["2014", "2024"] },
+    "classLevels": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 20 } },
+    "abilityScores": { "type": "object", "required": ["str", "dex", "con", "int", "wis", "cha"], "properties": {
+      "str": { "type": "integer" }, "dex": { "type": "integer" }, "con": { "type": "integer" },
+      "int": { "type": "integer" }, "wis": { "type": "integer" }, "cha": { "type": "integer" }
+    }, "additionalProperties": false },
+    "selections": { "type": "object", "additionalProperties": {
+      "type": "array", "items": { "type": "string" }
+    } },
+    "assignments": { "type": "array", "items": { "type": "object", "required": ["mechanicId", "optionId", "targetId"], "properties": {
+      "mechanicId": { "type": "string" }, "optionId": { "type": "string" }, "targetId": { "type": "string" }
+    }, "additionalProperties": false } },
+    "resources": { "type": "object", "additionalProperties": {
+      "type": "object", "required": ["maximum", "current"], "properties": {
+        "maximum": { "type": "integer", "minimum": 0 }, "current": { "type": "integer", "minimum": 0 }
+      }, "additionalProperties": false
+    } },
+    "knownSpells": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

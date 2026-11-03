@@ -1,0 +1,28 @@
+{
+  "fixture": "warlock-2024",
+  "purpose": "Verify that Pact options are represented in the Invocation option set and the 2024 progression.",
+  "ruleset": "2024",
+  "classId": "warlock",
+  "progression": [
+    { "level": 1, "values": { "invocationsKnown": 1 } },
+    { "level": 2, "values": { "invocationsKnown": 3 } },
+    { "level": 5, "values": { "invocationsKnown": 5 } },
+    { "level": 7, "values": { "invocationsKnown": 6 } },
+    { "level": 9, "values": { "invocationsKnown": 7 } },
+    { "level": 12, "values": { "invocationsKnown": 8 } },
+    { "level": 15, "values": { "invocationsKnown": 9 } },
+    { "level": 18, "values": { "invocationsKnown": 10 } }
+  ],
+  "mechanics": [
+    {
+      "kind": "selection",
+      "id": "warlock-2024:eldritch-invocations",
+      "optionSetId": "warlock-2024:invocations",
+      "mode": "multiple",
+      "count": { "kind": "class-table", "classId": "warlock", "column": "invocationsKnown" },
+      "allowDuplicates": false,
+      "replacement": { "when": "class-level-gained", "count": 1 }
+    }
+  ],
+  "pactOptionsInInvocationSet": ["pact-of-the-blade", "pact-of-the-chain", "pact-of-the-tome"]
+}

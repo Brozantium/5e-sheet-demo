@@ -1,0 +1,11 @@
+{
+  "fixture": "artificer-2024-replicate-magic-item",
+  "purpose": "Keep the 2024 Plans Known and Magic Items capacities separate from the 2014 Infuse Item model.",
+  "ruleset": "2024",
+  "classId": "artificer",
+  "mechanicNotes": {
+    "learnedCollection": "plans-known",
+    "createdCollection": "magic-items",
+    "doNotAliasAs": "artificer-2014:infusions-known"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "fixture": "sorcerer-metamagic-2024",
+  "purpose": "Verify 2024 Metamagic unlock levels and the two-option increase at levels 10 and 17.",
+  "ruleset": "2024",
+  "classId": "sorcerer",
+  "progression": [
+    { "level": 2, "values": { "metamagicKnown": 2, "sorceryPoints": 2 } },
+    { "level": 10, "values": { "metamagicKnown": 4, "sorceryPoints": 10 } },
+    { "level": 17, "values": { "metamagicKnown": 6, "sorceryPoints": 17 } }
+  ],
+  "mechanicNotes": {
+    "learnedOptions": "metamagicKnown",
+    "resourcePool": "sorceryPoints",
+    "appliedAt": "spell-cast",
+    "maxPerSpell": "normally one; Sorcery Incarnate permits up to two while active"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "fixture": "artificer-2014-infusions",
+  "purpose": "Verify that the number of Infusions known is independent from the number of active infused items.",
+  "ruleset": "2014",
+  "classId": "artificer",
+  "progression": [
+    { "level": 2, "values": { "infusionsKnown": 4, "infusedItems": 2 } },
+    { "level": 6, "values": { "infusionsKnown": 6, "infusedItems": 3 } },
+    { "level": 10, "values": { "infusionsKnown": 8, "infusedItems": 4 } },
+    { "level": 14, "values": { "infusionsKnown": 10, "infusedItems": 5 } },
+    { "level": 18, "values": { "infusionsKnown": 12, "infusedItems": 6 } }
+  ],
+  "mechanics": [
+    {
+      "kind": "selection",
+      "id": "artificer-2014:infusions-known",
+      "optionSetId": "artificer-2014:infusions",
+      "mode": "multiple",
+      "count": { "kind": "class-table", "classId": "artificer", "column": "infusionsKnown" },
+      "allowDuplicates": false,
+      "replacement": { "when": "class-level-gained", "count": 1 }
+    },
+    {
+      "kind": "assignment",
+      "id": "artificer-2014:infused-items",
+      "selectionId": "artificer-2014:infusions-known",
+      "targetKind": "inventory-item",
+      "capacity": { "kind": "class-table", "classId": "artificer", "column": "infusedItems" },
+      "maxPerTarget": 1,
+      "eligibleItemTags": ["nonmagical", "infusion-eligible"]
+    }
+  ]
+}

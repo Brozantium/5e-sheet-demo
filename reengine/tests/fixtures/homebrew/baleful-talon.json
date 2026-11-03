@@ -1,0 +1,30 @@
+{
+  "fixture": "baleful-talon",
+  "purpose": "Acceptance case for a weapon with a normal attack and a conditional on-hit trigger.",
+  "ruleset": "2014",
+  "item": {
+    "id": "baleful-talon",
+    "category": "magic-item",
+    "baseItemId": "dagger",
+    "overrides": { "magical": true, "attackBonus": 1, "damageBonus": 1 }
+  },
+  "actions": [
+    {
+      "id": "baleful-talon:weapon-attack",
+      "activation": "action",
+      "kind": "weapon-attack",
+      "damage": [{ "formula": "1d4+1", "damageType": "piercing" }],
+      "ability": "finesse",
+      "addAbilityModifier": true
+    }
+  ],
+  "triggers": [
+    {
+      "id": "baleful-talon:deathly-cut",
+      "event": "weapon.hit",
+      "condition": { "naturalD20": { "minimum": 19, "maximum": 20 } },
+      "savingThrow": { "ability": "con", "dc": { "mode": "fixed", "value": 15 }, "halfDamageOnSuccess": true },
+      "damage": [{ "formula": "6d6", "damageType": "necrotic" }]
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/reengine/schemas/item.schema.json",
+  "title": "Canonical Item Definition",
+  "type": "object",
+  "required": ["id", "name", "category", "ruleset"],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "ruleset": { "enum": ["2014", "2024", "shared"] },
+    "category": { "enum": ["weapon", "armor", "shield", "gear", "tool", "ammunition", "consumable", "magic-item"] },
+    "baseItemId": { "type": "string" },
+    "properties": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "weaponProfile": {
+      "type": "object",
+      "properties": {
+        "weaponCategory": { "enum": ["simple", "martial"] },
+        "weaponType": { "enum": ["melee", "ranged"] },
+        "damage": { "type": "array", "items": { "type": "object", "required": ["formula", "damageType"], "properties": {
+          "formula": { "type": "string" }, "damageType": { "type": "string" }
+        }, "additionalProperties": false } },
+        "range": { "type": "object", "properties": {
+          "normal": { "type": "integer", "minimum": 0 }, "long": { "type": "integer", "minimum": 0 }
+        }, "additionalProperties": false }
+      },
+      "additionalProperties": true
+    },
+    "armorProfile": {
+      "type": "object",
+      "properties": {
+        "armorCategory": { "enum": ["light", "medium", "heavy", "shield"] },
+        "baseAC": { "type": "integer", "minimum": 0 },
+        "dexterity": { "enum": ["full", "capped", "none"] },
+        "maxDexterityModifier": { "type": ["integer", "null"], "minimum": 0 },
+        "strengthRequirement": { "type": "integer", "minimum": 0 },
+        "stealthDisadvantage": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "effects": { "type": "array", "items": { "type": "object" } },
+    "actions": { "type": "array", "items": { "type": "object" } },
+    "triggers": { "type": "array", "items": { "type": "object" } },
+    "source": { "type": "object" }
+  },
+  "additionalProperties": true
+}

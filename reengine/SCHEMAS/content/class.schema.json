@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/reengine/schemas/class.schema.json",
+  "title": "Canonical Class Definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "ruleset", "hitDie", "features", "progression"],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "ruleset": { "enum": ["2014", "2024", "shared"] },
+    "source": { "type": "object" },
+    "hitDie": { "type": "integer", "enum": [6, 8, 10, 12] },
+    "primaryAbilities": { "type": "array", "items": { "enum": ["str", "dex", "con", "int", "wis", "cha"] } },
+    "features": { "type": "array", "items": { "$ref": "feature.schema.json" } },
+    "progression": {
+      "type": "array",
+      "items": { "type": "object", "required": ["level", "values"], "properties": {
+        "level": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "values": { "type": "object", "additionalProperties": { "type": ["integer", "string", "boolean"] } }
+      }, "additionalProperties": false }
+    },
+    "subclass": { "type": "object", "properties": {
+      "label": { "type": "string" }, "level": { "type": "integer", "minimum": 1 }
+    }, "additionalProperties": false }
+  }
+}

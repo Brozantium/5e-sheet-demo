@@ -1,0 +1,37 @@
+{
+  "fixture": "sorcerer-metamagic-2014",
+  "purpose": "Verify that learning Metamagic is separate from applying it to a spell and spending Sorcery Points.",
+  "ruleset": "2014",
+  "classId": "sorcerer",
+  "progression": [
+    { "level": 3, "values": { "metamagicKnown": 2, "sorceryPoints": 3 } },
+    { "level": 10, "values": { "metamagicKnown": 3, "sorceryPoints": 10 } },
+    { "level": 17, "values": { "metamagicKnown": 4, "sorceryPoints": 17 } }
+  ],
+  "mechanics": [
+    {
+      "kind": "selection",
+      "id": "sorcerer-2014:metamagic-known",
+      "optionSetId": "sorcerer-2014:metamagic",
+      "mode": "multiple",
+      "count": { "kind": "class-table", "classId": "sorcerer", "column": "metamagicKnown" },
+      "allowDuplicates": false,
+      "replacement": { "when": "class-level-gained", "count": 1 }
+    },
+    {
+      "kind": "resource-pool",
+      "id": "sorcerer-2014:sorcery-points",
+      "resourceId": "sorcery-points",
+      "maximum": { "kind": "class-table", "classId": "sorcerer", "column": "sorceryPoints" },
+      "recovery": "long-rest"
+    },
+    {
+      "kind": "spell-modifier",
+      "id": "sorcerer-2014:apply-metamagic",
+      "optionSetId": "sorcerer-2014:metamagic",
+      "resourceId": "sorcery-points",
+      "timing": "spell-cast",
+      "maxPerSpell": 1
+    }
+  ]
+}

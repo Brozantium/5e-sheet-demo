@@ -1,0 +1,34 @@
+{
+  "fixture": "warlock-2014",
+  "purpose": "Exercise a simple Pact Boon choice and progression-based Eldritch Invocation selection.",
+  "ruleset": "2014",
+  "classId": "warlock",
+  "progression": [
+    { "level": 2, "values": { "invocationsKnown": 2 } },
+    { "level": 5, "values": { "invocationsKnown": 3 } },
+    { "level": 7, "values": { "invocationsKnown": 4 } },
+    { "level": 9, "values": { "invocationsKnown": 5 } },
+    { "level": 12, "values": { "invocationsKnown": 6 } },
+    { "level": 15, "values": { "invocationsKnown": 7 } },
+    { "level": 18, "values": { "invocationsKnown": 8 } }
+  ],
+  "mechanics": [
+    {
+      "kind": "selection",
+      "id": "warlock-2014:pact-boon",
+      "optionSetId": "warlock-2014:pact-boons",
+      "mode": "single",
+      "count": { "kind": "fixed", "value": 1 }
+    },
+    {
+      "kind": "selection",
+      "id": "warlock-2014:eldritch-invocations",
+      "optionSetId": "warlock-2014:invocations",
+      "mode": "multiple",
+      "count": { "kind": "class-table", "classId": "warlock", "column": "invocationsKnown" },
+      "allowDuplicates": false,
+      "replacement": { "when": "class-level-gained", "count": 1 }
+    }
+  ],
+  "optionSetIds": ["warlock-2014:pact-boons", "warlock-2014:invocations"]
+}
