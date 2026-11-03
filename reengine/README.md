@@ -43,10 +43,10 @@ The unit suite uses Node's built-in test runner. JSON Schema validation uses Ajv
 - RE-002: isolated TypeScript check, Node test harness, and CI workflow established.
 - RE-003: weapon property locking/normalization has exhaustive parity coverage for 2,048 kind/property combinations. Armor, shield, AC, equip, and inventory work remain.
 - RE-004: documented F1–F8 core engine correction slice completed with regression tests.
-- RE-005: schema/type alignment implementation is in progress pending CI and final parity review. Shared schema definitions, option-set schema, canonical item types/schema, ID/ruleset metadata validation, item/progression/reference registry validation, Ajv schema fixtures, and TypeScript contract fixtures have been added.
+- RE-005: schema/content validation complete for the current canonical model. Shared schemas, option-set/item contracts, ID/ruleset metadata enforcement, reference checks, Ajv fixtures, and TypeScript contract fixtures pass CI (47/47 tests).
 - RE-006: rules and character calculation.
 - RE-007: spellcasting engine.
 - RE-008: action, trigger, and effect engine.
 - RE-009+: migration, canonical content pilot, Owlbear adapter, Builder, Sheet, and final integration.
 
-The new engine is not yet wired into the current application. No runtime import from reengine is added to src/main.tsx or src/App.tsx.
+Spell-record existence checks are planned with RE-007; action/trigger target existence checks are planned with RE-008. Their IDs are already format-validated. The new engine is not yet wired into the current application. No runtime import from reengine is added to src/main.tsx or src/App.tsx.

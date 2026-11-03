@@ -46,7 +46,7 @@ Scope:
 - Add regression tests for invalid schemas, IDs, metadata, duplicate identifiers, and unresolved references.
 - Keep the registry's in-memory validation consistent with the canonical JSON contracts.
 
-Implemented in the current RE-005 working slice:
+Implemented:
 
 - Shared JSON Schema definitions for canonical IDs, rulesets, sources, and effect records.
 - Dedicated class, feature, option-set, item, and character-state schemas using JSON Schema Draft 2020-12.
@@ -56,13 +56,13 @@ Implemented in the current RE-005 working slice:
 - Registry validation for IDs, ruleset metadata, duplicate mechanics, progression tables/columns, option references, prerequisite references, item profiles, and base-item links.
 - Ajv 2020 schema tests with valid and invalid fixtures, plus TypeScript contract fixtures compiled by `typecheck:reengine`.
 
-Status: implementation in progress pending CI verification and final type/schema parity review. Do not mark complete until `pnpm typecheck:reengine` and `pnpm test:reengine` pass on the committed tree.
+<badge color="success">Complete</badge> Verified on commit `07d69381d1bfc4d8297a585f31d93872693dcb13`: frozen-lockfile install passed, the isolated TypeScript check passed, and all 47 unit tests passed.
 
-Known bounded limitations:
+Bounded references intentionally extended by later phases:
 
-- Spell IDs can be format-validated, but spell existence cannot be resolved until the Spell Registry/RE-007 is implemented.
-- Action and trigger IDs can be format-validated, but action/trigger target existence belongs to RE-008 registries.
-- Canonical production content packs remain unpopulated; legacy data is not bulk-imported as part of schema validation.
+- Spell IDs are format-validated now; spell existence and spell-record references will be resolved by the Spell Registry in RE-007.
+- Action and trigger IDs are format-validated now; their target existence and event contracts will be resolved in RE-008.
+- Canonical production content packs remain unpopulated. Their curation is part of the later content pilot, not bulk-importing legacy data.
 - Character instance IDs and inventory instance IDs are not content IDs and intentionally use separate identity rules.
 
 ## RE-006 — Rules & Character Calculation

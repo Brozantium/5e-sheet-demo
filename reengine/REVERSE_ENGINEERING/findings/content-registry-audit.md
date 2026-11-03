@@ -1,8 +1,8 @@
-# Findings: Content Registry and Schema Audit (RE-005 Interim)
+# Findings: Content Registry and Schema Audit (RE-005 Complete)
 
 ## Scope and status
 
-This is an interim record for RE-005 — Schema & Content Validation. The registry hardening, domain contracts, schemas, and schema fixtures described here form the current implementation slice. RE-005 remains in progress until the committed tree passes the isolated typecheck and test suite and the final contract parity review is complete.
+RE-005 — Schema & Content Validation is complete for the canonical record types currently defined in the reengine domain: class, feature, option set, item, and character mechanics state. The work has passed the isolated TypeScript check and all 47 unit tests in CI.
 
 Legacy JavaScript and JSON remain archaeology references only. They are not imported by the new runtime.
 
@@ -17,7 +17,7 @@ Legacy JavaScript and JSON remain archaeology references only. They are not impo
 
 - `ContentRuleset` and `ContentSource` are shared domain contracts.
 - `OptionSetDefinition` and per-option source/effect/prerequisite metadata have a dedicated Option Set schema.
-- `ItemDefinition` is now a canonical discriminated domain model, separate from the RE-003 weapon editor property-control types.
+- `ItemDefinition` is a canonical discriminated domain model, separate from the RE-003 weapon editor property-control types.
 - Common, class, feature, option-set, item, and character-state schemas use JSON Schema Draft 2020-12.
 - The item schema constrains weapon, armor, and shield profiles by item category; it rejects combat profiles on gear/tool/ammunition/consumable records.
 - TypeScript contract fixtures cover classes, option sets, weapons, armor, shields, and character state.
@@ -33,19 +33,19 @@ Legacy JavaScript and JSON remain archaeology references only. They are not impo
 7. Item definitions are indexed separately; duplicate IDs, profile/category shape, profile bounds, and base-item references are checked.
 8. Cross-ruleset links between feature/option-set and magic-item/base-item are reported unless one side is `shared`.
 
-## Automated validation added
+## Automated validation
 
 - Ajv Draft 2020-12 unit tests compile the common, class, feature, option-set, item, and character schemas.
 - Positive and negative fixtures cover malformed IDs/rulesets, missing required profiles, category/profile mismatches, unknown fields, and non-canonical references.
 - Existing engine regression tests remain in the same Node test runner.
-- `reengine/tests/contracts/content-shapes.ts` is included in `pnpm typecheck:reengine` to compile representative values against the TypeScript contracts.
+- `reengine/tests/contracts/content-shapes.ts` compiles representative records against the TypeScript contracts.
+- CI: `pnpm install --frozen-lockfile`, `pnpm typecheck:reengine`, and `pnpm test:reengine` passed; test summary was 47 passed, 0 failed.
 
-## Known limitations and remaining acceptance work
+## Bounded references intentionally deferred
 
-- Spell existence cannot be resolved until the Spell Registry/RE-007 exists; current validation can enforce spell ID format only.
-- Action/trigger target existence belongs to RE-008; current validation can enforce reference ID format only.
+- Spell existence cannot be resolved until the Spell Registry/RE-007 exists; the current phase validates spell ID format.
+- Action/trigger target existence belongs to RE-008; the current phase validates reference ID format.
 - No complete canonical production content packs are populated yet. That is a later content pilot, not part of importing old data into runtime.
-- Final Ajv/TypeScript contract checks still need execution on the committed tree. Keep RE-005 in progress until CI is green and any failures are addressed.
 
 ## Non-goals
 
