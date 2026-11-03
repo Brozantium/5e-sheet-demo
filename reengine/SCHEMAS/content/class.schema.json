@@ -4,38 +4,102 @@
   "title": "Canonical Class Definition",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "name", "ruleset", "hitDie", "features", "progression"],
+  "required": [
+    "id",
+    "name",
+    "ruleset",
+    "hitDie",
+    "features",
+    "progression"
+  ],
   "properties": {
-    "id": { "type": "string", "minLength": 1 },
-    "name": { "type": "string", "minLength": 1 },
-    "ruleset": { "enum": ["2014", "2024", "shared"] },
-    "hitDie": { "type": "integer", "enum": [6, 8, 10, 12] },
+    "id": {
+      "$ref": "common.schema.json#/$defs/contentId"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ruleset": {
+      "$ref": "common.schema.json#/$defs/ruleset"
+    },
+    "hitDie": {
+      "type": "integer",
+      "enum": [
+        6,
+        8,
+        10,
+        12
+      ]
+    },
     "primaryAbilities": {
       "type": "array",
-      "items": { "enum": ["str", "dex", "con", "int", "wis", "cha"] }
+      "items": {
+        "enum": [
+          "str",
+          "dex",
+          "con",
+          "int",
+          "wis",
+          "cha"
+        ]
+      },
+      "uniqueItems": true
     },
-    "features": { "type": "array", "items": { "$ref": "feature.schema.json" } },
-    "progression": { "$ref": "#/$defs/progressionTable" }
+    "features": {
+      "type": "array",
+      "items": {
+        "$ref": "feature.schema.json"
+      }
+    },
+    "progression": {
+      "$ref": "#/$defs/progressionTable"
+    },
+    "source": {
+      "$ref": "common.schema.json#/$defs/source"
+    }
   },
   "$defs": {
     "progressionTable": {
       "type": "object",
-      "required": ["id", "classId", "rows"],
+      "required": [
+        "id",
+        "classId",
+        "rows"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "classId": { "type": "string", "minLength": 1 },
-        "levelFromClassId": { "type": "string", "minLength": 1 },
+        "id": {
+          "$ref": "common.schema.json#/$defs/contentId"
+        },
+        "classId": {
+          "$ref": "common.schema.json#/$defs/contentId"
+        },
+        "levelFromClassId": {
+          "$ref": "common.schema.json#/$defs/contentId"
+        },
         "rows": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["level", "values"],
+            "required": [
+              "level",
+              "values"
+            ],
             "properties": {
-              "level": { "type": "integer", "minimum": 1, "maximum": 20 },
+              "level": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 20
+              },
               "values": {
                 "type": "object",
                 "additionalProperties": {
-                  "type": ["integer", "string", "boolean", "null"]
+                  "type": [
+                    "integer",
+                    "string",
+                    "boolean",
+                    "null"
+                  ]
                 }
               }
             },

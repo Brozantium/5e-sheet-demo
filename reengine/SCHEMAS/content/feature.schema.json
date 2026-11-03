@@ -4,61 +4,118 @@
   "title": "Canonical Feature Definition",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "name", "level", "description", "ruleset", "mechanics"],
+  "required": [
+    "id",
+    "name",
+    "level",
+    "description",
+    "ruleset",
+    "mechanics"
+  ],
   "properties": {
-    "id": { "type": "string", "minLength": 1 },
-    "name": { "type": "string", "minLength": 1 },
-    "level": { "type": "integer", "minimum": 0 },
-    "description": { "type": "string" },
-    "ruleset": { "enum": ["2014", "2024", "shared"] },
-    "source": { "$ref": "#/$defs/source" },
-    "tags": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
-    "optional": { "type": "boolean", "default": false },
+    "id": {
+      "$ref": "common.schema.json#/$defs/contentId"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "level": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 20
+    },
+    "description": {
+      "type": "string"
+    },
+    "ruleset": {
+      "$ref": "common.schema.json#/$defs/ruleset"
+    },
+    "source": {
+      "$ref": "common.schema.json#/$defs/source"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "optional": {
+      "type": "boolean",
+      "default": false
+    },
     "mechanics": {
       "type": "array",
       "items": {
         "oneOf": [
-          { "$ref": "#/$defs/selection" },
-          { "$ref": "#/$defs/assignment" },
-          { "$ref": "#/$defs/resourcePool" },
-          { "$ref": "#/$defs/spellModifier" },
-          { "$ref": "#/$defs/action" },
-          { "$ref": "#/$defs/trigger" }
+          {
+            "$ref": "#/$defs/selection"
+          },
+          {
+            "$ref": "#/$defs/assignment"
+          },
+          {
+            "$ref": "#/$defs/resourcePool"
+          },
+          {
+            "$ref": "#/$defs/spellModifier"
+          },
+          {
+            "$ref": "#/$defs/action"
+          },
+          {
+            "$ref": "#/$defs/trigger"
+          }
         ]
       }
     }
   },
   "$defs": {
-    "source": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "book": { "type": "string" },
-        "page": { "type": ["integer", "string"] },
-        "publisher": { "type": "string" },
-        "license": { "type": "string" }
-      }
-    },
     "progressionValue": {
       "oneOf": [
         {
           "type": "object",
-          "required": ["kind", "value"],
+          "required": [
+            "kind",
+            "value"
+          ],
           "properties": {
-            "kind": { "const": "fixed" },
-            "value": { "type": "integer", "minimum": 0 }
+            "kind": {
+              "const": "fixed"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": 0
+            }
           },
           "additionalProperties": false
         },
         {
           "type": "object",
-          "required": ["kind", "tableId", "column"],
+          "required": [
+            "kind",
+            "tableId",
+            "column"
+          ],
           "properties": {
-            "kind": { "const": "class-table" },
-            "tableId": { "type": "string", "minLength": 1 },
-            "levelFromClassId": { "type": "string", "minLength": 1 },
-            "column": { "type": "string", "minLength": 1 },
-            "fallback": { "type": "integer", "minimum": 0 }
+            "kind": {
+              "const": "class-table"
+            },
+            "tableId": {
+              "$ref": "common.schema.json#/$defs/contentId"
+            },
+            "levelFromClassId": {
+              "$ref": "common.schema.json#/$defs/contentId"
+            },
+            "column": {
+              "type": "string",
+              "minLength": 1
+            },
+            "fallback": {
+              "type": "integer",
+              "minimum": 0
+            }
           },
           "additionalProperties": false
         }
@@ -68,61 +125,124 @@
       "oneOf": [
         {
           "type": "object",
-          "required": ["kind", "classId", "minimum"],
+          "required": [
+            "kind",
+            "classId",
+            "minimum"
+          ],
           "properties": {
-            "kind": { "const": "class-level" },
-            "classId": { "type": "string" },
-            "minimum": { "type": "integer", "minimum": 1 }
+            "kind": {
+              "const": "class-level"
+            },
+            "classId": {
+              "$ref": "common.schema.json#/$defs/contentId"
+            },
+            "minimum": {
+              "type": "integer",
+              "minimum": 1
+            }
           },
           "additionalProperties": false
         },
         {
           "type": "object",
-          "required": ["kind", "ability", "minimum"],
+          "required": [
+            "kind",
+            "ability",
+            "minimum"
+          ],
           "properties": {
-            "kind": { "const": "ability-score" },
-            "ability": { "enum": ["str", "dex", "con", "int", "wis", "cha"] },
-            "minimum": { "type": "integer", "minimum": 1 }
+            "kind": {
+              "const": "ability-score"
+            },
+            "ability": {
+              "enum": [
+                "str",
+                "dex",
+                "con",
+                "int",
+                "wis",
+                "cha"
+              ]
+            },
+            "minimum": {
+              "type": "integer",
+              "minimum": 1
+            }
           },
           "additionalProperties": false
         },
         {
           "type": "object",
-          "required": ["kind", "selectionId", "optionId"],
+          "required": [
+            "kind",
+            "selectionId",
+            "optionId"
+          ],
           "properties": {
-            "kind": { "const": "known-option" },
-            "selectionId": { "type": "string" },
-            "optionId": { "type": "string" }
+            "kind": {
+              "const": "known-option"
+            },
+            "selectionId": {
+              "$ref": "common.schema.json#/$defs/contentId"
+            },
+            "optionId": {
+              "$ref": "common.schema.json#/$defs/contentId"
+            }
           },
           "additionalProperties": false
         },
         {
           "type": "object",
-          "required": ["kind", "spellId"],
+          "required": [
+            "kind",
+            "spellId"
+          ],
           "properties": {
-            "kind": { "const": "spell-known" },
-            "spellId": { "type": "string" }
+            "kind": {
+              "const": "spell-known"
+            },
+            "spellId": {
+              "$ref": "common.schema.json#/$defs/contentId"
+            }
           },
           "additionalProperties": false
         },
         {
           "type": "object",
-          "required": ["kind", "featureId"],
+          "required": [
+            "kind",
+            "featureId"
+          ],
           "properties": {
-            "kind": { "const": "feature-owned" },
-            "featureId": { "type": "string" }
+            "kind": {
+              "const": "feature-owned"
+            },
+            "featureId": {
+              "$ref": "common.schema.json#/$defs/contentId"
+            }
           },
           "additionalProperties": false
         },
         {
           "type": "object",
-          "required": ["kind", "requirements"],
+          "required": [
+            "kind",
+            "requirements"
+          ],
           "properties": {
-            "kind": { "enum": ["all", "any"] },
+            "kind": {
+              "enum": [
+                "all",
+                "any"
+              ]
+            },
             "requirements": {
               "type": "array",
-              "items": { "$ref": "#/$defs/requirement" },
-              "minItems": 1
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/requirement"
+              }
             }
           },
           "additionalProperties": false
@@ -131,20 +251,54 @@
     },
     "selection": {
       "type": "object",
-      "required": ["kind", "id", "optionSetId", "mode", "count"],
+      "required": [
+        "kind",
+        "id",
+        "optionSetId",
+        "mode",
+        "count"
+      ],
       "properties": {
-        "kind": { "const": "selection" },
-        "id": { "type": "string" },
-        "optionSetId": { "type": "string" },
-        "mode": { "enum": ["single", "multiple"] },
-        "count": { "$ref": "#/$defs/progressionValue" },
-        "allowDuplicates": { "type": "boolean", "default": false },
+        "kind": {
+          "const": "selection"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/contentId"
+        },
+        "optionSetId": {
+          "$ref": "common.schema.json#/$defs/contentId"
+        },
+        "mode": {
+          "enum": [
+            "single",
+            "multiple"
+          ]
+        },
+        "count": {
+          "$ref": "#/$defs/progressionValue"
+        },
+        "allowDuplicates": {
+          "type": "boolean",
+          "default": false
+        },
         "replacement": {
           "type": "object",
-          "required": ["when", "count"],
+          "required": [
+            "when",
+            "count"
+          ],
           "properties": {
-            "when": { "enum": ["class-level-gained", "long-rest", "manual"] },
-            "count": { "type": "integer", "minimum": 1 }
+            "when": {
+              "enum": [
+                "class-level-gained",
+                "long-rest",
+                "manual"
+              ]
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1
+            }
           },
           "additionalProperties": false
         }
@@ -153,47 +307,140 @@
     },
     "assignment": {
       "type": "object",
-      "required": ["kind", "id", "selectionId", "targetKind", "capacity", "maxPerTarget"],
+      "required": [
+        "kind",
+        "id",
+        "selectionId",
+        "targetKind",
+        "capacity",
+        "maxPerTarget"
+      ],
       "properties": {
-        "kind": { "const": "assignment" },
-        "id": { "type": "string" },
-        "selectionId": { "type": "string" },
-        "targetKind": { "enum": ["inventory-item", "creature", "spell"] },
-        "capacity": { "$ref": "#/$defs/progressionValue" },
-        "maxPerTarget": { "type": "integer", "minimum": 1 },
-        "maxPerOption": { "type": "integer", "minimum": 1 },
-        "resetOn": { "enum": ["short-rest", "long-rest", "never"] },
-        "eligibleItemTags": { "type": "array", "items": { "type": "string" } }
+        "kind": {
+          "const": "assignment"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/contentId"
+        },
+        "selectionId": {
+          "$ref": "common.schema.json#/$defs/contentId"
+        },
+        "targetKind": {
+          "enum": [
+            "inventory-item",
+            "creature",
+            "spell"
+          ]
+        },
+        "capacity": {
+          "$ref": "#/$defs/progressionValue"
+        },
+        "maxPerTarget": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxPerOption": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "resetOn": {
+          "enum": [
+            "short-rest",
+            "long-rest",
+            "never"
+          ]
+        },
+        "eligibleItemTags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
       },
       "additionalProperties": false
     },
     "resourcePool": {
       "type": "object",
-      "required": ["kind", "id", "resourceId", "maximum", "recovery"],
+      "required": [
+        "kind",
+        "id",
+        "resourceId",
+        "maximum",
+        "recovery"
+      ],
       "properties": {
-        "kind": { "const": "resource-pool" },
-        "id": { "type": "string" },
-        "resourceId": { "type": "string" },
-        "maximum": { "$ref": "#/$defs/progressionValue" },
-        "recovery": { "enum": ["short-rest", "long-rest", "dawn", "manual", "special"] }
+        "kind": {
+          "const": "resource-pool"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/contentId"
+        },
+        "resourceId": {
+          "$ref": "common.schema.json#/$defs/contentId"
+        },
+        "maximum": {
+          "$ref": "#/$defs/progressionValue"
+        },
+        "recovery": {
+          "enum": [
+            "short-rest",
+            "long-rest",
+            "dawn",
+            "manual",
+            "special"
+          ]
+        }
       },
       "additionalProperties": false
     },
     "spellModifier": {
       "type": "object",
-      "required": ["kind", "id", "optionSetId", "resourceId", "timing", "maxPerSpell"],
+      "required": [
+        "kind",
+        "id",
+        "optionSetId",
+        "resourceId",
+        "timing",
+        "maxPerSpell"
+      ],
       "properties": {
-        "kind": { "const": "spell-modifier" },
-        "id": { "type": "string" },
-        "optionSetId": { "type": "string" },
-        "resourceId": { "type": "string" },
-        "timing": { "const": "spell-cast" },
-        "maxPerSpell": { "type": "integer", "minimum": 1 },
+        "kind": {
+          "const": "spell-modifier"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/contentId"
+        },
+        "optionSetId": {
+          "$ref": "common.schema.json#/$defs/contentId"
+        },
+        "resourceId": {
+          "$ref": "common.schema.json#/$defs/contentId"
+        },
+        "timing": {
+          "const": "spell-cast"
+        },
+        "maxPerSpell": {
+          "type": "integer",
+          "minimum": 1
+        },
         "replacement": {
           "type": "object",
+          "required": [
+            "when",
+            "count"
+          ],
           "properties": {
-            "when": { "enum": ["class-level-gained", "manual"] },
-            "count": { "type": "integer", "minimum": 1 }
+            "when": {
+              "enum": [
+                "class-level-gained",
+                "manual"
+              ]
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1
+            }
           },
           "additionalProperties": false
         }
@@ -202,21 +449,51 @@
     },
     "action": {
       "type": "object",
-      "required": ["kind", "id", "actionIds"],
+      "required": [
+        "kind",
+        "id",
+        "actionIds"
+      ],
       "properties": {
-        "kind": { "const": "action" },
-        "id": { "type": "string" },
-        "actionIds": { "type": "array", "items": { "type": "string" } }
+        "kind": {
+          "const": "action"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/contentId"
+        },
+        "actionIds": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/contentId"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
       },
       "additionalProperties": false
     },
     "trigger": {
       "type": "object",
-      "required": ["kind", "id", "triggerIds"],
+      "required": [
+        "kind",
+        "id",
+        "triggerIds"
+      ],
       "properties": {
-        "kind": { "const": "trigger" },
-        "id": { "type": "string" },
-        "triggerIds": { "type": "array", "items": { "type": "string" } }
+        "kind": {
+          "const": "trigger"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/contentId"
+        },
+        "triggerIds": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/contentId"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
       },
       "additionalProperties": false
     }

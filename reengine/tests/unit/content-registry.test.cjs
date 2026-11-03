@@ -166,3 +166,197 @@ test("nested prerequisite groups are recursively validated", () => {
   assert.ok(codes.includes("missing-class"));
   assert.ok(codes.includes("missing-feature"));
 });
+
+test("class-level ruleset metadata must match nested class features", () => {
+  const registry = new ContentRegistry();
+  registry.registerClass({
+    ...makeClass("fighter", [makeFeature("fighter:feature", [], "2024")]),
+    ruleset: "2014",
+  });
+  assert.ok(registry.validateReferences().some((issue) =>
+    issue.code === "incompatible-ruleset" && issue.subjectId === "fighter:feature",
+  ));
+});
+
+test("progression tables reject non-integer and duplicate level rows", () => {
+  const registry = new ContentRegistry();
+  assert.throws(() => registry.registerProgressionTable({
+    id: "fighter-progress",
+    classId: "fighter",
+    rows: [{ level: 1.5, values: { uses: 1 } }],
+  }), /Invalid progression row level/);
+
+  assert.throws(() => registry.registerProgressionTable({
+    id: "fighter-progress",
+    classId: "fighter",
+    rows: [
+      { level: 1, values: { uses: 1 } },
+      { level: 1, values: { uses: 2 } },
+    ],
+  }), /Duplicate progression row level/);
+});
+
+test("fixed progression values and fallbacks must be non-negative integers", () => {
+  const registry = new ContentRegistry();
+  assert.throws(() => registry.registerFeature(makeFeature("bad-feature", [{
+    kind: "selection",
+    id: "bad-feature:selection",
+    optionSetId: "styles",
+    mode: "single",
+    count: { kind: "fixed", value: 1.5 },
+  }])), /non-negative integer/);
+});
+
+test("item registry validates canonical base-item references", () => {
+  const registry = new ContentRegistry();
+  registry.registerItem({
+    id: "weapon:longsword",
+    name: "Longsword",
+    ruleset: "2014",
+    category: "weapon",
+    weaponProfile: {
+      weaponCategory: "martial",
+      weaponType: "melee",
+      damage: [{ formula: "1d8", damageType: "slashing" }],
+    },
+  });
+  registry.registerItem({
+    id: "magic-item:flame-tongue",
+    name: "Flame Tongue",
+    ruleset: "2014",
+    category: "magic-item",
+    baseItemId: "weapon:longsword",
+  });
+
+  assert.equal(registry.getItem("weapon:longsword").name, "Longsword");
+  assert.equal(registry.listItems().length, 2);
+  assert.equal(registry.validateReferences().some((issue) => issue.code === "missing-base-item"), false);
+});
+
+test("item registry reports missing base items and cross-ruleset item links", () => {
+  const missing = new ContentRegistry();
+  missing.registerItem({
+    id: "magic-item:missing-sword",
+    name: "Missing Sword",
+    ruleset: "2014",
+    category: "magic-item",
+    baseItemId: "weapon:unknown",
+  });
+  assert.ok(missing.validateReferences().some((issue) => issue.code === "missing-base-item"));
+
+  const mismatch = new ContentRegistry();
+  mismatch.registerItem({
+    id: "weapon:base-blade",
+    name: "Base Blade",
+    ruleset: "2014",
+    category: "weapon",
+    weaponProfile: {
+      weaponCategory: "martial",
+      weaponType: "melee",
+      damage: [{ formula: "1d8", damageType: "slashing" }],
+    },
+  });
+  mismatch.registerItem({
+    id: "magic-item:2024-blade",
+    name: "2024 Blade",
+    ruleset: "2024",
+    category: "magic-item",
+    baseItemId: "weapon:base-blade",
+  });
+  assert.ok(mismatch.validateReferences().some((issue) =>
+    issue.code === "incompatible-ruleset" && issue.subjectId === "magic-item:2024-blade",
+  ));
+});
+
+test("item registration rejects malformed item identifiers and malformed profiles", () => {
+  const registry = new ContentRegistry();
+  assert.throws(() => registry.registerItem({
+    id: "Long Sword",
+    name: "Long Sword",
+    ruleset: "2014",
+    category: "weapon",
+    weaponProfile: {
+      weaponCategory: "martial",
+      weaponType: "melee",
+      damage: [{ formula: "1d8", damageType: "slashing" }],
+    },
+  }), /Invalid item id/);
+
+  assert.throws(() => registry.registerItem({
+    id: "weapon:broken",
+    name: "Broken",
+    ruleset: "2014",
+    category: "weapon",
+  }), /requires a weapon profile/);
+});
+
+test("unreferenced progression tables still validate their class-level source", () => {
+  const registry = new ContentRegistry();
+  registry.registerProgressionTable({
+    id: "subclass:rune-knight",
+    classId: "subclass:rune-knight",
+    levelFromClassId: "missing-class",
+    rows: [{ level: 3, values: { runesKnown: 2 } }],
+  });
+  assert.ok(registry.validateReferences().some((issue) =>
+    issue.code === "missing-progression-class" && issue.subjectId === "subclass:rune-knight",
+  ));
+});
+
+test("registry rejects non-positive mechanic limits and duplicate action targets", () => {
+  const registry = new ContentRegistry();
+  assert.throws(() => registry.registerFeature(makeFeature("invalid-assignment-feature", [{
+    kind: "assignment",
+    id: "invalid-assignment-feature:assignment",
+    selectionId: "some-selection",
+    targetKind: "inventory-item",
+    capacity: { kind: "fixed", value: 1 },
+    maxPerTarget: 0,
+  }])), /positive integer/);
+
+  assert.throws(() => registry.registerFeature(makeFeature("invalid-action-feature", [{
+    kind: "action",
+    id: "invalid-action-feature:action",
+    actionIds: ["test:action", "test:action"],
+  }])), /must be unique/);
+
+  assert.throws(() => registry.registerFeature(makeFeature("invalid-trigger-feature", [{
+    kind: "trigger",
+    id: "invalid-trigger-feature:trigger",
+    triggerIds: [],
+  }])), /at least 1 entries/);
+});
+
+test("registry rejects blank source metadata and duplicate class ability metadata", () => {
+  const registry = new ContentRegistry();
+  assert.throws(() => registry.registerFeature({
+    ...makeFeature("feature-with-blank-source"),
+    source: { book: "   " },
+  }), /non-empty text/);
+
+  assert.throws(() => registry.registerClass({
+    ...makeClass("fighter"),
+    primaryAbilities: ["str", "str"],
+  }), /must be unique/);
+});
+
+test("item profile validation matches category-specific schema requirements", () => {
+  const registry = new ContentRegistry();
+  assert.throws(() => registry.registerItem({
+    id: "armor:bad-mail",
+    name: "Bad Mail",
+    ruleset: "2014",
+    category: "armor",
+    weaponProfile: {
+      weaponCategory: "martial",
+      weaponType: "melee",
+      damage: [{ formula: "1d8", damageType: "slashing" }],
+    },
+    armorProfile: {
+      armorCategory: "shield",
+      baseAC: 16,
+      dexterity: "none",
+      stealthDisadvantage: true,
+    },
+  }), /non-shield armor profile/);
+});

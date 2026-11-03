@@ -1,6 +1,14 @@
 export type Ruleset = "2014" | "2024";
+export type ContentRuleset = Ruleset | "shared";
 export type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
 export type Recovery = "short-rest" | "long-rest" | "dawn" | "manual" | "special";
+
+export interface ContentSource {
+  book?: string;
+  page?: string | number;
+  publisher?: string;
+  license?: string;
+}
 
 export type ProgressionValue =
   | { kind: "fixed"; value: number }
@@ -30,6 +38,7 @@ export interface OptionDefinition {
   resourceCost?: { resourceId: string; amount: number };
   effects?: EffectDefinition[];
   tags?: string[];
+  source?: ContentSource;
 }
 
 export type EffectDefinition =
@@ -41,9 +50,10 @@ export type EffectDefinition =
 
 export interface OptionSetDefinition {
   id: string;
-  ruleset: Ruleset | "shared";
+  ruleset: ContentRuleset;
   name: string;
   options: OptionDefinition[];
+  source?: ContentSource;
 }
 
 export interface ProgressionRow {
@@ -126,9 +136,9 @@ export interface FeatureDefinition {
   name: string;
   level: number;
   description: string;
-  ruleset: Ruleset | "shared";
+  ruleset: ContentRuleset;
   optional?: boolean;
-  source?: { book?: string; page?: string | number; publisher?: string; license?: string };
+  source?: ContentSource;
   mechanics: FeatureMechanic[];
   tags?: string[];
 }
@@ -136,11 +146,12 @@ export interface FeatureDefinition {
 export interface ClassDefinition {
   id: string;
   name: string;
-  ruleset: Ruleset | "shared";
+  ruleset: ContentRuleset;
   hitDie: 6 | 8 | 10 | 12;
   progression: ProgressionTable;
   features: FeatureDefinition[];
   primaryAbilities?: Ability[];
+  source?: ContentSource;
 }
 
 export interface CharacterMechanicsState {

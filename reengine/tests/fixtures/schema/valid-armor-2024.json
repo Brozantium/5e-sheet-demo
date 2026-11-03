@@ -1,0 +1,13 @@
+{
+  "id": "armor:chain-mail",
+  "name": "Chain Mail",
+  "ruleset": "2024",
+  "category": "armor",
+  "armorProfile": {
+    "armorCategory": "heavy",
+    "baseAC": 16,
+    "dexterity": "none",
+    "strengthRequirement": 13,
+    "stealthDisadvantage": true
+  }
+}

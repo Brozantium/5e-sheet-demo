@@ -1,0 +1,38 @@
+{
+  "id": "fighter:fighting-styles",
+  "name": "Fighting Styles",
+  "ruleset": "2014",
+  "source": {
+    "book": "Player's Handbook"
+  },
+  "options": [
+    {
+      "id": "fighter:fighting-styles:archery",
+      "name": "Archery",
+      "description": "A ranged weapon attack benefit.",
+      "prerequisites": [
+        {
+          "kind": "class-level",
+          "classId": "fighter",
+          "minimum": 1
+        }
+      ],
+      "effects": [
+        {
+          "kind": "modifier",
+          "target": "attack.ranged",
+          "amount": 2
+        }
+      ],
+      "tags": [
+        "fighter"
+      ]
+    },
+    {
+      "id": "fighter:fighting-styles:defense",
+      "name": "Defense",
+      "description": "An armor-related benefit.",
+      "repeatable": false
+    }
+  ]
+}

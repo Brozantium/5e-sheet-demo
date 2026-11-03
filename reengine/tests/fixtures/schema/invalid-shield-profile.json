@@ -1,0 +1,12 @@
+{
+  "id": "armor:shield",
+  "name": "Shield",
+  "ruleset": "2024",
+  "category": "shield",
+  "armorProfile": {
+    "armorCategory": "heavy",
+    "baseAC": 2,
+    "dexterity": "none",
+    "stealthDisadvantage": false
+  }
+}

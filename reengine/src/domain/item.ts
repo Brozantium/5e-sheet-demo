@@ -1,3 +1,5 @@
+import type { ContentRuleset, ContentSource } from "./types";
+
 export const WEAPON_PROPERTY_DEFINITIONS = [
   { id: "ammunition", label: "Ammunition", hint: "Needs ammo; ranged weapons only" },
   { id: "finesse", label: "Finesse", hint: "Use the better of STR or DEX" },
@@ -29,3 +31,79 @@ export interface WeaponPropertyControlState {
   disabled: boolean;
   lockReason: string;
 }
+
+export type ItemCategory =
+  | "weapon"
+  | "armor"
+  | "shield"
+  | "gear"
+  | "tool"
+  | "ammunition"
+  | "consumable"
+  | "magic-item";
+
+export interface ItemDamageComponent {
+  formula: string;
+  damageType: string;
+}
+
+export interface WeaponProfile {
+  weaponCategory: "simple" | "martial";
+  weaponType: WeaponKind;
+  damage: ItemDamageComponent[];
+  range?: { normal: number; long?: number };
+}
+
+interface ArmorProfileBase {
+  baseAC: number;
+  dexterity: "full" | "capped" | "none";
+  maxDexterityModifier?: number | null;
+  strengthRequirement?: number;
+  stealthDisadvantage: boolean;
+}
+
+export type ArmorProfile =
+  | (ArmorProfileBase & { armorCategory: "light" | "medium" | "heavy" })
+  | (ArmorProfileBase & { armorCategory: "shield" });
+
+export interface ItemDefinitionBase {
+  id: string;
+  name: string;
+  ruleset: ContentRuleset;
+  baseItemId?: string;
+  properties?: string[];
+  tags?: string[];
+  source?: ContentSource;
+}
+
+/**
+ * Immutable canonical definition for equipment/content. Inventory instance state
+ * (quantity, equipped slot, charges remaining) belongs to character state.
+ * Actions and event triggers are separate records in the RE-008 action/effect phase.
+ */
+export type ItemDefinition =
+  | (ItemDefinitionBase & {
+      category: "weapon";
+      weaponProfile: WeaponProfile;
+      armorProfile?: never;
+    })
+  | (ItemDefinitionBase & {
+      category: "armor";
+      armorProfile: ArmorProfile & { armorCategory: "light" | "medium" | "heavy" };
+      weaponProfile?: never;
+    })
+  | (ItemDefinitionBase & {
+      category: "shield";
+      armorProfile: ArmorProfile & { armorCategory: "shield" };
+      weaponProfile?: never;
+    })
+  | (ItemDefinitionBase & {
+      category: "gear" | "tool" | "ammunition" | "consumable";
+      weaponProfile?: never;
+      armorProfile?: never;
+    })
+  | (ItemDefinitionBase & {
+      category: "magic-item";
+      weaponProfile?: WeaponProfile;
+      armorProfile?: ArmorProfile;
+    });

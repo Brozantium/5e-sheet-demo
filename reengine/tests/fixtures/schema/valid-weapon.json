@@ -1,0 +1,23 @@
+{
+  "id": "weapon:longsword",
+  "name": "Longsword",
+  "ruleset": "2014",
+  "category": "weapon",
+  "properties": [
+    "versatile"
+  ],
+  "tags": [
+    "martial",
+    "melee"
+  ],
+  "weaponProfile": {
+    "weaponCategory": "martial",
+    "weaponType": "melee",
+    "damage": [
+      {
+        "formula": "1d8",
+        "damageType": "slashing"
+      }
+    ]
+  }
+}

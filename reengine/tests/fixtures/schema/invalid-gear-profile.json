@@ -1,0 +1,12 @@
+{
+  "id": "gear:rope",
+  "name": "Rope",
+  "ruleset": "2014",
+  "category": "gear",
+  "armorProfile": {
+    "armorCategory": "light",
+    "baseAC": 11,
+    "dexterity": "full",
+    "stealthDisadvantage": false
+  }
+}

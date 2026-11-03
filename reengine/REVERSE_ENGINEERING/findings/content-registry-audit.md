@@ -1,56 +1,55 @@
-# Findings: Content Registry Audit (RE-005 Interim)
+# Findings: Content Registry and Schema Audit (RE-005 Interim)
 
 ## Scope and status
 
-This is an interim record for RE-005 — Schema & Content Validation. The registry hardening described here is a useful subset of the phase, not completion of the whole phase.
+This is an interim record for RE-005 — Schema & Content Validation. The registry hardening, domain contracts, schemas, and schema fixtures described here form the current implementation slice. RE-005 remains in progress until the committed tree passes the isolated typecheck and test suite and the final contract parity review is complete.
 
-RE-005 must align TypeScript domain contracts and JSON Schema, define and validate stable IDs and ruleset metadata, and validate cross-content references. No legacy JavaScript or JSON is imported at runtime.
+Legacy JavaScript and JSON remain archaeology references only. They are not imported by the new runtime.
 
-## Repository inventory at the audited revision
+## Canonical identity and metadata
 
-- Legacy reference data exists in `data/` and `data/2024/`; it remains archaeology input only.
-- Canonical content directories under `reengine/content/` are present but contain only `.gitkeep` placeholders.
-- Schemas currently cover class, feature, item, and character mechanics state. A dedicated Option Set schema is missing.
-- `reengine/src/domain/types.ts` defines class, feature, option set, progression, and character mechanics types.
-- `reengine/src/domain/item.ts` currently defines weapon editor property controls, not a canonical item definition.
-- The current item schema remains permissive in several areas and is not yet backed by a matching canonical TypeScript item interface.
+- Stable canonical content IDs use lowercase kebab-case segments separated by colons, such as `artificer-2014:infusions-known` and `fighter:rune-carver:known`.
+- Ruleset metadata is explicit: `2014`, `2024`, or `shared`.
+- Source metadata is represented by a shared `ContentSource` interface and common JSON Schema definition.
+- Character IDs and inventory instance IDs are separate runtime identities; they are not forced into the canonical content ID namespace.
 
-## Registry work already implemented
+## TypeScript and JSON Schema work implemented
 
-1. Duplicate mechanic IDs are rejected.
-2. Class registration validates nested IDs before mutating registry indexes.
+- `ContentRuleset` and `ContentSource` are shared domain contracts.
+- `OptionSetDefinition` and per-option source/effect/prerequisite metadata have a dedicated Option Set schema.
+- `ItemDefinition` is now a canonical discriminated domain model, separate from the RE-003 weapon editor property-control types.
+- Common, class, feature, option-set, item, and character-state schemas use JSON Schema Draft 2020-12.
+- The item schema constrains weapon, armor, and shield profiles by item category; it rejects combat profiles on gear/tool/ammunition/consumable records.
+- TypeScript contract fixtures cover classes, option sets, weapons, armor, shields, and character state.
+
+## Registry validation implemented
+
+1. Duplicate mechanic IDs are rejected; class registration validates nested entries before mutating registry indexes.
+2. IDs and ruleset metadata are checked on class, feature, option-set, progression, mechanic, option, prerequisite, and item registration.
 3. Assignment references must resolve to a selection mechanic.
-4. Selection/spell-modifier option-set references are checked.
-5. Feature and option-set rulesets must match unless one side is `shared`.
-6. Structured prerequisites validate class, feature, selection, and option references where the relevant registry exists.
-7. Progression references validate table and column existence.
-8. Class progression tables can be indexed and looked up.
+4. Selection/spell-modifier option-set references and ruleset compatibility are checked.
+5. Structured prerequisites validate class, feature, selection, and option references where the relevant registry exists.
+6. Progression references validate table and column existence; progression row levels, duplicate levels, and numeric value constraints are checked.
+7. Item definitions are indexed separately; duplicate IDs, profile/category shape, profile bounds, and base-item references are checked.
+8. Cross-ruleset links between feature/option-set and magic-item/base-item are reported unless one side is `shared`.
 
-These behaviors have focused unit tests in `reengine/tests/unit/content-registry.test.cjs`.
+## Automated validation added
 
-## Remaining RE-005 work
+- Ajv Draft 2020-12 unit tests compile the common, class, feature, option-set, item, and character schemas.
+- Positive and negative fixtures cover malformed IDs/rulesets, missing required profiles, category/profile mismatches, unknown fields, and non-canonical references.
+- Existing engine regression tests remain in the same Node test runner.
+- `reengine/tests/contracts/content-shapes.ts` is included in `pnpm typecheck:reengine` to compile representative values against the TypeScript contracts.
 
-- Define an ID grammar and namespace policy based on the canonical content model, then enforce it in TypeScript-facing validation, schemas, registry registration, and fixtures.
-- Add an Option Set JSON Schema matching `OptionSetDefinition` and `OptionDefinition`.
-- Compare each TypeScript interface against its JSON Schema, including optionality, nullability, numeric bounds, unions, and metadata.
-- Add a canonical item domain model and replace permissive item schema sections with explicit weapon, armor, shield, gear, and magic-item contracts as supported by the selected scope.
-- Standardize ruleset/source metadata consistently across canonical content records.
-- Add JSON Schema validation tests for valid fixtures and invalid/negative cases.
-- Extend reference validation as corresponding registries/contracts become available; do not pretend spell, item, action, trigger, and effect references are resolved before those registries exist.
+## Known limitations and remaining acceptance work
+
+- Spell existence cannot be resolved until the Spell Registry/RE-007 exists; current validation can enforce spell ID format only.
+- Action/trigger target existence belongs to RE-008; current validation can enforce reference ID format only.
+- No complete canonical production content packs are populated yet. That is a later content pilot, not part of importing old data into runtime.
+- Final Ajv/TypeScript contract checks still need execution on the committed tree. Keep RE-005 in progress until CI is green and any failures are addressed.
 
 ## Non-goals
 
 - No automatic bulk conversion of `data/` or `data/2024/` into canonical content.
 - No runtime reads from `/assets`, `/data`, or `/data/2024`.
 - No prose-to-mechanics parsing during gameplay.
-- No claim that RE-005 is complete until schema validation and type/schema parity tests pass.
-
-## Acceptance criteria
-
-RE-005 is complete only when:
-
-- TypeScript contracts and JSON Schemas agree for every canonical record type included in this phase.
-- Stable IDs and ruleset/source metadata are validated consistently.
-- Registry checks reject duplicate IDs and unresolved references within the available content domains.
-- Positive and negative schema fixtures pass the configured validator.
-- `pnpm typecheck:reengine` and `pnpm test:reengine` pass in CI.
+- No assertion that a reference is resolvable before the relevant content registry exists.

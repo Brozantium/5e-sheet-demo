@@ -32,9 +32,8 @@ Status: weapon-property parity slice complete. Armor, shields, AC, equipment, an
 
 - Fix F1–F8 findings with regression tests.
 - Cover progression, selection, assignment, resources, and spell-modifier validation.
-- Keep the TypeScript contracts and JSON Schema synchronized as part of the correction work.
 
-Status: the documented F1–F8 correction slice is complete, with tests. Further contract/schema alignment belongs to RE-005.
+Status: the documented F1–F8 correction slice is complete, with tests.
 
 ## RE-005 — Schema & Content Validation
 
@@ -47,25 +46,24 @@ Scope:
 - Add regression tests for invalid schemas, IDs, metadata, duplicate identifiers, and unresolved references.
 - Keep the registry's in-memory validation consistent with the canonical JSON contracts.
 
-Current status: in progress, not complete.
+Implemented in the current RE-005 working slice:
 
-Already implemented in the initial RE-005 slice:
+- Shared JSON Schema definitions for canonical IDs, rulesets, sources, and effect records.
+- Dedicated class, feature, option-set, item, and character-state schemas using JSON Schema Draft 2020-12.
+- Canonical content ID grammar: lowercase kebab-case segments separated by colons, e.g. `artificer-2014:infusions-known`.
+- Shared `ContentRuleset` and `ContentSource` TypeScript contracts.
+- A canonical discriminated `ItemDefinition` model for weapons, armor, shields, gear, tools, ammunition, consumables, and magic items.
+- Registry validation for IDs, ruleset metadata, duplicate mechanics, progression tables/columns, option references, prerequisite references, item profiles, and base-item links.
+- Ajv 2020 schema tests with valid and invalid fixtures, plus TypeScript contract fixtures compiled by `typecheck:reengine`.
 
-- Duplicate mechanic ID protection and atomic class registration.
-- Assignment-to-selection reference checks.
-- Option-set/ruleset compatibility checks.
-- Structured prerequisite checks for class, feature, selection, and option references.
-- Progression table and column reference checks.
+Status: implementation in progress pending CI verification and final type/schema parity review. Do not mark complete until `pnpm typecheck:reengine` and `pnpm test:reengine` pass on the committed tree.
 
-Remaining before RE-005 can be marked complete:
+Known bounded limitations:
 
-- Add the missing Option Set JSON Schema.
-- Define a canonical content ID policy and apply it consistently in TypeScript, schemas, registry validation, and fixtures.
-- Reconcile the remaining TypeScript/schema shape differences, including progression numeric constraints and source/ruleset metadata.
-- Introduce a canonical item domain contract; the current `domain/item.ts` only defines weapon editor property controls, not a full item definition.
-- Tighten the item schema so it validates a real contract rather than accepting broadly permissive objects.
-- Add schema-validation tests for actual canonical fixtures and negative cases.
-- Verify the final schema/type/reference contract together before moving the phase to complete.
+- Spell IDs can be format-validated, but spell existence cannot be resolved until the Spell Registry/RE-007 is implemented.
+- Action and trigger IDs can be format-validated, but action/trigger target existence belongs to RE-008 registries.
+- Canonical production content packs remain unpopulated; legacy data is not bulk-imported as part of schema validation.
+- Character instance IDs and inventory instance IDs are not content IDs and intentionally use separate identity rules.
 
 ## RE-006 — Rules & Character Calculation
 

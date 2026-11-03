@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/reengine/schemas/option-set.schema.json",
+  "title": "Canonical Option Set Definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "ruleset",
+    "options"
+  ],
+  "properties": {
+    "id": {
+      "$ref": "common.schema.json#/$defs/contentId"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ruleset": {
+      "$ref": "common.schema.json#/$defs/ruleset"
+    },
+    "source": {
+      "$ref": "common.schema.json#/$defs/source"
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/contentId"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string"
+          },
+          "prerequisites": {
+            "type": "array",
+            "items": {
+              "$ref": "feature.schema.json#/$defs/requirement"
+            }
+          },
+          "repeatable": {
+            "type": "boolean",
+            "default": false
+          },
+          "resourceCost": {
+            "type": "object",
+            "required": [
+              "resourceId",
+              "amount"
+            ],
+            "properties": {
+              "resourceId": {
+                "$ref": "common.schema.json#/$defs/contentId"
+              },
+              "amount": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          "effects": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/effectDefinition"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "source": {
+            "$ref": "common.schema.json#/$defs/source"
+          }
+        }
+      }
+    }
+  }
+}

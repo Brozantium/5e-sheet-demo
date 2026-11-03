@@ -1,0 +1,17 @@
+{
+  "id": "magic-item:flame-tongue",
+  "name": "Flame Tongue",
+  "ruleset": "2014",
+  "category": "magic-item",
+  "baseItemId": "weapon:longsword",
+  "weaponProfile": {
+    "weaponCategory": "martial",
+    "weaponType": "melee",
+    "damage": [
+      {
+        "formula": "1d8",
+        "damageType": "slashing"
+      }
+    ]
+  }
+}

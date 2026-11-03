@@ -1,0 +1,37 @@
+{
+  "id": "character-1",
+  "ruleset": "2014",
+  "classLevels": {
+    "fighter": 5
+  },
+  "abilityScores": {
+    "str": 16,
+    "dex": 12,
+    "con": 14,
+    "int": 10,
+    "wis": 10,
+    "cha": 8
+  },
+  "selections": {
+    "fighter:fighting-style": [
+      "fighter:fighting-styles:archery"
+    ]
+  },
+  "assignments": [],
+  "resources": {
+    "fighter:second-wind:uses": {
+      "maximum": 1,
+      "current": 0
+    }
+  },
+  "knownSpells": [],
+  "ownedFeatures": [
+    "fighter:second-wind"
+  ],
+  "inventoryItemTags": {
+    "item-instance-1": [
+      "weapon",
+      "martial"
+    ]
+  }
+}

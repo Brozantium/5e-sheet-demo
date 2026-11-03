@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/reengine/schemas/common.schema.json",
+  "title": "Shared Canonical Content Definitions",
+  "$defs": {
+    "contentId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?::[a-z][a-z0-9]*(?:-[a-z0-9]+)*)*$"
+    },
+    "ruleset": {
+      "enum": [
+        "2014",
+        "2024",
+        "shared"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "book": {
+          "type": "string",
+          "minLength": 1
+        },
+        "page": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "publisher": {
+          "type": "string",
+          "minLength": 1
+        },
+        "license": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "effectDefinition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "target",
+            "amount"
+          ],
+          "properties": {
+            "kind": {
+              "const": "modifier"
+            },
+            "target": {
+              "type": "string",
+              "minLength": 1
+            },
+            "amount": {
+              "type": "number"
+            },
+            "condition": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "spellId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "grant-spell"
+            },
+            "spellId": {
+              "$ref": "#/$defs/contentId"
+            },
+            "preparation": {
+              "enum": [
+                "always",
+                "known",
+                "prepared"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "defense",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "defense"
+            },
+            "defense": {
+              "enum": [
+                "resistance",
+                "immunity",
+                "vulnerability"
+              ]
+            },
+            "value": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "proficiency",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "proficiency"
+            },
+            "proficiency": {
+              "enum": [
+                "skill",
+                "tool",
+                "weapon",
+                "armor",
+                "language"
+              ]
+            },
+            "value": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "actionId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "action-grant"
+            },
+            "actionId": {
+              "$ref": "#/$defs/contentId"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

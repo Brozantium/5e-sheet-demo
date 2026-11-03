@@ -35,7 +35,7 @@ pnpm typecheck:reengine
 pnpm test:reengine
 ```
 
-The test suite uses Node's built-in test runner and TypeScript compilation to a disposable CommonJS directory. It introduces no additional runtime dependency. Generated test output is ignored by git.
+The unit suite uses Node's built-in test runner. JSON Schema validation uses Ajv Draft 2020-12 as a development-only dependency; it adds no runtime dependency to the production application. TypeScript fixtures under tests/contracts are included in the isolated typecheck.
 
 ## Current status
 
@@ -43,7 +43,7 @@ The test suite uses Node's built-in test runner and TypeScript compilation to a 
 - RE-002: isolated TypeScript check, Node test harness, and CI workflow established.
 - RE-003: weapon property locking/normalization has exhaustive parity coverage for 2,048 kind/property combinations. Armor, shield, AC, equip, and inventory work remain.
 - RE-004: documented F1–F8 core engine correction slice completed with regression tests.
-- RE-005: in progress. Registry reference checks have been added, but schema/type alignment, stable ID policy, complete item contract, option-set schema, and schema validation tests remain.
+- RE-005: schema/type alignment implementation is in progress pending CI and final parity review. Shared schema definitions, option-set schema, canonical item types/schema, ID/ruleset metadata validation, item/progression/reference registry validation, Ajv schema fixtures, and TypeScript contract fixtures have been added.
 - RE-006: rules and character calculation.
 - RE-007: spellcasting engine.
 - RE-008: action, trigger, and effect engine.

@@ -3,6 +3,7 @@
   "$id": "https://example.invalid/reengine/schemas/character-state.schema.json",
   "title": "Canonical Character Mechanics State",
   "type": "object",
+  "additionalProperties": false,
   "required": [
     "id",
     "ruleset",
@@ -16,66 +17,141 @@
     "inventoryItemTags"
   ],
   "properties": {
-    "id": { "type": "string" },
-    "ruleset": { "enum": ["2014", "2024"] },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ruleset": {
+      "enum": [
+        "2014",
+        "2024"
+      ]
+    },
     "classLevels": {
       "type": "object",
-      "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 20 }
+      "propertyNames": {
+        "$ref": "common.schema.json#/$defs/contentId"
+      },
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 20
+      }
     },
     "abilityScores": {
       "type": "object",
-      "required": ["str", "dex", "con", "int", "wis", "cha"],
+      "required": [
+        "str",
+        "dex",
+        "con",
+        "int",
+        "wis",
+        "cha"
+      ],
       "properties": {
-        "str": { "type": "integer" },
-        "dex": { "type": "integer" },
-        "con": { "type": "integer" },
-        "int": { "type": "integer" },
-        "wis": { "type": "integer" },
-        "cha": { "type": "integer" }
+        "str": {
+          "type": "integer"
+        },
+        "dex": {
+          "type": "integer"
+        },
+        "con": {
+          "type": "integer"
+        },
+        "int": {
+          "type": "integer"
+        },
+        "wis": {
+          "type": "integer"
+        },
+        "cha": {
+          "type": "integer"
+        }
       },
       "additionalProperties": false
     },
     "selections": {
       "type": "object",
+      "propertyNames": {
+        "$ref": "common.schema.json#/$defs/contentId"
+      },
       "additionalProperties": {
         "type": "array",
-        "items": { "type": "string" }
+        "items": {
+          "$ref": "common.schema.json#/$defs/contentId"
+        }
       }
     },
     "assignments": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["mechanicId", "optionId", "targetId"],
+        "required": [
+          "mechanicId",
+          "optionId",
+          "targetId"
+        ],
         "properties": {
-          "mechanicId": { "type": "string" },
-          "optionId": { "type": "string" },
-          "targetId": { "type": "string" }
+          "mechanicId": {
+            "$ref": "common.schema.json#/$defs/contentId"
+          },
+          "optionId": {
+            "$ref": "common.schema.json#/$defs/contentId"
+          },
+          "targetId": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "additionalProperties": false
       }
     },
     "resources": {
       "type": "object",
+      "propertyNames": {
+        "$ref": "common.schema.json#/$defs/contentId"
+      },
       "additionalProperties": {
         "type": "object",
-        "required": ["maximum", "current"],
+        "required": [
+          "maximum",
+          "current"
+        ],
         "properties": {
-          "maximum": { "type": "integer", "minimum": 0 },
-          "current": { "type": "integer", "minimum": 0 }
+          "maximum": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "current": {
+            "type": "integer",
+            "minimum": 0
+          }
         },
         "additionalProperties": false
       }
     },
-    "knownSpells": { "type": "array", "items": { "type": "string" } },
-    "ownedFeatures": { "type": "array", "items": { "type": "string" } },
+    "knownSpells": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/contentId"
+      },
+      "uniqueItems": true
+    },
+    "ownedFeatures": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/contentId"
+      },
+      "uniqueItems": true
+    },
     "inventoryItemTags": {
       "type": "object",
       "additionalProperties": {
         "type": "array",
-        "items": { "type": "string" }
+        "items": {
+          "type": "string"
+        }
       }
     }
-  },
-  "additionalProperties": false
+  }
 }

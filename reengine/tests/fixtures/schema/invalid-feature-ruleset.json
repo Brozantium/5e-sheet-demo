@@ -1,0 +1,50 @@
+{
+  "id": "fighter",
+  "name": "Fighter",
+  "ruleset": "2014",
+  "hitDie": 10,
+  "primaryAbilities": [
+    "str",
+    "dex"
+  ],
+  "source": {
+    "book": "Player's Handbook",
+    "publisher": "Wizards of the Coast"
+  },
+  "progression": {
+    "id": "fighter",
+    "classId": "fighter",
+    "rows": [
+      {
+        "level": 1,
+        "values": {
+          "proficiencyBonus": 2
+        }
+      }
+    ]
+  },
+  "features": [
+    {
+      "id": "fighter:second-wind",
+      "name": "Second Wind",
+      "level": 1,
+      "description": "A limited-use recovery feature.",
+      "ruleset": "5e2024",
+      "source": {
+        "book": "Player's Handbook"
+      },
+      "mechanics": [
+        {
+          "kind": "resource-pool",
+          "id": "fighter:second-wind:uses",
+          "resourceId": "fighter:second-wind:uses",
+          "maximum": {
+            "kind": "fixed",
+            "value": 1
+          },
+          "recovery": "short-rest"
+        }
+      ]
+    }
+  ]
+}

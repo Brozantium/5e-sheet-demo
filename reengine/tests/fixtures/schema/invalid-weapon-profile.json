@@ -1,0 +1,13 @@
+{
+  "id": "weapon:longsword",
+  "name": "Longsword",
+  "ruleset": "2014",
+  "category": "weapon",
+  "properties": [
+    "versatile"
+  ],
+  "tags": [
+    "martial",
+    "melee"
+  ]
+}
