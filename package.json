@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "format": "oxfmt",
     "typecheck:reengine": "tsc -p reengine/tsconfig.json",
-    "test:reengine": "tsc -p reengine/tsconfig.test.json && node -e \"require('node:fs').writeFileSync('reengine/.test-dist/package.json', '{\\\"type\\\":\\\"commonjs\\\"}\\\\n')\" && node --test reengine/tests/unit/*.test.cjs"
+    "test:reengine": "tsc -p reengine/tsconfig.test.json && node -e \"require('node:fs').writeFileSync('reengine/.test-dist/package.json', '{\\\"type\\\":\\\"commonjs\\\"}')\" && node --test reengine/tests/unit/*.test.cjs"
   },
   "dependencies": {
     "@owlbear-rodeo/sdk": "^3.1.0",
