@@ -11,11 +11,13 @@ Current first-pass modules:
 - spell-modifier-engine: validates known Metamagic-like options and computes resource cost.
 - item-engine: normalizes weapon-property combinations with exhaustive legacy parity coverage.
 - character-calculation-engine: calculates ability modifiers, total character level, proficiency bonus, saving throws, skills, initiative, and passive Perception.
+- armor-class-engine: calculates unarmored, armor, and shield AC from canonical item profiles and character training.
 
 Planned modules / extensions:
 - effect-engine
 - action-engine
 - trigger-engine
-- armor, equipment, and inventory calculations
+- weapon attack and damage calculations, including finesse and weapon proficiency
+- equipment hand occupancy and weapon equip validation
 - character HP, death saves, rest, and condition/exhaustion policies
 - spellcasting-engine

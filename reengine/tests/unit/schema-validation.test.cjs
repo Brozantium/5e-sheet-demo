@@ -81,6 +81,13 @@ test("schema rejects shield and non-combat records with the wrong profile shape"
   assertInvalid(validators.item, fixture("invalid-gear-profile.json"), "gear with armor profile");
 });
 
+test("schema requires a numeric Dexterity cap for capped armor", () => {
+  const value = fixture("valid-armor-2024.json");
+  value.armorProfile.dexterity = "capped";
+  delete value.armorProfile.maxDexterityModifier;
+  assertInvalid(validators.item, value, "capped armor without maximum Dexterity modifier");
+});
+
 test("schema rejects unknown fields instead of silently accepting shape drift", () => {
   const value = fixture("valid-weapon.json");
   value.unreviewedLegacyField = true;

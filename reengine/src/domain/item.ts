@@ -56,15 +56,24 @@ export interface WeaponProfile {
 
 interface ArmorProfileBase {
   baseAC: number;
-  dexterity: "full" | "capped" | "none";
-  maxDexterityModifier?: number | null;
   strengthRequirement?: number;
   stealthDisadvantage: boolean;
 }
 
+type ArmorDexterityRule =
+  | { dexterity: "full" | "none"; maxDexterityModifier?: null }
+  | { dexterity: "capped"; maxDexterityModifier: number };
+
 export type ArmorProfile =
-  | (ArmorProfileBase & { armorCategory: "light" | "medium" | "heavy" })
-  | (ArmorProfileBase & { armorCategory: "shield" });
+  | (ArmorProfileBase &
+      ArmorDexterityRule & {
+        armorCategory: "light" | "medium" | "heavy";
+      })
+  | (ArmorProfileBase & {
+      armorCategory: "shield";
+      dexterity: "none";
+      maxDexterityModifier?: null;
+    });
 
 export interface ItemDefinitionBase {
   id: string;

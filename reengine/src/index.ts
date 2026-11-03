@@ -8,3 +8,4 @@ export * from "./engines/assignment-engine";
 export * from "./engines/spell-modifier-engine";
 export * from "./engines/item-engine";
 export * from "./engines/character-calculation-engine";
+export * from "./engines/armor-class-engine";

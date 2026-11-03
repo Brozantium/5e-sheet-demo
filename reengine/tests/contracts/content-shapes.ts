@@ -68,6 +68,20 @@ export const chainMail2024 = {
   },
 } satisfies ItemDefinition;
 
+export const halfPlate2014 = {
+  id: "armor:half-plate",
+  name: "Half Plate",
+  ruleset: "2014",
+  category: "armor",
+  armorProfile: {
+    armorCategory: "medium",
+    baseAC: 15,
+    dexterity: "capped",
+    maxDexterityModifier: 2,
+    stealthDisadvantage: true,
+  },
+} satisfies ItemDefinition;
+
 export const shield2024 = {
   id: "armor:shield",
   name: "Shield",
