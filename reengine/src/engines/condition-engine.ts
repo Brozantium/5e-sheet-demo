@@ -43,6 +43,18 @@ function emptyEffects(): ConditionDerivedEffects {
     automaticSavingThrowFailures: [],
     automaticAbilityCheckFailures: [],
     prohibitedHarmfulTargetCreatureIds: [],
+    prohibitedDamagingTargetCreatureIds: [],
+    automaticCriticalHitWithinFeet: null,
+    canSee: true,
+    canHear: true,
+    awareOfSurroundings: true,
+    invisible: false,
+    cannotBeTargetedBySightRequiredEffectsUnlessVisible: false,
+    physicalProperties: {
+      transformedToInanimateSubstance: false,
+      weightMultiplier: 1,
+      ceasesAging: false,
+    },
     actions: {
       canTakeAction: true,
       canTakeBonusAction: true,
@@ -212,16 +224,29 @@ export function resolveConditionEffects(
     addUnique(effects.automaticSavingThrowFailures, "dex");
   }
   if (activeTypes.has("blinded")) {
+    effects.canSee = false;
     addUnique(effects.automaticAbilityCheckFailures, "sight");
   }
   if (activeTypes.has("deafened")) {
+    effects.canHear = false;
     addUnique(effects.automaticAbilityCheckFailures, "hearing");
   }
 
   effects.mustDropHeldItems = activeTypes.has("unconscious");
   effects.mustFallProne = activeTypes.has("unconscious");
+  effects.automaticCriticalHitWithinFeet =
+    activeTypes.has("paralyzed") || activeTypes.has("unconscious") ? 5 : null;
+  effects.awareOfSurroundings = !activeTypes.has("unconscious") && !activeTypes.has("petrified");
+
+  if (activeTypes.has("invisible")) {
+    effects.invisible = true;
+    effects.cannotBeTargetedBySightRequiredEffectsUnlessVisible = true;
+  }
 
   if (activeTypes.has("petrified")) {
+    effects.physicalProperties.transformedToInanimateSubstance = true;
+    effects.physicalProperties.weightMultiplier = 10;
+    effects.physicalProperties.ceasesAging = true;
     effects.damageResistances.push("all");
     effects.conditionImmunities.push("poisoned");
     if (input.ruleset === "2014") {
@@ -239,7 +264,11 @@ export function resolveConditionEffects(
         break;
       case "charmed":
         if (sourceCreatureId) {
-          addUnique(effects.prohibitedHarmfulTargetCreatureIds, sourceCreatureId);
+          if (input.ruleset === "2014") {
+            addUnique(effects.prohibitedHarmfulTargetCreatureIds, sourceCreatureId);
+          } else {
+            addUnique(effects.prohibitedDamagingTargetCreatureIds, sourceCreatureId);
+          }
           addRollModifier(
             effects,
             instance,
@@ -362,6 +391,7 @@ export function resolveConditionEffects(
 
   const uniqueStringLists: Array<keyof ConditionDerivedEffects> = [
     "prohibitedHarmfulTargetCreatureIds",
+    "prohibitedDamagingTargetCreatureIds",
     "automaticSavingThrowFailures",
     "automaticAbilityCheckFailures",
     "conditionImmunities",
