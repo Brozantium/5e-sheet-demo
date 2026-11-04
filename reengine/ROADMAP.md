@@ -202,7 +202,7 @@ Status: implementation complete on `feat/re-006d3-death-saves-stabilization`. Fr
 - 2014 Hit Dice recovery is a player choice, limited to half total Hit Dice (minimum one); 2024 automatically restores all expended Hit Dice.
 - Keep the rest lifecycle and interruption event log explicit; do not duplicate D2 Hit Die spending or RE-006E Exhaustion effects.
 
-Status: implementation in progress on `feat/re-006d4-long-rest-recovery`.
+Status: implementation complete on `feat/re-006d4-long-rest-recovery`. Frozen-lockfile install and `pnpm typecheck:reengine` passed; all 257 unit tests passed. The caller supplies the resolved rest event log; persistence and UI orchestration remain later integration work.
 
 ### RE-006E — Conditions & Exhaustion
 
