@@ -35,10 +35,10 @@ This audit is scoped to the inspected legacy sheet path and the current reengine
 - `duration`, `source`, `save`, and `notes` are displayed in the condition UI. `appliedAt` is initialized but has no observed duration countdown use in the inspected file.
 
 Code evidence:
-- [Condition identifiers and ActiveCondition](../../../../src/combat-rules.ts#L4-L34)
-- [Sheet state](../../../../src/App.tsx#L280-L315)
-- [Condition normalization](../../../../src/App.tsx#L4823-L4845)
-- [Saved character condition loading](../../../../src/App.tsx#L5048-L5055)
+- [Condition identifiers and ActiveCondition](../../../src/combat-rules.ts#L4-L34)
+- [Sheet state](../../../src/App.tsx#L280-L315)
+- [Condition normalization](../../../src/App.tsx#L4823-L4845)
+- [Saved character condition loading](../../../src/App.tsx#L5048-L5055)
 
 ### 2. Resolver and actual consumers
 
@@ -61,11 +61,11 @@ Observed consumers:
 - UI renders reminder strings and the action/reaction availability indicators.
 
 Code evidence:
-- [ConditionSummary and resolver](../../../../src/combat-rules.ts#L36-L165)
-- [Summary, maximum HP, and speed calculation](../../../../src/App.tsx#L5900-L5935)
-- [General roll integration](../../../../src/App.tsx#L6590-L6645)
-- [Death Save mode integration](../../../../src/App.tsx#L6888-L6925)
-- [Action/reaction button gating](../../../../src/App.tsx#L11905-L11942)
+- [ConditionSummary and resolver](../../../src/combat-rules.ts#L36-L165)
+- [Summary, maximum HP, and speed calculation](../../../src/App.tsx#L5900-L5935)
+- [General roll integration](../../../src/App.tsx#L6590-L6645)
+- [Death Save mode integration](../../../src/App.tsx#L6888-L6925)
+- [Action/reaction button gating](../../../src/App.tsx#L11905-L11942)
 
 ### 3. Condition application and instance stacking
 
@@ -82,8 +82,8 @@ Implication:
 - The manual pill's `find`/toggle approach is a type-level toggle, not an instance-management interface.
 
 Code evidence:
-- [Feature effect condition application](../../../../src/App.tsx#L7058-L7120)
-- [Condition UI toggle and instance list](../../../../src/App.tsx#L12300-L12378)
+- [Feature effect condition application](../../../src/App.tsx#L7058-L7120)
+- [Condition UI toggle and instance list](../../../src/App.tsx#L12300-L12378)
 
 ### 4. Condition duration and lifecycle
 
@@ -101,9 +101,9 @@ The rest handler applies the following filters:
 No turn counter, round/turn boundary, clock deadline, save-to-end resolver, or source-ended event handler was found in the inspected condition path. The free-text duration is presented to the player but is not parsed into a timer. The timestamp is stored but is not used to calculate expiry.
 
 Code evidence:
-- [Rest expiration filtering](../../../../src/App.tsx#L3815-L3850)
-- [Condition normalization and metadata defaults](../../../../src/App.tsx#L4823-L4845)
-- [Condition source/duration/save display](../../../../src/App.tsx#L12340-L12378)
+- [Rest expiration filtering](../../../src/App.tsx#L3815-L3850)
+- [Condition normalization and metadata defaults](../../../src/App.tsx#L4823-L4845)
+- [Condition source/duration/save display](../../../src/App.tsx#L12340-L12378)
 
 ### 5. Exhaustion and rest interaction in the legacy sheet
 
@@ -130,11 +130,11 @@ The inspected legacy `applyRestToSheet()` does not reduce `exhaustionLevel`. Thi
 **Boundary:** D4 remains the owner of Long Rest recovery. RE-006E Exhaustion should own per-level derived mechanical effects and validated level changes, not reimplement Long Rest's recovery decision.
 
 Code evidence:
-- [2014 Exhaustion calculations](../../../../src/combat-rules.ts#L52-L178)
-- [Legacy death transition and HP maximum clamp](../../../../src/App.tsx#L5904-L5915)
-- [Legacy Exhaustion controls/display](../../../../src/App.tsx#L12380-L12430)
-- [D4 Long Rest Exhaustion recovery](../../../../reengine/src/engines/long-rest-engine.ts#L350-L380)
-- [D4 Exhaustion recovery tests](../../../../reengine/tests/unit/long-rest-engine.test.cjs#L80-L110)
+- [2014 Exhaustion calculations](../../../src/combat-rules.ts#L52-L178)
+- [Legacy death transition and HP maximum clamp](../../../src/App.tsx#L5904-L5915)
+- [Legacy Exhaustion controls/display](../../../src/App.tsx#L12380-L12430)
+- [D4 Long Rest Exhaustion recovery](../../../reengine/src/engines/long-rest-engine.ts#L350-L380)
+- [D4 Exhaustion recovery tests](../../../reengine/tests/unit/long-rest-engine.test.cjs#L80-L110)
 
 ## Condition-by-condition gap matrix
 
