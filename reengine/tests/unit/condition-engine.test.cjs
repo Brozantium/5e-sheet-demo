@@ -177,7 +177,8 @@ test("Charmed without a charmer creature ID returns a diagnostic rather than gue
 
 test("2014 Charmed prevents harmful abilities and magical effects against the charmer", () => {
   const result = resolve([sourceCondition("charmed")], "2014");
-  assert.deepEqual(result.effects.prohibitedHarmfulTargetCreatureIds, [SOURCE]);
+  assert.deepEqual(result.effects.prohibitedHarmfulTargetCreatureIds, []);
+  assert.deepEqual(result.effects.prohibitedDamagingTargetCreatureIds, [SOURCE]);
   assert.deepEqual(result.effects.prohibitedDamagingTargetCreatureIds, []);
 });
 
@@ -262,6 +263,19 @@ test("2024 Grappled with multiple grapplers exempts attacks against any active g
     mode(result, selfContext("attack", { targetCreatureId: "creature:third" })),
     "disadvantage",
   );
+  assert.equal(result.effects.movement.grappleDragRules.length, 2);
+});
+
+test("2024 Grappled exempts all active grapplers when multiple sources impose it", () => {
+  const first = sourceCondition("grappled", { id: "grapple:first" });
+  const second = sourceCondition("grappled", {
+    id: "grapple:second",
+    source: { kind: "creature", id: OTHER, creatureId: OTHER, label: "Other grappler" },
+  });
+  const result = resolve([first, second], "2024");
+  assert.equal(mode(result, selfContext("attack", { targetCreatureId: SOURCE })), "normal");
+  assert.equal(mode(result, selfContext("attack", { targetCreatureId: OTHER })), "normal");
+  assert.equal(mode(result, selfContext("attack", { targetCreatureId: "creature:third" })), "disadvantage");
   assert.equal(result.effects.movement.grappleDragRules.length, 2);
 });
 
@@ -380,9 +394,12 @@ test("Stunned imposes STR/DEX save failure and ruleset-specific speech behavior"
   assert.deepEqual(legacy.effects.automaticSavingThrowFailures, ["str", "dex"]);
   assert.equal(legacy.effects.actions.speech, "faltering");
   assert.equal(legacy.effects.movement.speedIsZero, true);
+  assert.equal(legacy.effects.movement.speedIsZero, true);
   assert.equal(mode(legacy, incomingContext("attack")), "advantage");
   const revised = resolve([condition({ type: "stunned" })], "2024");
   assert.equal(revised.effects.actions.speech, "none");
+  assert.equal(revised.effects.movement.speedIsZero, false);
+  assert.equal(revised.effects.movement.speedCannotIncrease, false);
   assert.equal(revised.effects.movement.speedIsZero, false);
   assert.equal(revised.effects.movement.speedCannotIncrease, false);
 });
