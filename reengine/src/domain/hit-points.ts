@@ -49,3 +49,44 @@ export interface TemporaryHitPointResult {
   temporaryHitPointsGained: number;
   replacedExistingTemporaryHitPoints: boolean;
 }
+
+export interface HitDicePool {
+  classId: string;
+  hitDie: HitDieSize;
+  total: number;
+  spent: number;
+}
+
+export type HitDieSpendIssueCode =
+  | "short-rest-requires-positive-hit-points"
+  | "unknown-hit-die-pool"
+  | "no-hit-dice-remaining";
+
+export interface HitDieSpendIssue {
+  code: HitDieSpendIssueCode;
+  message: string;
+}
+
+export interface ShortRestHitDieSpendInput {
+  ruleset: "2014" | "2024";
+  hitPoints: HitPointState;
+  hitDicePools: readonly HitDicePool[];
+  /** The character's HP when this Short Rest began; reused for each die spent. */
+  shortRestStartedAtHitPoints: number;
+  classId: string;
+  roll: number;
+  constitutionScore: number;
+}
+
+export interface ShortRestHitDieSpendResult {
+  canSpend: boolean;
+  hitPoints: HitPointState;
+  hitDicePools: HitDicePool[];
+  classId: string;
+  hitDie: HitDieSize | null;
+  rollValue: number;
+  constitutionModifier: number;
+  healingBeforeMaximum: number;
+  hitPointsRestored: number;
+  issue?: HitDieSpendIssue;
+}
