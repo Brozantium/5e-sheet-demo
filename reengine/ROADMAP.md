@@ -120,7 +120,6 @@ Split this into small, independently testable slices:
 
 Weapon Property/range/attack-cycle implementation (B3A–B3C2) is covered by independent stacked PRs. B4 completes mastery selection/eligibility; mastery effects and 2014/2024 Special effect execution remain in RE-008.
 
-Weapon Property/range/attack-cycle implementation (B3A–B3C2) is now covered by independent stacked PRs. Remaining weapon-specific RE-006 scope is B4 mastery eligibility/selection; mastery effects and 2014/2024 Special effect execution remain in RE-008.
 - Keep editor compatibility/normalization (RE-003) separate from the actual rules mechanics. Do not make Heavy automatically mean Two-Handed in the combat domain.
 
 Acceptance: official 2014 and 2024 weapon lists can be represented without encoding mechanical parameters in display strings; every implemented rule has ruleset-specific regression tests.
@@ -133,7 +132,7 @@ Acceptance: official 2014 and 2024 weapon lists can be represented without encod
   - Barbarian: Simple or Martial melee weapons; starts with 2 choices and scales by class progression.
   - Fighter: Simple or Martial weapons; starts with 3 choices and scales by class progression.
   - Paladin, Ranger, Rogue: 2 proficient weapon types.
-- Reuse the generic multiple SelectionMechanic with Long Rest replacement of one choice; resolve the actual number of choices from the class progression table for Barbarian/Fighter.
+- Reuse the generic multiple SelectionMechanic; Barbarian/Fighter replace one choice after a Long Rest, while Paladin/Ranger/Rogue can change their full two-weapon selection. Resolve Barbarian/Fighter capacity from class progression.
 - Validate selected weapon types and resolve whether the character owns the Weapon Mastery feature and selected the weapon before exposing that weapon's mastery to the combat/action layer.
 - Keep the eight mastery effects and their triggers in RE-008.
 
