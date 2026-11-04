@@ -44,7 +44,7 @@ Use this order at the beginning of a new chat:
 | Armor / shields | `src/domain/equipment.ts`, armor class/training engines | armor unit tests; item profiles and grant inputs |
 | HP / rests / death | matching domain file and HP, Long Rest, or Death Save engine | matching unit tests; resource engine and caller-owned event snapshots |
 | Conditions / Exhaustion | `conditions.ts`, `condition-lifecycle.ts`, `exhaustion.ts` | condition, lifecycle, exhaustion, and Long Rest tests as relevant |
-| Movement / derived defenses | `REVERSE_ENGINEERING/findings/movement-defenses-audit.md`, then E1/E2 domain outputs | F1 movement model, F2 Speed composition, F3 defense aggregation; inspect only the movement/defense contracts and tests affected by the active slice |
+| Movement / derived defenses | `REVERSE_ENGINEERING/findings/movement-defenses-audit.md`, `domain/movement.ts`, `domain/defenses.ts` | `movement-engine.ts`, `defense-engine.ts`, and their unit tests; E1/E2 outputs are inputs, not reimplemented |
 | Content validation | `domain/types.ts`, identity, `registry/content-registry.ts` | affected JSON Schema, fixtures, registry tests |
 | Builder / feature grants | `builder/builder-manifest.ts`, mechanic contracts | progression, choice, prerequisite, assignment, resource engines and their tests |
 | Spellcasting | spell-related schemas/content and spell modifier engine | RE-007 contracts/tests; do not infer complete casting support from the modifier engine |
@@ -94,6 +94,8 @@ Keep canonical content definitions separate from character-selected/applied stat
 | `src/domain/conditions.ts` | Per-instance condition records and derived condition results |
 | `src/domain/condition-lifecycle.ts` | Structured condition expiry/removal events and results |
 | `src/domain/exhaustion.ts` | Numeric Exhaustion state and ruleset-aware derived effects |
+| `src/domain/movement.ts` | Five canonical movement modes, normalized base profiles, provenance, ordered Speed modifiers, and resolver contracts |
+| `src/domain/defenses.ts` | Source-aware defense grants/results; AC contributions stay separate |
 | `src/domain/index.ts` | Domain barrel; currently re-exports conditions, lifecycle, and Exhaustion |
 | `src/registry/content-registry.ts` | In-memory validation and registration of canonical content records |
 | `src/builder/builder-manifest.ts` | Builder step order and feature mechanic panel identifiers |
@@ -130,6 +132,8 @@ The following mapping is based on the engine directory and `src/engines/README.m
 | `condition-engine.ts` | Condition-derived roll, save/check, action, movement, and defense results |
 | `exhaustion-engine.ts` | 2014 and 2024 Exhaustion penalties and level-6 death result |
 | `condition-lifecycle-engine.ts` | Pure, caller-driven condition expiry/removal; no clocks or scheduler |
+| `movement-engine.ts` | Resolves per-mode Speed from normalized profiles, ordered modifiers, E2 Exhaustion, and E1 constraints |
+| `defense-engine.ts` | Coalesces defense facts while retaining sources and leaving damage/AC arithmetic downstream |
 
 Engine functions are intended to remain pure. They consume normalized inputs and return decisions/results; they do not own React UI, Owlbear APIs, persistence, legacy runtime, timers, or turn scheduling.
 
@@ -157,7 +161,7 @@ The test command compiles test TypeScript and runs `node --test reengine/tests/u
 
 1. **Public barrel exports need deliberate review:** `src/domain/index.ts` re-exports the Conditions, Condition Lifecycle, and Exhaustion domain contracts. However, at the inspected snapshot, `src/index.ts` does not re-export `condition-engine.ts`, `condition-lifecycle-engine.ts`, or `exhaustion-engine.ts`. Do not assume those engine functions are available from the root barrel; import-path/API intent should be checked before external consumers rely on it. This index records the observation and does not change it.
 2. **UI and persistence are not integrated:** the inspected UI subfolders and serialization area contain placeholders. The existence of domain engines does not mean the Owlbear sheet uses them.
-3. **Movement remains unimplemented:** no movement domain/engine module appeared in the inspected tree. RE-006F0 documents the legacy behavior and F1–F3 boundaries; F1 must define typed movement profiles, and F2 must compose E1/E2 outputs without duplicating their policies.
+3. **Movement implementation is new and awaiting CI:** F1–F3 source and test files are now present on the movement branch. Verify CI on the exact PR head before claiming them CI verified; this does not imply Owlbear/UI integration.
 4. **Legacy sources remain separate:** `src/App.tsx`, `src/combat-rules.ts`, `assets/`, and `data/` are reference/legacy areas. Do not make them runtime dependencies of `reengine/`.
 
 ## Maintenance rule
