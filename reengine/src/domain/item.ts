@@ -17,6 +17,19 @@ export type WeaponProp = (typeof WEAPON_PROPERTY_DEFINITIONS)[number]["id"];
 export type WeaponKind = "melee" | "ranged";
 export type WeaponSpecialRuleId = "lance-2014" | "net-2014";
 
+export const WEAPON_MASTERY_DEFINITIONS = [
+  { id: "cleave", name: "Cleave" },
+  { id: "graze", name: "Graze" },
+  { id: "nick", name: "Nick" },
+  { id: "push", name: "Push" },
+  { id: "sap", name: "Sap" },
+  { id: "slow", name: "Slow" },
+  { id: "topple", name: "Topple" },
+  { id: "vex", name: "Vex" },
+] as const;
+
+export type WeaponMasteryId = (typeof WEAPON_MASTERY_DEFINITIONS)[number]["id"];
+
 export type WeaponPropertyDefinition = (typeof WEAPON_PROPERTY_DEFINITIONS)[number];
 
 const WEAPON_PROPERTY_DEFINITIONS_2024 = WEAPON_PROPERTY_DEFINITIONS.filter(
@@ -96,6 +109,8 @@ export interface WeaponProfile {
   ammunitionType?: string;
   /** Two-Handed defaults to always; this records an explicit exception such as the 2024 Lance. */
   twoHandedRule?: { unlessMounted?: true };
+  /** 2024 Weapon Mastery assigned to this weapon type. */
+  mastery?: WeaponMasteryId;
   /** Structured mechanics for the 2014 Special property; descriptions remain display-only. */
   specialRules?: WeaponSpecialRuleId[];
 }

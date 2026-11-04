@@ -14,6 +14,7 @@ import type {
 import { assertContentId, assertContentRuleset } from "../domain/identity";
 import {
   getWeaponPropertyDefinitions,
+  WEAPON_MASTERY_DEFINITIONS,
   WEAPON_PROPERTY_DEFINITIONS,
   type ArmorProfile,
   type ItemDefinition as CanonicalItemDefinition,
@@ -364,6 +365,15 @@ export class ContentRegistry {
     if (!Array.isArray(profile.damage)) {
       throw new Error("Weapon item " + definition.id + " requires a damage component array.");
     }
+    if (profile.mastery !== undefined) {
+      if (!WEAPON_MASTERY_DEFINITIONS.some((mastery) => mastery.id === profile.mastery)) {
+        throw new Error("Weapon item " + definition.id + " has unknown Weapon Mastery " + profile.mastery + ".");
+      }
+      if (definition.ruleset !== "2024") {
+        throw new Error("Weapon Mastery is only available on 2024 weapon content.");
+      }
+    }
+
     const specialRules = profile.specialRules ?? [];
     this.assertUniqueStrings(specialRules, "weapon special rules");
 
