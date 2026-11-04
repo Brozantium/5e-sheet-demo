@@ -9,5 +9,6 @@ export * from "./long-rest";
 
 export * from "./death-saves";
 export * from "./conditions";
+export * from "./condition-lifecycle";
 export * from "./exhaustion";
 
