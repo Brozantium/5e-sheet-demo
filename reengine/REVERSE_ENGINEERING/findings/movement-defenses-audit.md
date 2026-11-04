@@ -146,4 +146,14 @@ Define a pure normalized defense input/output that can combine permanent feature
 
 The legacy implementation has a usable single-Speed summary and visible movement grants, but it does not provide a normalized multi-mode movement model or a general composable Speed resolver. RE-006E supplies the structured condition and Exhaustion outputs needed for a clean-room movement layer. The next correct step is F1's typed movement profiles, followed by an evidence-based modifier/precedence contract for F2 and a separate defense aggregation contract for F3.
 
-**F0 status: audit and initial contract boundaries documented. F1–F3 implementation has not started.**
+## F1–F3 implementation checkpoint
+
+Implemented on `feat/re-006f-movement-defenses`:
+
+- **F1:** typed walking, climbing, swimming, flying, and burrowing profiles. An absent mode remains distinct from an explicit zero-Speed profile. Duplicate mode profiles are rejected so the builder/content layer must normalize grants and preserve their sources.
+- **F2:** pure per-mode movement resolver with deterministic caller-supplied modifier order. It consumes the E2 Exhaustion speed result for each mode and applies E1 Speed-zero / cannot-increase constraints without duplicating E1/E2 policy. Prone, Frightened, and Grappled metadata is preserved, not executed.
+- **F3:** pure defense aggregation for resistance, vulnerability, immunity, condition immunity, and individual AC-bonus contributions. Duplicate labels are coalesced case-insensitively while unique source provenance is retained. Resistance/immunity conflicts and AC arithmetic remain downstream responsibilities.
+- Added 14 regression test cases across movement and defense engine tests.
+- CI/typecheck has not yet been verified for this implementation branch; no local test run was performed through this GitHub-only workflow.
+
+**F1–F3 status: implemented with regression tests; CI pending.**
