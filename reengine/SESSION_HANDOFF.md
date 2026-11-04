@@ -81,7 +81,7 @@ This is a compact history of the decisions and slices already recorded in the re
 | RE-006D2 | Hit Dice pools and Short Rest | Per-class multiclass pools and ruleset-aware healing. |
 | RE-006D3 | Death Saves, damage at 0 HP, stabilization | Pure state resolution; turn/timer/action orchestration remains caller-owned. |
 | RE-006D4 | Ruleset-aware Long Rest and recovery | Latest documented implementation checkpoint; see PR #12 and its verification record below. |
-| RE-006E | Conditions & Exhaustion | **Next work. Audit only so far; no RE-006E implementation is recorded at this checkpoint.** |
+| RE-006E | Conditions & Exhaustion | **Legacy call-path audit complete** for the inspected sheet flow; clean-room implementation not started. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md). |
 | RE-006F | Movement & derived defenses | Planned after RE-006E. |
 | RE-007 | Spellcasting engine | Planned. |
 | RE-008 | Action, trigger, and effect engine | Planned; owns action execution, event triggers, reactions, mastery effects, and condition/action timing. |
@@ -103,7 +103,7 @@ Important correction to an earlier preliminary chat note:
 - The helper embeds the 2014-style Exhaustion ladder: level 1 ability-check Disadvantage; level 2 half Speed; level 3 attack-roll and saving-throw Disadvantage; level 4 half maximum HP; level 5 Speed 0; level 6 marks the character dead via reminders and action/reaction flags. It does not expose a 2024 Exhaustion policy.
 - `ActiveCondition.expiration` currently allows `manual | short | long | dawn`, and each instance has `duration` / `appliedAt`; this file does not itself implement a lifecycle/expiry resolver.
 
-These findings are scoped to this file. **Before finalizing RE-006E design**, inspect all call sites, persistence/serialization, condition application/removal UI, rest handlers, and any other condition/exhaustion code. Search the repository rather than inferring the entire legacy application from one helper.
+The audit has now followed the inspected path through `src/App.tsx`: character state, saved-state normalization, condition UI, feature-action condition application, roll-mode consumers, speed/HP derivation, action/reaction gating, Petrified defense handling, and Short Rest/Long Rest/Dawn expiration filtering. See the dedicated findings document for exact source ranges, condition-by-condition gaps, ruleset differences, and acceptance tests. The findings remain scoped to the inspected current-app path; future newly discovered callers must be added to the audit.
 
 ### RE-006E proposed implementation slices
 
@@ -149,16 +149,17 @@ At checkpoint review (2026-11-04), branch `feat/re-006d4-long-rest-recovery` was
 
 ## Current checkpoint and next action
 
-**Checkpoint:** latest documented rules-engine slice is RE-006D4. RE-006E has not been implemented. The immediate next task is to complete the Conditions & Exhaustion evidence audit, not to start RE-007/RE-008 and not to wire UI.
+**Checkpoint (2026-11-04):** RE-006D4 remains the latest implemented clean-room rules-engine slice. The RE-006E legacy audit is complete for the inspected sheet call path; no RE-006E runtime engine code has been added and no legacy `src/App.tsx` / `src/combat-rules.ts` code has been changed. Audit branch: `docs/re-006e-conditions-exhaustion-audit`, based on `feat/re-006d4-long-rest-recovery`. PR #12 remains open with no reviews; its recorded CI run 41779301323 passed install, typecheck, and 257 tests. A separate documentation-only Draft PR is being prepared for the audit branch; verify its live URL/state before relying on it.
+
+**Immediate next task:** implement **RE-006E1 — Condition Instances & Derived Resolver** in the clean-room `reengine/` only, after translating the audit's acceptance criteria into explicit domain contracts and test fixtures. E2 and E3 follow E1. Do not begin E2 until the condition/Exhaustion boundary has been agreed and E1 result contracts are stable.
 
 **Recommended next sequence:**
 
-1. Re-check GitHub branch/PR status and current CI.
-2. Search the whole repository for `ActiveCondition`, `conditionSummary`, `CONDITION_TYPES`, `exhaustionLevel`, and all condition application/removal/expiry handlers.
-3. Trace state persistence and UI flows: creation, editing, removal, save prompts, short/long rest and dawn recovery.
-4. Compare 2014/2024 rules against authoritative rule references and record each rule's source/ruleset.
-5. Write a dedicated RE-006E findings/audit document with legacy evidence, mismatches, unknowns, and acceptance tests.
-6. Implement E1, E2, E3 as small pure-engine slices with tests, updating this handoff and the roadmap after each completed slice.
+1. Verify the documentation Draft PR and current PR #12/CI state.
+2. Translate E1 acceptance cases from `conditions-exhaustion-audit.md` into a compact domain contract: instance identity, ruleset, source/target/context, aggregate non-stacking behavior, outgoing/incoming attacks, saving throws, checks, action availability, and movement constraints.
+3. Inspect existing `reengine/src/domain/combat.ts`, death-save contracts, and character-state schemas before creating overlapping types.
+4. Implement E1 as pure functions with tests; do not add UI/Owlbear integration or modify legacy source.
+5. Update this handoff and `ROADMAP.md` at E1 completion with branch, commit, exact tests, CI, and PR status.
 
 ## How to maintain this safeguard
 
