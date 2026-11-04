@@ -20,20 +20,20 @@ Priority: establish reliable verification before implementing more behavior.
 
 Status: complete. The isolated TypeScript check, Node test harness, and CI workflow are present.
 
-## RE-003 — Weapon & Equipment Engine
+## RE-003 — Weapon & Equipment Editor Parity
 
 - Port weapon-property locking and normalization.
 - Preserve parity across the 2,048 kind/property combinations.
-- Continue with armor, shields, AC, equip/unequip, and inventory behavior.
+- Preserve legacy editor behavior unless a separately reviewed rules correction is approved.
 
-Status: weapon-property parity slice complete. Armor, shields, AC, equipment, and inventory remain in the later calculation/equipment scope.
+Status: weapon-property editor parity slice complete. Rules mechanics are handled by RE-006 and must not be inferred from editor locks.
 
 ## RE-004 — Core Engine Corrections
 
 - Fix F1–F8 findings with regression tests.
 - Cover progression, selection, assignment, resources, and spell-modifier validation.
 
-Status: the documented F1–F8 correction slice is complete, with tests.
+Status: complete.
 
 ## RE-005 — Schema & Content Validation
 
@@ -56,7 +56,7 @@ Implemented:
 - Registry validation for IDs, ruleset metadata, duplicate mechanics, progression tables/columns, option references, prerequisite references, item profiles, and base-item links.
 - Ajv 2020 schema tests with valid and invalid fixtures, plus TypeScript contract fixtures compiled by `typecheck:reengine`.
 
-<badge color="success">Complete</badge> Verified on commit `07d69381d1bfc4d8297a585f31d93872693dcb13`: frozen-lockfile install passed, the isolated TypeScript check passed, and all 47 unit tests passed.
+Status: complete. Verified on commit `07d69381d1bfc4d8297a585f31d93872693dcb13`: frozen-lockfile install passed, the isolated TypeScript check passed, and all 47 unit tests passed.
 
 Bounded references intentionally extended by later phases:
 
@@ -67,41 +67,85 @@ Bounded references intentionally extended by later phases:
 
 ## RE-006 — Rules & Character Calculation
 
-Scope:
+Goal: finish the pure, ruleset-aware character and combat calculations before wiring them into the legacy application.
 
-- Combat and attack calculations.
-- Saving throws and skills.
-- Conditions, HP, death saves, rest, and exhaustion.
-- Armor class and other character-derived calculations.
-- Equipment interactions needed by the character sheet.
+### RE-006A — Core Character Calculations
 
 Implemented:
 
-- RE-006A: pure calculations for ability modifiers, total multiclass level, proficiency bonus, skills, saving throws, initiative, and passive Perception.
-- RE-006B1: armor class from unarmored, light/medium/heavy armor, shield, Unarmored Defense, and explicit flat bonuses; includes ruleset-aware shield proficiency behavior.
+- Ability modifiers, total multiclass level, proficiency bonus.
+- Skills, saving throws, initiative, and passive Perception.
 
-Current acceptance checks:
-- Capped armor applies the Dexterity ceiling to positive modifiers while preserving negative Dexterity modifiers.
-- Armor and shield are independently equippable but limited to one each.
-- 2014 untrained shields still contribute AC with a training issue; 2024 shield AC requires shield training.
-- Strength requirements, Stealth disadvantage, ruleset compatibility, and invalid equipment combinations are surfaced.
-- Canonical item schema and TypeScript contracts require a numeric Dexterity cap for capped armor.
+Status: complete.
+
+### RE-006B1 — Armor Class
 
 Implemented:
 
-- RE-006B2: weapon attack ability selection, weapon/category proficiency, attack bonuses, damage modifiers, Versatile damage dice, and held-item hand occupancy validation.
+- AC from unarmored, light/medium/heavy armor, shield, Unarmored Defense, and explicit flat bonuses.
+- Ruleset-aware shield proficiency behavior.
+- Strength requirements, Stealth disadvantage, equipment compatibility, and invalid equipment combinations.
 
-RE-006B2 acceptance coverage:
+Status: complete. Armor-training consequences beyond AC remain in the later armor-training slice.
 
-- Melee weapons use Strength and ranged weapons use Dexterity by default. Finesse weapons permit an explicit Strength or Dexterity choice on either weapon type; the higher modifier is the fallback when no choice is supplied.
-- Thrown melee weapons retain the melee ability rule.
-- Category and exact/base-item weapon proficiency are supported; non-proficient attacks omit PB without being prohibited.
-- Attack and damage adjustments are explicit; the ability modifier is applied once to the primary damage component.
-- Versatile weapons use their alternate primary damage formula only when wielded in two hands.
-- Only the explicit Two-Handed property requires both hands; Heavy is handled independently. Heavy grants disadvantage to Tiny/Small creatures in 2014 and when the relevant STR/DEX score is below 13 in 2024. Shields can occupy one hand. Physical hand occupancy is validated separately from Light weapon-pair eligibility (the Attack-action trigger is not checked here): 2014 requires two Light melee weapons, while 2024 requires two different Light weapons (including ranged weapons).
-- Ruleset mismatches and malformed equipment states are surfaced rather than silently normalized.
+### RE-006B2 — Weapon Attack, Damage & Hand Occupancy
 
-Status: in progress. Armor training consequences, HP/rest/death saves, and ruleset-aware condition/exhaustion behavior remain.
+Implemented on branch `feat/re-006b2-weapon-attacks`; PR #1 is open for review.
+
+- Default melee STR and ranged DEX, explicit Finesse STR/DEX choice.
+- Weapon/category proficiency, attack adjustments, damage adjustments, and Versatile damage formulas.
+- 2014 and 2024 Heavy disadvantage rules.
+- Hand occupancy and Light weapon-pair prerequisite validation.
+
+Status: implementation and tests complete for this bounded slice; pending PR review/merge. It does not complete Weapon Properties as a whole.
+
+### RE-006B3 — Weapon Properties & Range (current priority)
+
+Split this into small, independently testable slices:
+
+- **B3A — Canonical property model and range contracts:** ruleset-aware 2014/2024 property definitions; normal and long range; distinct thrown range; ammunition type; Versatile damage metadata; structured Special rules; schema and registry validation.
+- **B3B — Property calculations:** Reach and Opportunity Attack reach; Thrown attack mode and ability selection; range-band validation and long-range Disadvantage; Two-Handed constraints including the 2024 mounted Lance exception; 2014 Lance and Net Special rules.
+- **B3C — Attack-cycle restrictions:** Ammunition requirements and consumption/recovery contracts; Loading limits per Action, Bonus Action, or Reaction; Light extra-attack trigger and damage rules. Coordinate action-state ownership with RE-008 rather than duplicating action economy.
+- Keep editor compatibility/normalization (RE-003) separate from the actual rules mechanics. Do not make Heavy automatically mean Two-Handed in the combat domain.
+
+Acceptance: official 2014 and 2024 weapon lists can be represented without encoding mechanical parameters in display strings; every implemented rule has ruleset-specific regression tests.
+
+### RE-006B4 — Weapon Mastery Eligibility & Selection
+
+- Store the mastery assigned to each weapon definition.
+- Model class-granted Weapon Mastery choices, eligible weapon types, choice capacity by level, and Long Rest replacement.
+- Validate that a character can use a weapon's mastery only when the character has the relevant feature and selected that weapon.
+- Keep the eight mastery effects and their triggers in RE-008.
+
+### RE-006C — Armor Training Consequences
+
+- Resolve armor and shield training grants from character features.
+- Implement the ruleset-specific consequences of lacking required armor training, beyond AC calculation.
+- Cover spellcasting and other consequences with regression tests.
+
+### RE-006D — Hit Points, Hit Dice & Recovery
+
+- Maximum/current/temporary HP and damage/healing application.
+- Hit Dice pools and spending.
+- Death saves and stabilization.
+- Short Rest, Long Rest, and other recovery boundaries, including resource restoration.
+
+### RE-006E — Conditions & Exhaustion
+
+- Condition state and derived attack/check/save/movement restrictions.
+- Separate 2014 and 2024 Exhaustion behavior.
+- Duration, expiration, stacking, and removal rules with tests.
+
+### RE-006F — Movement & Derived Defenses
+
+- Walking, climbing, swimming, flying, and other movement modes.
+- Speed bonuses/penalties and condition interactions.
+- Derived combat values that depend on movement or character state.
+- Do not fold mount or vehicle stat blocks into the character's base Speed.
+
+### RE-006 completion gate
+
+RE-006 is complete only when all slices above have explicit acceptance tests, clean-room typecheck and unit tests pass, and the derived calculations are documented. UI integration and legacy migration remain later work.
 
 ## RE-007 — Spellcasting Engine
 
@@ -118,8 +162,10 @@ Status: in progress. Armor training consequences, HP/rest/death saves, and rules
 - Magic item actions and effects.
 - Passive and conditional effects.
 - Explicit event payloads and effect application contracts.
+- Implement weapon mastery effects (Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex), Light/Loading/Ammunition action-cycle interactions, and their turn/Reaction/expiration semantics.
+- Resolve cross-feature interactions without duplicating the rules already calculated by RE-006.
 
-## RE-009 and later — Migration, Content, UI, and Integration
+## RE-009 — Migration, Content, UI & Integration
 
 - Character-state migration and compatibility.
 - Canonical content pilot packs for 2014, 2024, shared, and Homebrew.
@@ -127,6 +173,21 @@ Status: in progress. Armor training consequences, HP/rest/death saves, and rules
 - Builder orchestration and UI.
 - Character Sheet and Actions presentation.
 - Controlled integration behind a feature flag, regression against existing characters, and deliberate retirement of legacy dependencies.
+
+## RE-010 — Creature, Companion & Transportation Layer (future)
+
+Keep these as stat-block-driven entities instead of treating every creature or vehicle as character equipment.
+
+- **Creature entities:** reusable stat blocks, size, creature type, AC, HP, abilities, senses, movement modes, and actions.
+- **Mounts:** Mount/Dismount state, rider-to-mount relation, controlled/independent behavior, carrying capacity, mounted movement, falling, and Mounted Combat rules.
+- **Familiars and summoned familiars:** ownership/summoner link, creature stat block, summon duration, command/control, dismissal, and re-summoning lifecycle.
+- **Other companions and summons:** reusable creature links without forcing them into the character's inventory or base Speed.
+- **Vehicles:** separate vehicle stat blocks with their own tactical movement (when defined), travel speed/units (such as mph), AC, HP, crew, passengers, cargo, and operator/driver roles.
+- **Owlbear integration:** optional token linking for creature/companion/vehicle entities and their independent HP/movement state.
+
+Vehicle speed must come from the vehicle's own stat block and must never be added to or overwrite the character's walking Speed. A mounted creature may supply the rider's effective tactical movement while mounted, but the character's native movement remains preserved.
+
+RE-010 is intentionally after the core rules engines. It can reuse the action, condition, movement, and effect contracts without blocking completion of RE-006.
 
 ## Non-negotiable boundaries
 
