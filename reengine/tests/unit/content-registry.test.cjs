@@ -362,3 +362,156 @@ test("item profile validation matches category-specific schema requirements", ()
     },
   }), /non-shield armor profile/);
 });
+
+const makeWeapon = ({
+  id = "weapon:test",
+  name = "Test Weapon",
+  ruleset = "2014",
+  properties = [],
+  weaponType = "melee",
+  damage = [{ formula: "1d6", damageType: "slashing" }],
+  range,
+  thrownRange,
+  ammunitionType,
+  twoHandedRule,
+  specialRules,
+} = {}) => ({
+  id,
+  name,
+  ruleset,
+  category: "weapon",
+  properties,
+  weaponProfile: {
+    weaponCategory: "simple",
+    weaponType,
+    damage,
+    ...(range ? { range } : {}),
+    ...(thrownRange ? { thrownRange } : {}),
+    ...(ammunitionType ? { ammunitionType } : {}),
+    ...(twoHandedRule ? { twoHandedRule } : {}),
+    ...(specialRules ? { specialRules } : {}),
+  },
+});
+
+test("weapon registry accepts ruleset-specific thrown, ammunition, and mounted Lance profiles", () => {
+  const registry = new ContentRegistry();
+  registry.registerItem(makeWeapon({
+    id: "weapon:dagger",
+    name: "Dagger",
+    properties: ["finesse", "light", "thrown"],
+    thrownRange: { normal: 20, long: 60 },
+  }));
+  registry.registerItem(makeWeapon({
+    id: "weapon:longbow",
+    name: "Longbow",
+    ruleset: "2024",
+    properties: ["ammunition", "heavy", "two-handed"],
+    weaponType: "ranged",
+    range: { normal: 150, long: 600 },
+    ammunitionType: "arrow",
+  }));
+  registry.registerItem(makeWeapon({
+    id: "weapon:lance-2014",
+    name: "Lance",
+    properties: ["reach", "special"],
+    specialRules: ["lance-2014"],
+  }));
+  registry.registerItem(makeWeapon({
+    id: "weapon:lance-2024",
+    name: "Lance",
+    ruleset: "2024",
+    properties: ["heavy", "reach", "two-handed"],
+    twoHandedRule: { unlessMounted: true },
+  }));
+
+  assert.equal(registry.listItems().length, 4);
+});
+
+test("weapon registry rejects 2014 Special in 2024 or shared content", () => {
+  const registry = new ContentRegistry();
+  assert.throws(() => registry.registerItem(makeWeapon({
+    id: "weapon:bad-special-2024",
+    ruleset: "2024",
+    properties: ["special"],
+    specialRules: ["lance-2014"],
+  })), /not available for the 2024 ruleset/);
+
+  assert.throws(() => registry.registerItem(makeWeapon({
+    id: "weapon:bad-special-shared",
+    ruleset: "shared",
+    properties: ["special"],
+    specialRules: ["lance-2014"],
+  })), /not available for the shared ruleset/);
+});
+
+test("Thrown and Ammunition require their own structured range data", () => {
+  const registry = new ContentRegistry();
+  assert.throws(() => registry.registerItem(makeWeapon({
+    properties: ["thrown"],
+  })), /requires thrownRange/);
+
+  assert.throws(() => registry.registerItem(makeWeapon({
+    id: "weapon:bad-ammo",
+    ruleset: "2024",
+    properties: ["ammunition"],
+    weaponType: "ranged",
+    range: { normal: 30, long: 120 },
+  })), /requires ammunitionType/);
+
+  assert.throws(() => registry.registerItem(makeWeapon({
+    id: "weapon:orphan-thrown-range",
+    thrownRange: { normal: 20, long: 60 },
+  })), /without Thrown/);
+});
+
+test("weapon range validation requires positive distances and long range not below normal range", () => {
+  const registry = new ContentRegistry();
+  assert.throws(() => registry.registerItem(makeWeapon({
+    properties: ["thrown"],
+    thrownRange: { normal: 0, long: 60 },
+  })), /positive integer/);
+
+  assert.throws(() => registry.registerItem(makeWeapon({
+    id: "weapon:bad-range-order",
+    ruleset: "2024",
+    properties: ["ammunition"],
+    weaponType: "ranged",
+    range: { normal: 120, long: 60 },
+    ammunitionType: "bolt",
+  })), /long range cannot be shorter/);
+});
+
+test("weapon registry validates property semantics and Versatile damage metadata", () => {
+  const registry = new ContentRegistry();
+  assert.throws(() => registry.registerItem(makeWeapon({
+    properties: ["reach"],
+    weaponType: "ranged",
+  })), /Reach property requires a melee weapon/);
+
+  assert.throws(() => registry.registerItem(makeWeapon({
+    properties: ["versatile"],
+  })), /requires a primary versatileFormula/);
+
+  assert.throws(() => registry.registerItem(makeWeapon({
+    properties: ["loading"],
+  })), /Loading property requires Ammunition/);
+});
+
+test("2014 Special profiles are structured and permit the non-damaging Net exception", () => {
+  const registry = new ContentRegistry();
+  registry.registerItem(makeWeapon({
+    id: "weapon:net",
+    name: "Net",
+    properties: ["special", "thrown"],
+    weaponType: "ranged",
+    damage: [],
+    thrownRange: { normal: 5, long: 15 },
+    specialRules: ["net-2014"],
+  }));
+  assert.equal(registry.getItem("weapon:net").weaponProfile.damage.length, 0);
+
+  assert.throws(() => registry.registerItem(makeWeapon({
+    id: "weapon:unmodeled-special",
+    properties: ["special"],
+  })), /requires structured specialRules/);
+});

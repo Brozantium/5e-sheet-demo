@@ -16,7 +16,8 @@
     "damage": [
       {
         "formula": "1d8",
-        "damageType": "slashing"
+        "damageType": "slashing",
+        "versatileFormula": "1d10"
       }
     ]
   }

@@ -99,3 +99,54 @@ test("character content-reference fields reject display names instead of stable 
   value.knownSpells = ["Fire Bolt"];
   assertInvalid(validators.character, value, "display name in knownSpells");
 });
+
+test("weapon schema supports distinct thrown range, ammunition type, and mounted grip exception", () => {
+  const dagger = fixture("valid-weapon.json");
+  dagger.properties = ["finesse", "thrown"];
+  delete dagger.weaponProfile.damage[0].versatileFormula;
+  dagger.weaponProfile.thrownRange = { normal: 20, long: 60 };
+  assertValid(validators.item, dagger, "2014 Dagger thrown range");
+
+  const longbow = fixture("valid-weapon.json");
+  longbow.id = "weapon:longbow";
+  longbow.name = "Longbow";
+  longbow.ruleset = "2024";
+  longbow.properties = ["ammunition", "heavy", "two-handed"];
+  longbow.weaponProfile.weaponType = "ranged";
+  longbow.weaponProfile.damage = [{ formula: "1d8", damageType: "piercing" }];
+  longbow.weaponProfile.range = { normal: 150, long: 600 };
+  longbow.weaponProfile.ammunitionType = "arrow";
+  assertValid(validators.item, longbow, "2024 Longbow");
+
+  const lance = fixture("valid-weapon.json");
+  lance.id = "weapon:lance-2024";
+  lance.name = "Lance";
+  lance.ruleset = "2024";
+  lance.properties = ["heavy", "reach", "two-handed"];
+  lance.weaponProfile.damage = [{ formula: "1d10", damageType: "piercing" }];
+  lance.weaponProfile.twoHandedRule = { unlessMounted: true };
+  assertValid(validators.item, lance, "2024 mounted Lance exception");
+});
+
+test("weapon schema represents the 2014 Net as a structured Special weapon without ordinary damage dice", () => {
+  const net = fixture("valid-weapon.json");
+  net.id = "weapon:net";
+  net.name = "Net";
+  net.properties = ["special", "thrown"];
+  net.weaponProfile.damage = [];
+  delete net.weaponProfile.damage[0]?.versatileFormula;
+  net.weaponProfile.thrownRange = { normal: 5, long: 15 };
+  net.weaponProfile.specialRules = ["net-2014"];
+  assertValid(validators.item, net, "2014 Net");
+});
+
+test("weapon range schema requires positive normal and long distances", () => {
+  const value = fixture("valid-weapon.json");
+  value.properties = ["thrown"];
+  delete value.weaponProfile.damage[0].versatileFormula;
+  value.weaponProfile.thrownRange = { normal: 0, long: 60 };
+  assertInvalid(validators.item, value, "zero normal thrown range");
+
+  value.weaponProfile.thrownRange = { normal: 20 };
+  assertInvalid(validators.item, value, "thrown range missing long distance");
+});

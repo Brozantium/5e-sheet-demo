@@ -4,79 +4,199 @@
   "title": "Canonical Item Definition",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "name", "category", "ruleset"],
+  "required": [
+    "id",
+    "name",
+    "category",
+    "ruleset"
+  ],
   "properties": {
-    "id": { "$ref": "common.schema.json#/$defs/contentId" },
-    "name": { "type": "string", "minLength": 1 },
-    "ruleset": { "$ref": "common.schema.json#/$defs/ruleset" },
-    "category": {
-      "enum": ["weapon", "armor", "shield", "gear", "tool", "ammunition", "consumable", "magic-item"]
+    "id": {
+      "$ref": "common.schema.json#/$defs/contentId"
     },
-    "baseItemId": { "$ref": "common.schema.json#/$defs/contentId" },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ruleset": {
+      "$ref": "common.schema.json#/$defs/ruleset"
+    },
+    "category": {
+      "enum": [
+        "weapon",
+        "armor",
+        "shield",
+        "gear",
+        "tool",
+        "ammunition",
+        "consumable",
+        "magic-item"
+      ]
+    },
+    "baseItemId": {
+      "$ref": "common.schema.json#/$defs/contentId"
+    },
     "properties": {
       "type": "array",
-      "items": { "type": "string", "minLength": 1 },
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "uniqueItems": true
     },
     "tags": {
       "type": "array",
-      "items": { "type": "string", "minLength": 1 },
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "uniqueItems": true
     },
-    "source": { "$ref": "common.schema.json#/$defs/source" },
+    "source": {
+      "$ref": "common.schema.json#/$defs/source"
+    },
     "weaponProfile": {
       "type": "object",
-      "required": ["weaponCategory", "weaponType", "damage"],
+      "required": [
+        "weaponCategory",
+        "weaponType",
+        "damage"
+      ],
       "properties": {
-        "weaponCategory": { "enum": ["simple", "martial"] },
-        "weaponType": { "enum": ["melee", "ranged"] },
+        "weaponCategory": {
+          "enum": [
+            "simple",
+            "martial"
+          ]
+        },
+        "weaponType": {
+          "enum": [
+            "melee",
+            "ranged"
+          ]
+        },
         "damage": {
           "type": "array",
-          "minItems": 1,
+          "minItems": 0,
           "items": {
             "type": "object",
-            "required": ["formula", "damageType"],
+            "required": [
+              "formula",
+              "damageType"
+            ],
             "properties": {
-              "formula": { "type": "string", "minLength": 1 },
-              "damageType": { "type": "string", "minLength": 1 },
-              "versatileFormula": { "type": "string", "minLength": 1 }
+              "formula": {
+                "type": "string",
+                "minLength": 1
+              },
+              "damageType": {
+                "type": "string",
+                "minLength": 1
+              },
+              "versatileFormula": {
+                "type": "string",
+                "minLength": 1
+              }
             },
             "additionalProperties": false
           }
         },
         "range": {
+          "$ref": "#/$defs/weaponRange"
+        },
+        "thrownRange": {
+          "$ref": "#/$defs/weaponRange"
+        },
+        "ammunitionType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "twoHandedRule": {
           "type": "object",
-          "required": ["normal"],
           "properties": {
-            "normal": { "type": "integer", "minimum": 0 },
-            "long": { "type": "integer", "minimum": 0 }
+            "unlessMounted": {
+              "const": true
+            }
           },
           "additionalProperties": false
+        },
+        "specialRules": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "lance-2014",
+              "net-2014"
+            ]
+          },
+          "uniqueItems": true
         }
       },
       "additionalProperties": false
     },
     "armorProfile": {
       "type": "object",
-      "required": ["armorCategory", "baseAC", "dexterity", "stealthDisadvantage"],
+      "required": [
+        "armorCategory",
+        "baseAC",
+        "dexterity",
+        "stealthDisadvantage"
+      ],
       "properties": {
-        "armorCategory": { "enum": ["light", "medium", "heavy", "shield"] },
-        "baseAC": { "type": "integer", "minimum": 0 },
-        "dexterity": { "enum": ["full", "capped", "none"] },
-        "maxDexterityModifier": { "type": ["integer", "null"], "minimum": 0 },
-        "strengthRequirement": { "type": "integer", "minimum": 0 },
-        "stealthDisadvantage": { "type": "boolean" }
+        "armorCategory": {
+          "enum": [
+            "light",
+            "medium",
+            "heavy",
+            "shield"
+          ]
+        },
+        "baseAC": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dexterity": {
+          "enum": [
+            "full",
+            "capped",
+            "none"
+          ]
+        },
+        "maxDexterityModifier": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "strengthRequirement": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stealthDisadvantage": {
+          "type": "boolean"
+        }
       },
       "allOf": [
         {
           "if": {
-            "properties": { "dexterity": { "const": "capped" } },
-            "required": ["dexterity"]
+            "properties": {
+              "dexterity": {
+                "const": "capped"
+              }
+            },
+            "required": [
+              "dexterity"
+            ]
           },
           "then": {
-            "required": ["maxDexterityModifier"],
+            "required": [
+              "maxDexterityModifier"
+            ],
             "properties": {
-              "maxDexterityModifier": { "type": "integer", "minimum": 0 }
+              "maxDexterityModifier": {
+                "type": "integer",
+                "minimum": 0
+              }
             }
           }
         }
@@ -86,48 +206,151 @@
   },
   "allOf": [
     {
-      "if": { "properties": { "category": { "const": "weapon" } }, "required": ["category"] },
-      "then": { "required": ["weaponProfile"], "not": { "required": ["armorProfile"] } }
-    },
-    {
-      "if": { "properties": { "category": { "const": "armor" } }, "required": ["category"] },
-      "then": {
-        "required": ["armorProfile"],
-        "not": { "required": ["weaponProfile"] },
+      "if": {
         "properties": {
-          "armorProfile": {
-            "properties": { "armorCategory": { "enum": ["light", "medium", "heavy"] } },
-            "required": ["armorCategory"]
+          "category": {
+            "const": "weapon"
           }
+        },
+        "required": [
+          "category"
+        ]
+      },
+      "then": {
+        "required": [
+          "weaponProfile"
+        ],
+        "not": {
+          "required": [
+            "armorProfile"
+          ]
         }
       }
     },
     {
-      "if": { "properties": { "category": { "const": "shield" } }, "required": ["category"] },
+      "if": {
+        "properties": {
+          "category": {
+            "const": "armor"
+          }
+        },
+        "required": [
+          "category"
+        ]
+      },
       "then": {
-        "required": ["armorProfile"],
-        "not": { "required": ["weaponProfile"] },
+        "required": [
+          "armorProfile"
+        ],
+        "not": {
+          "required": [
+            "weaponProfile"
+          ]
+        },
         "properties": {
           "armorProfile": {
-            "properties": { "armorCategory": { "const": "shield" } },
-            "required": ["armorCategory"]
+            "properties": {
+              "armorCategory": {
+                "enum": [
+                  "light",
+                  "medium",
+                  "heavy"
+                ]
+              }
+            },
+            "required": [
+              "armorCategory"
+            ]
           }
         }
       }
     },
     {
       "if": {
-        "properties": { "category": { "enum": ["gear", "tool", "ammunition", "consumable"] } },
-        "required": ["category"]
+        "properties": {
+          "category": {
+            "const": "shield"
+          }
+        },
+        "required": [
+          "category"
+        ]
+      },
+      "then": {
+        "required": [
+          "armorProfile"
+        ],
+        "not": {
+          "required": [
+            "weaponProfile"
+          ]
+        },
+        "properties": {
+          "armorProfile": {
+            "properties": {
+              "armorCategory": {
+                "const": "shield"
+              }
+            },
+            "required": [
+              "armorCategory"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "enum": [
+              "gear",
+              "tool",
+              "ammunition",
+              "consumable"
+            ]
+          }
+        },
+        "required": [
+          "category"
+        ]
       },
       "then": {
         "not": {
           "anyOf": [
-            { "required": ["weaponProfile"] },
-            { "required": ["armorProfile"] }
+            {
+              "required": [
+                "weaponProfile"
+              ]
+            },
+            {
+              "required": [
+                "armorProfile"
+              ]
+            }
           ]
         }
       }
     }
-  ]
+  ],
+  "$defs": {
+    "weaponRange": {
+      "type": "object",
+      "required": [
+        "normal",
+        "long"
+      ],
+      "properties": {
+        "normal": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "long": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  }
 }

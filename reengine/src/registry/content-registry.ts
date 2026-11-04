@@ -12,10 +12,14 @@ import type {
   SelectionMechanic,
 } from "../domain/types";
 import { assertContentId, assertContentRuleset } from "../domain/identity";
-import type {
-  ArmorProfile,
-  ItemDefinition as CanonicalItemDefinition,
-  WeaponProfile,
+import {
+  getWeaponPropertyDefinitions,
+  WEAPON_PROPERTY_DEFINITIONS,
+  type ArmorProfile,
+  type ItemDefinition as CanonicalItemDefinition,
+  type WeaponProfile,
+  type WeaponSpecialRuleId,
+  type WeaponRange,
 } from "../domain/item";
 
 export class ContentRegistry {
@@ -316,19 +320,7 @@ export class ContentRegistry {
     }
 
     if (profiles.weaponProfile) {
-      if (profiles.weaponProfile.damage.length === 0) {
-        throw new Error("Weapon item " + definition.id + " requires at least one damage component.");
-      }
-      for (const component of profiles.weaponProfile.damage) {
-        this.assertNonBlank(component.formula, "weapon damage formula");
-        this.assertNonBlank(component.damageType, "weapon damage type");
-      }
-      if (profiles.weaponProfile.range) {
-        this.assertNonNegativeInteger(profiles.weaponProfile.range.normal, "weapon normal range");
-        if (profiles.weaponProfile.range.long !== undefined) {
-          this.assertNonNegativeInteger(profiles.weaponProfile.range.long, "weapon long range");
-        }
-      }
+      this.assertWeaponProfile(definition, profiles.weaponProfile);
     }
 
     if (profiles.armorProfile) {
@@ -342,6 +334,171 @@ export class ContentRegistry {
       if (profiles.armorProfile.strengthRequirement !== undefined) {
         this.assertNonNegativeInteger(profiles.armorProfile.strengthRequirement, "armor Strength requirement");
       }
+    }
+  }
+
+  private assertWeaponProfile(
+    definition: CanonicalItemDefinition,
+    profile: WeaponProfile,
+  ): void {
+    const properties = new Set(definition.properties ?? []);
+    const knownPropertyIds = new Set<string>(
+      WEAPON_PROPERTY_DEFINITIONS.map((property) => property.id),
+    );
+    const allowedPropertyIds = new Set<string>(
+      getWeaponPropertyDefinitions(definition.ruleset).map((property) => property.id),
+    );
+
+    for (const property of properties) {
+      if (!knownPropertyIds.has(property)) {
+        throw new Error("Weapon item " + definition.id + " has unknown property " + property + ".");
+      }
+      if (!allowedPropertyIds.has(property)) {
+        throw new Error(
+          "Weapon item " + definition.id + " uses property " + property +
+          " which is not available for the " + definition.ruleset + " ruleset.",
+        );
+      }
+    }
+
+    if (!Array.isArray(profile.damage)) {
+      throw new Error("Weapon item " + definition.id + " requires a damage component array.");
+    }
+    const specialRules = profile.specialRules ?? [];
+    this.assertUniqueStrings(specialRules, "weapon special rules");
+
+    for (const component of profile.damage) {
+      this.assertNonBlank(component.formula, "weapon damage formula");
+      this.assertNonBlank(component.damageType, "weapon damage type");
+      if (component.versatileFormula !== undefined) {
+        this.assertNonBlank(component.versatileFormula, "versatile damage formula");
+      }
+    }
+
+    const isNet = specialRules.includes("net-2014");
+    if (profile.damage.length === 0 && !isNet) {
+      throw new Error("Weapon item " + definition.id + " requires at least one damage component.");
+    }
+    if (isNet && profile.damage.length !== 0) {
+      throw new Error("The 2014 Net special rule must not define ordinary weapon damage components.");
+    }
+
+    if (profile.range !== undefined) {
+      this.assertWeaponRange(profile.range, "weapon range");
+      if (profile.weaponType !== "ranged") {
+        throw new Error("Weapon item " + definition.id + " can only define standard range for a ranged weapon.");
+      }
+    }
+
+    const hasAmmunition = properties.has("ammunition");
+    if (hasAmmunition) {
+      if (profile.weaponType !== "ranged") {
+        throw new Error("The Ammunition property requires a ranged weapon.");
+      }
+      if (!profile.range) {
+        throw new Error("Weapon item " + definition.id + " requires range when it has Ammunition.");
+      }
+      if (profile.ammunitionType === undefined) {
+        throw new Error("Weapon item " + definition.id + " requires ammunitionType when it has Ammunition.");
+      }
+      this.assertNonBlank(profile.ammunitionType, "weapon ammunition type");
+    } else if (profile.ammunitionType !== undefined) {
+      throw new Error("Weapon item " + definition.id + " defines ammunitionType without Ammunition.");
+    }
+
+    if (properties.has("loading") && !hasAmmunition) {
+      throw new Error("The Loading property requires Ammunition.");
+    }
+
+    const hasThrown = properties.has("thrown");
+    if (hasThrown) {
+      if (!profile.thrownRange) {
+        throw new Error("Weapon item " + definition.id + " requires thrownRange when it has Thrown.");
+      }
+      this.assertWeaponRange(profile.thrownRange, "weapon thrown range");
+    } else if (profile.thrownRange !== undefined) {
+      throw new Error("Weapon item " + definition.id + " defines thrownRange without Thrown.");
+    }
+
+    if (profile.weaponType === "ranged" && !profile.range && !profile.thrownRange) {
+      throw new Error("Ranged weapon " + definition.id + " requires a standard or Thrown range.");
+    }
+
+    if (properties.has("reach") && profile.weaponType !== "melee") {
+      throw new Error("The Reach property requires a melee weapon.");
+    }
+    if (properties.has("versatile")) {
+      if (profile.weaponType !== "melee") {
+        throw new Error("The Versatile property requires a melee weapon.");
+      }
+      if (!profile.damage[0]?.versatileFormula) {
+        throw new Error("Weapon item " + definition.id + " requires a primary versatileFormula.");
+      }
+    } else if (profile.damage.some((component) => component.versatileFormula !== undefined)) {
+      throw new Error("Weapon item " + definition.id + " defines versatileFormula without Versatile.");
+    }
+
+    if (profile.twoHandedRule !== undefined) {
+      if (!properties.has("two-handed")) {
+        throw new Error("Weapon item " + definition.id + " defines a twoHandedRule without Two-Handed.");
+      }
+      if (
+        profile.twoHandedRule.unlessMounted !== undefined &&
+        profile.twoHandedRule.unlessMounted !== true
+      ) {
+        throw new Error("Weapon item " + definition.id + " has an invalid mounted two-handed exception.");
+      }
+      if (
+        profile.twoHandedRule.unlessMounted === true &&
+        definition.ruleset !== "2024"
+      ) {
+        throw new Error("The unlessMounted Two-Handed exception is only supported for 2024 weapon content.");
+      }
+    }
+
+    if (specialRules.length > 0 && !properties.has("special")) {
+      throw new Error("Weapon item " + definition.id + " defines Special rules without the Special property.");
+    }
+    if (properties.has("special") && specialRules.length === 0) {
+      throw new Error("Weapon item " + definition.id + " requires structured specialRules for Special.");
+    }
+    for (const specialRule of specialRules) {
+      if (specialRule !== "lance-2014" && specialRule !== "net-2014") {
+        throw new Error("Weapon item " + definition.id + " has unknown special rule " + specialRule + ".");
+      }
+      if (definition.ruleset !== "2014") {
+        throw new Error("Weapon item " + definition.id + " uses a 2014 Special rule in non-2014 content.");
+      }
+      this.assert2014SpecialRuleCompatibility(definition.id, profile, properties, specialRule);
+    }
+  }
+
+  private assert2014SpecialRuleCompatibility(
+    itemId: string,
+    profile: WeaponProfile,
+    properties: Set<string>,
+    specialRule: WeaponSpecialRuleId,
+  ): void {
+    if (specialRule === "lance-2014") {
+      if (profile.weaponType !== "melee" || !properties.has("reach")) {
+        throw new Error("The 2014 Lance Special rule requires a melee Reach weapon.");
+      }
+      return;
+    }
+    if (specialRule === "net-2014") {
+      if (profile.weaponType !== "ranged" || !properties.has("thrown") || !profile.thrownRange) {
+        throw new Error("The 2014 Net Special rule requires a ranged Thrown weapon with thrownRange.");
+      }
+      return;
+    }
+    throw new Error("Weapon item " + itemId + " has an unsupported 2014 Special rule.");
+  }
+
+  private assertWeaponRange(range: WeaponRange, field: string): void {
+    this.assertPositiveInteger(range.normal, field + " normal distance");
+    this.assertPositiveInteger(range.long, field + " long distance");
+    if (range.long < range.normal) {
+      throw new Error("Invalid " + field + ": long range cannot be shorter than normal range.");
     }
   }
 
