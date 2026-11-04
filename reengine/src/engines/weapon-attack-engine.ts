@@ -206,7 +206,7 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
   if (input.targetDistanceFeet !== undefined) {
     assertInteger(input.targetDistanceFeet, "Target distance");
     if (input.targetDistanceFeet < 0) {
-      throw new RangeError("Target distance must be non-negative.");
+      throw new RangeError("Target distance must be a non-negative integer.");
     }
   }
   const abilityModifierDamageMode = input.abilityModifierDamageMode ?? "normal";
