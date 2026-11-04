@@ -246,35 +246,36 @@ Status: implemented and CI verified in [PR #16](https://github.com/Brozantium/5e
 
 ### RE-006F — Movement & Derived Defenses
 
-See [movement-defenses-audit.md](./REVERSE_ENGINEERING/findings/movement-defenses-audit.md) for the bounded legacy audit, existing E1/E2 contracts, open questions, and acceptance-test checklist.
+See [movement-defenses-audit.md](./REVERSE_ENGINEERING/findings/movement-defenses-audit.md) for legacy evidence, contract decisions, tests, and scope boundaries.
 
 #### RE-006F0 — Movement & Defense Audit / Contract Boundaries
 
-Status: audit and initial contract boundaries documented. No movement or defense engine implementation has started. Legacy single-Speed behavior, movement grant display, Condition/Exhaustion outputs, and legacy defense aggregation were inspected.
+Status: audit complete. The legacy single-Speed path, visible movement grants, E1/E2 outputs, and defense aggregation path were inspected.
 
 #### RE-006F1 — Movement Profiles
 
-- Define typed movement modes and normalized base Speed profiles.
-- Preserve missing modes separately from explicit zero Speed.
-- Preserve source/provenance and distinguish base grants from temporary modifiers.
+- Define walking, climbing, swimming, flying, and burrowing profile IDs.
+- Preserve absent modes separately from explicit zero Speed.
+- Retain provenance and keep base profiles separate from temporary modifiers.
 
-Status: planned.
+Status: implemented with regression tests on `feat/re-006f-movement-defenses`; CI pending.
 
 #### RE-006F2 — Effective Movement Resolver
 
-- Compose per-mode base Speed, typed modifiers, E1 condition constraints, and E2 ruleset-aware Exhaustion output.
-- Specify precedence/stacking before implementation; do not infer a universal order from display descriptions.
-- Keep movement costs and target-specific restrictions separate from Speed values.
+- Apply explicit caller-ordered modifiers to each mode.
+- Consume the existing E2 Exhaustion speed effect per mode.
+- Apply E1 hard Speed-zero / cannot-increase constraints last; preserve crawl/stand, source-approach, and Grappled drag metadata without executing movement.
+- Keep movement costs and target restrictions separate from Speed values.
 
-Status: planned.
+Status: implemented with regression tests on `feat/re-006f-movement-defenses`; CI pending.
 
 #### RE-006F3 — Derived Defense Aggregation
 
-- Define pure aggregation for permanent, temporary, equipment-derived, and condition-derived defenses.
-- Preserve source/provenance and make overlap/duplicate semantics explicit.
-- Keep AC calculation and damage/roll execution owned by their designated engines.
+- Aggregate feature, temporary, equipment, and E1 condition-derived defense facts.
+- Coalesce duplicate labels while preserving unique source provenance.
+- Preserve AC bonus source records without owning AC arithmetic; leave damage conflict resolution downstream.
 
-Status: planned.
+Status: implemented with regression tests on `feat/re-006f-movement-defenses`; CI pending.
 
 **RE-006F boundaries:** no mount, familiar, summoned creature, or vehicle entity model (RE-010); no turn/action/pathfinding/movement consumption (RE-008); no Owlbear/UI/persistence integration (RE-009).
 
