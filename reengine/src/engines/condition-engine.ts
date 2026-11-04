@@ -1,4 +1,4 @@
-import type { Ability, Ruleset } from "../domain/types";
+import type { Ruleset } from "../domain/types";
 import {
   CONDITION_TYPES,
 } from "../domain/conditions";
