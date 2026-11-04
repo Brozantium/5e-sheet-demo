@@ -119,7 +119,23 @@ function isStaleForInstance(
   condition: ConditionInstance,
 ): boolean {
   const appliedSequence = condition.appliedAt?.sequence;
-  return appliedSequence !== undefined && event.sequence <= appliedSequence;
+  if (appliedSequence !== undefined && event.sequence <= appliedSequence) return true;
+  if (
+    event.kind === "turn-boundary" &&
+    condition.appliedAt?.turn !== undefined &&
+    event.turnIndex < condition.appliedAt.turn
+  ) return true;
+  if (
+    event.kind === "round-boundary" &&
+    condition.appliedAt?.round !== undefined &&
+    event.round < condition.appliedAt.round
+  ) return true;
+  if (
+    event.kind === "time-advanced" &&
+    condition.appliedAt?.timestampMs !== undefined &&
+    event.timestampMs < condition.appliedAt.timestampMs
+  ) return true;
+  return false;
 }
 
 function expiresOnEvent(
