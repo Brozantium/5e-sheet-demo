@@ -190,7 +190,7 @@ Status: implementation complete on `feat/re-006d2-hit-dice-short-rest`. Frozen-l
 - A Stable character remains at 0 HP and unconscious; damage ends Stability. After the rules-defined 1d4 hours without healing, the character regains 1 HP.
 - Keep the shared death-save outcomes common while retaining edition-specific stabilization action costs. Melee knockout action semantics remain a combat/action integration concern.
 
-Status: implementation in progress on `feat/re-006d3-death-saves-stabilization`.
+Status: implementation complete on `feat/re-006d3-death-saves-stabilization`. Frozen-lockfile install and `pnpm typecheck:reengine` passed; all 235 unit tests passed. Turn orchestration, condition application, and knockout action handling remain with RE-006E/RE-008.
 
 #### RE-006D4 — Rest & Recovery
 
