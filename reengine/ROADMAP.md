@@ -181,9 +181,15 @@ Status: implementation complete. Exact-`main` verification in PR #10 passed froz
 
 #### RE-006D3 — Death Saves & Stabilization
 
-- Track successes/failures, natural 1/20 outcomes, stabilization, and death at three failures.
-- Resolve damage while at 0 HP, massive damage, and healing reset behavior.
-- Keep edition-specific edge cases explicit.
+- Track non-consecutive Death Save successes/failures: DC 10, three successes become Stable, three failures cause death; a natural 1 adds two failures and a natural 20 restores 1 HP.
+- Reset both tallies when HP is regained or the character becomes Stable.
+- Resolve damage while at 0 HP: one failure for damage, two for a Critical Hit; apply instant death when damage equals or exceeds maximum HP. Also resolve massive damage when dropping from positive HP to 0.
+- 2014 stabilization: Action + DC 10 Wisdom (Medicine), or expend one Healer's Kit use as an Action without a check.
+- 2024 stabilization: Help action + DC 10 Wisdom (Medicine), or expend one Healer's Kit use as a Utilize action without a check.
+- A Stable character remains at 0 HP and unconscious; damage ends Stability. After the rules-defined 1d4 hours without healing, the character regains 1 HP.
+- Keep shared Death Save outcomes common while retaining edition-specific stabilization action costs. Melee knockout action semantics remain a combat/action integration concern.
+
+Status: implementation complete; exact-`main` verification is pending in PR #11. Turn orchestration, condition application, and knockout action handling remain with RE-006E/RE-008.
 
 #### RE-006D4 — Rest & Recovery
 
@@ -225,6 +231,7 @@ RE-006 is complete only when all slices above have explicit acceptance tests, cl
 - Passive and conditional effects.
 - Explicit event payloads and effect application contracts.
 - Implement weapon mastery effects (Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex), Light/Loading/Ammunition action-cycle interactions, and their turn/Reaction/expiration semantics.
+- Resolve ruleset-specific melee knockout choices: 2014 can leave a target at 0 HP and Stable; 2024 leaves it at 1 HP with Unconscious and starts a Short Rest, with the documented end conditions.
 - Resolve cross-feature interactions without duplicating the rules already calculated by RE-006.
 
 ## RE-009 — Migration, Content, UI & Integration
