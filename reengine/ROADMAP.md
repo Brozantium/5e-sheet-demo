@@ -246,10 +246,37 @@ Status: implemented and CI verified in [PR #16](https://github.com/Brozantium/5e
 
 ### RE-006F — Movement & Derived Defenses
 
-- Walking, climbing, swimming, flying, and other movement modes.
-- Speed bonuses/penalties and condition interactions.
-- Derived combat values that depend on movement or character state.
-- Do not fold mount or vehicle stat blocks into the character's base Speed.
+See [movement-defenses-audit.md](./REVERSE_ENGINEERING/findings/movement-defenses-audit.md) for the bounded legacy audit, existing E1/E2 contracts, open questions, and acceptance-test checklist.
+
+#### RE-006F0 — Movement & Defense Audit / Contract Boundaries
+
+Status: audit and initial contract boundaries documented. No movement or defense engine implementation has started. Legacy single-Speed behavior, movement grant display, Condition/Exhaustion outputs, and legacy defense aggregation were inspected.
+
+#### RE-006F1 — Movement Profiles
+
+- Define typed movement modes and normalized base Speed profiles.
+- Preserve missing modes separately from explicit zero Speed.
+- Preserve source/provenance and distinguish base grants from temporary modifiers.
+
+Status: planned.
+
+#### RE-006F2 — Effective Movement Resolver
+
+- Compose per-mode base Speed, typed modifiers, E1 condition constraints, and E2 ruleset-aware Exhaustion output.
+- Specify precedence/stacking before implementation; do not infer a universal order from display descriptions.
+- Keep movement costs and target-specific restrictions separate from Speed values.
+
+Status: planned.
+
+#### RE-006F3 — Derived Defense Aggregation
+
+- Define pure aggregation for permanent, temporary, equipment-derived, and condition-derived defenses.
+- Preserve source/provenance and make overlap/duplicate semantics explicit.
+- Keep AC calculation and damage/roll execution owned by their designated engines.
+
+Status: planned.
+
+**RE-006F boundaries:** no mount, familiar, summoned creature, or vehicle entity model (RE-010); no turn/action/pathfinding/movement consumption (RE-008); no Owlbear/UI/persistence integration (RE-009).
 
 ### RE-006 completion gate
 
