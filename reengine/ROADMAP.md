@@ -157,7 +157,7 @@ Status: implementation complete on `feat/re-006c-armor-training-consequences`. F
 - Handle multiclass grant unions, shared content, and ruleset-incompatible sources with diagnostics.
 - Retain grant provenance for builder diagnostics and auditability.
 
-Status: implementation in progress on `feat/re-006c2-armor-training-grants`; frozen install, typecheck, and unit-test verification pending.
+Status: implementation complete on `feat/re-006c2-armor-training-grants`. Frozen install and typecheck passed; all 184 unit tests passed. Pending review/merge after the C1 dependency.
 
 ### RE-006D — Hit Points, Hit Dice & Recovery
 
