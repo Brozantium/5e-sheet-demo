@@ -87,7 +87,7 @@ test("healing can restore a character from zero HP",()=>{
 test("Temporary HP grants require an explicit choice when temporary HP already exists",()=>{
   const first=grantTemporaryHitPoints(state(),6);
   assert.equal(first.state.temporaryHitPoints,6);
-  assert.throws(()=>grantTemporaryHitPoints(first.state,4),/choose whether to keep or replace/);
+  assert.throws(()=>grantTemporaryHitPoints(first.state,4),/Choose whether to keep or replace/);
 
   const kept=grantTemporaryHitPoints(first.state,4,"keep-current");
   assert.equal(kept.state.temporaryHitPoints,6);
