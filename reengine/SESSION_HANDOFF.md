@@ -81,7 +81,7 @@ This is a compact history of the decisions and slices already recorded in the re
 | RE-006D2 | Hit Dice pools and Short Rest | Per-class multiclass pools and ruleset-aware healing. |
 | RE-006D3 | Death Saves, damage at 0 HP, stabilization | Pure state resolution; turn/timer/action orchestration remains caller-owned. |
 | RE-006D4 | Ruleset-aware Long Rest and recovery | Latest documented implementation checkpoint; see PR #12 and its verification record below. |
-| RE-006E | Conditions & Exhaustion | **Legacy call-path audit complete** for the inspected sheet flow; clean-room implementation not started. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md). |
+| RE-006E | Conditions & Exhaustion | Legacy audit complete. E1 Condition Resolver and E2 Exhaustion Resolver are implemented and CI verified on open stacked PRs #14/#15; E3 Condition Lifecycle is next. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md). |
 | RE-006F | Movement & derived defenses | Planned after RE-006E. |
 | RE-007 | Spellcasting engine | Planned. |
 | RE-008 | Action, trigger, and effect engine | Planned; owns action execution, event triggers, reactions, mastery effects, and condition/action timing. |
@@ -105,9 +105,13 @@ Important correction to an earlier preliminary chat note:
 
 The audit has now followed the inspected path through `src/App.tsx`: character state, saved-state normalization, condition UI, feature-action condition application, roll-mode consumers, speed/HP derivation, action/reaction gating, Petrified defense handling, and Short Rest/Long Rest/Dawn expiration filtering. See the dedicated findings document for exact source ranges, condition-by-condition gaps, ruleset differences, and acceptance tests. The findings remain scoped to the inspected current-app path; future newly discovered callers must be added to the audit.
 
-### RE-006E proposed implementation slices
+### RE-006E implementation status and remaining slice
 
-These are the working plan, subject to the evidence-based audit and explicit acceptance tests:
+- **E1 — Condition Instances & Derived Resolver:** implemented and CI verified on [PR #14](https://github.com/Brozantium/5e-sheet-demo/pull/14), run 41787492057, 288 tests passed.
+- **E2 — Ruleset-aware Exhaustion Resolver:** implemented and CI verified on [PR #15](https://github.com/Brozantium/5e-sheet-demo/pull/15), run 41788054920, 302 tests passed. 2014 and 2024 policies remain separate; D4 owns Long Rest recovery; level 6 is an explicit death outcome and does not create Death Save failures.
+- **E3 — Condition Lifecycle:** not implemented. It is the immediate next slice.
+
+The remaining E3 plan and acceptance criteria are:
 
 1. **E1 — Condition model and resolver:** structured derived effects for outgoing/incoming attacks, ability checks, saves, movement restrictions, action/reaction availability, and other required condition consequences. Preserve condition instances/provenance; define which effects are aggregate and which depend on source/target/context.
 2. **E2 — Exhaustion engine:** separate 2014 and 2024 resolvers, levels 0–6, with explicit D20 Test, Speed, maximum HP, and death consequences as applicable. Coordinate Long Rest recovery with D4 without duplicating rest lifecycle.
@@ -144,22 +148,41 @@ The roadmap branch records a stacked implementation sequence. These PR links are
 | #10 | RE-006D2 Hit Dice/Short Rest | [PR #10](https://github.com/Brozantium/5e-sheet-demo/pull/10) | 212 |
 | #11 | RE-006D3 Death Saves/stabilization | [PR #11](https://github.com/Brozantium/5e-sheet-demo/pull/11) | 235 |
 | #12 | RE-006D4 Long Rest/recovery | [PR #12](https://github.com/Brozantium/5e-sheet-demo/pull/12) | 257 |
+| #13 | RE-006E audit and documentation | [PR #13](https://github.com/Brozantium/5e-sheet-demo/pull/13) | documentation only |
+| #14 | RE-006E1 condition instances/resolver | [PR #14](https://github.com/Brozantium/5e-sheet-demo/pull/14) | 288 |
+| #15 | RE-006E2 Exhaustion resolver | [PR #15](https://github.com/Brozantium/5e-sheet-demo/pull/15) | 302 |
 
 At checkpoint review (2026-11-04), branch `feat/re-006d4-long-rest-recovery` was confirmed to exist and PR #12's review list returned no reviews. The PR search response did not reliably expose the current state field, so do not infer merged/open status from this note. PR #12's description records successful frozen-lockfile install, `pnpm typecheck:reengine`, and `pnpm test:reengine` with 257 tests, plus [workflow run 41779301323](https://github.com/Brozantium/5e-sheet-demo/actions/runs/41779301323). Recheck the exact head commit and CI on resume.
 
 ## Current checkpoint and next action
 
-**Checkpoint (2026-11-04):** RE-006D4 remains the latest implemented clean-room rules-engine slice. The RE-006E legacy audit is complete for the inspected sheet call path; no RE-006E runtime engine code has been added and no legacy `src/App.tsx` / `src/combat-rules.ts` code has been changed. Audit branch: `docs/re-006e-conditions-exhaustion-audit`, based on `feat/re-006d4-long-rest-recovery`. PR #12 remains open with no reviews; its recorded CI run 41779301323 passed install, typecheck, and 257 tests. Documentation-only Draft PR #13 is open from `docs/re-006e-conditions-exhaustion-audit` into `feat/re-006d4-long-rest-recovery`: [PR #13](https://github.com/Brozantium/5e-sheet-demo/pull/13). It contains the audit, roadmap expansion, README navigation, and this handoff update. It is deliberately not merged.
+**Checkpoint (2026-11-04):** RE-006E1 and RE-006E2 are implemented and CI verified on the clean-room `reengine/` branches. No legacy `src/App.tsx` or `src/combat-rules.ts` source was changed.
 
-**Immediate next task:** implement **RE-006E1 — Condition Instances & Derived Resolver** in the clean-room `reengine/` only, after translating the audit's acceptance criteria into explicit domain contracts and test fixtures. Use [PR #13](https://github.com/Brozantium/5e-sheet-demo/pull/13) as the documentation review surface. E2 and E3 follow E1. Do not begin E2 until the condition/Exhaustion boundary has been agreed and E1 result contracts are stable.
+- **PR #12 — RE-006D4:** open; its recorded CI run 41779301323 passed 257 tests. [PR #12](https://github.com/Brozantium/5e-sheet-demo/pull/12)
+- **PR #13 — RE-006E audit/docs:** documentation-only stacked PR; audit, roadmap, README, and handoff. [PR #13](https://github.com/Brozantium/5e-sheet-demo/pull/13)
+- **PR #14 — RE-006E1:** open, ready for review, not merged; run 41787492057 passed install, typecheck, and 288 tests. [PR #14](https://github.com/Brozantium/5e-sheet-demo/pull/14)
+- **PR #15 — RE-006E2:** open, ready for review, not merged; run 41788054920 passed install, typecheck, and 302 tests. [PR #15](https://github.com/Brozantium/5e-sheet-demo/pull/15)
+
+PR #14 and #15 are stacked: #15 is based on `feat/re-006e1-condition-resolver`. Keep this order when reviewing/merging. Live review state should be checked again before merging.
+
+**Immediate next task:** implement **RE-006E3 — Condition Lifecycle** in a new branch based on `feat/re-006e2-exhaustion-resolver`. This pure resolver consumes caller-supplied lifecycle events and returns updated per-instance condition records; it does not own clocks, turn scheduling, UI, persistence, or action execution.
+
+**E3 contract goals:**
+
+1. Expire only the matching instance(s) for manual removal, Short Rest, Long Rest, Dawn, turn/round boundary, elapsed-time threshold, successful save-to-end, or explicit source/target event.
+2. Preserve independent expiry for multiple instances of the same condition type.
+3. Validate event IDs/subjects, turn counters, timestamps, and saving-throw outcomes; handle duplicate/stale/out-of-order events deterministically.
+4. Keep the operation immutable and ruleset-aware only where the condition's lifecycle requires it; do not duplicate D4 Long Rest eligibility or Exhaustion recovery.
+5. Add tests for every expiry kind, two same-type instances with different lifetimes, unrelated instances remaining, idempotent duplicate events, invalid event payloads, and save-to-end success/failure.
 
 **Recommended next sequence:**
 
-1. Verify the documentation Draft PR and current PR #12/CI state.
-2. Translate E1 acceptance cases from `conditions-exhaustion-audit.md` into a compact domain contract: instance identity, ruleset, source/target/context, aggregate non-stacking behavior, outgoing/incoming attacks, saving throws, checks, action availability, and movement constraints.
-3. Inspect existing `reengine/src/domain/combat.ts`, death-save contracts, and character-state schemas before creating overlapping types.
-4. Implement E1 as pure functions with tests; do not add UI/Owlbear integration or modify legacy source.
-5. Update this handoff and `ROADMAP.md` at E1 completion with branch, commit, exact tests, CI, and PR status.
+1. Verify PR #14/#15 live head, review state, and CI on resume.
+2. Inspect the exact E1 `ConditionExpiry` and `ConditionInstance` types on `feat/re-006e2-exhaustion-resolver`.
+3. Formalize E3 event contracts and determine which expiry triggers are per-affected-creature versus per-source/target.
+4. Implement a pure `condition-lifecycle-engine` with explicit result diagnostics and immutable outputs.
+5. Add lifecycle tests; run frozen install, `pnpm typecheck:reengine`, and `pnpm test:reengine`.
+6. Update the roadmap and this handoff with branch, PR, commit, exact tests, and CI status.
 
 ## How to maintain this safeguard
 
