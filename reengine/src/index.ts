@@ -9,3 +9,5 @@ export * from "./engines/spell-modifier-engine";
 export * from "./engines/item-engine";
 export * from "./engines/character-calculation-engine";
 export * from "./engines/armor-class-engine";
+export * from "./engines/weapon-attack-engine";
+export * from "./engines/weapon-hand-occupancy-engine";

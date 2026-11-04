@@ -50,7 +50,7 @@ export const longsword2014 = {
   weaponProfile: {
     weaponCategory: "martial",
     weaponType: "melee",
-    damage: [{ formula: "1d8", damageType: "slashing" }],
+    damage: [{ formula: "1d8", versatileFormula: "1d10", damageType: "slashing" }],
   },
 } satisfies ItemDefinition;
 
