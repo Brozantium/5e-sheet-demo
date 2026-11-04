@@ -39,6 +39,7 @@ export interface DeathSaveDamageResult {
 }
 
 export type DeathSavingThrowOutcome =
+  | "no-roll"
   | "success"
   | "failure"
   | "stable"
