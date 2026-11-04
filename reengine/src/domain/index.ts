@@ -4,3 +4,4 @@ export * from "./identity";
 export * from "./character";
 export * from "./equipment";
 export * from "./combat";
+export * from "./hit-points";
