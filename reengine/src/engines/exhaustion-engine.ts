@@ -105,7 +105,7 @@ export function resolveExhaustionEffects(
     ruleset: input.ruleset,
     level: input.level,
     isDead: input.level === 6,
-    d20TestModifier: is2014 ? 0 : -2 * input.level,
+    d20TestModifier: is2014 || input.level === 0 ? 0 : -2 * input.level,
     attackRollDisadvantage: is2014 && input.level >= 3,
     abilityCheckDisadvantage: is2014 && input.level >= 1,
     savingThrowDisadvantage: is2014 && input.level >= 3,
