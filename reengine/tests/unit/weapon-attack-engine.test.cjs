@@ -357,3 +357,257 @@ test("invalid scores, bonuses, grip, finesse choices, and proficiency records ar
   assert.throws(() => attack({ abilityModifierDamageMode: "sometimes" }), /damage mode/);
   assert.throws(() => attack({ weaponProficiencies: [{ kind: "category", category: "exotic" }] }), /category/);
 });
+
+const lance2014 = () => ({
+  id: "weapon:lance",
+  name: "Lance",
+  ruleset: "2014",
+  category: "weapon",
+  properties: ["reach", "special"],
+  weaponProfile: {
+    weaponCategory: "martial",
+    weaponType: "melee",
+    damage: [{ formula: "1d12", damageType: "piercing" }],
+    specialRules: ["lance-2014"],
+  },
+});
+
+const lance2024 = () => ({
+  id: "weapon:lance-2024",
+  name: "Lance",
+  ruleset: "2024",
+  category: "weapon",
+  properties: ["heavy", "reach", "two-handed"],
+  weaponProfile: {
+    weaponCategory: "martial",
+    weaponType: "melee",
+    damage: [{ formula: "1d10", damageType: "piercing" }],
+    twoHandedRule: { unlessMounted: true },
+  },
+});
+
+test("Reach adds five feet to base reach and is reusable for Opportunity Attack reach", () => {
+  const { calculateWeaponReach } = require("../../.test-dist/engines/weapon-attack-engine.js");
+  assert.equal(calculateWeaponReach(), 5);
+  assert.equal(calculateWeaponReach(5, true), 10);
+  assert.equal(calculateWeaponReach(10, true), 15);
+
+  const withReach = attack({
+    weapon: { instanceId: "whip", definition: rapier({ properties: ["reach"] }), equipped: true },
+    targetDistanceFeet: 10,
+  });
+  const outOfReach = attack({
+    weapon: { instanceId: "whip", definition: rapier({ properties: ["reach"] }), equipped: true },
+    targetDistanceFeet: 11,
+  });
+  assert.equal(withReach.effectiveReachFeet, 10);
+  assert.equal(withReach.rangeBand, "melee");
+  assert.equal(withReach.canAttack, true);
+  assert.equal(outOfReach.canAttack, false);
+  assert.ok(outOfReach.issues.some((issue) => issue.code === "target-out-of-reach"));
+});
+
+test("standard ranged attacks use normal/long range bands and reject targets beyond long range", () => {
+  const bow = {
+    id: "weapon:longbow",
+    name: "Longbow",
+    ruleset: "2024",
+    category: "weapon",
+    properties: ["ammunition", "heavy", "two-handed"],
+    weaponProfile: {
+      weaponCategory: "martial",
+      weaponType: "ranged",
+      damage: [{ formula: "1d8", damageType: "piercing" }],
+      range: { normal: 150, long: 600 },
+      ammunitionType: "arrow",
+    },
+  };
+  const normal = attack({
+    ruleset: "2024",
+    weapon: { instanceId: "bow", definition: bow, equipped: true },
+    attackMode: "ranged",
+    targetDistanceFeet: 150,
+    grip: "two-handed",
+  });
+  const long = attack({
+    ruleset: "2024",
+    weapon: { instanceId: "bow", definition: bow, equipped: true },
+    attackMode: "ranged",
+    targetDistanceFeet: 300,
+    grip: "two-handed",
+  });
+  const tooFar = attack({
+    ruleset: "2024",
+    weapon: { instanceId: "bow", definition: bow, equipped: true },
+    attackMode: "ranged",
+    targetDistanceFeet: 601,
+    grip: "two-handed",
+  });
+  assert.equal(normal.rangeBand, "normal");
+  assert.equal(normal.hasRangeDisadvantage, false);
+  assert.equal(long.rangeBand, "long");
+  assert.equal(long.hasRangeDisadvantage, true);
+  assert.deepEqual(long.rangeDisadvantageReasons, ["long-range"]);
+  assert.equal(long.hasDisadvantage, true);
+  assert.equal(tooFar.canAttack, false);
+  assert.ok(tooFar.issues.some((issue) => issue.code === "target-out-of-range"));
+});
+
+test("Thrown mode uses thrownRange and preserves the weapon's melee ability rule", () => {
+  const javelin = {
+    id: "weapon:javelin",
+    name: "Javelin",
+    ruleset: "2024",
+    category: "weapon",
+    properties: ["thrown"],
+    weaponProfile: {
+      weaponCategory: "simple",
+      weaponType: "melee",
+      damage: [{ formula: "1d6", damageType: "piercing" }],
+      thrownRange: { normal: 30, long: 120 },
+    },
+  };
+  const result = attack({
+    ruleset: "2024",
+    weapon: { instanceId: "javelin", definition: javelin, equipped: true },
+    attackMode: "thrown",
+    targetDistanceFeet: 90,
+    abilityScores: scores({ str: 18, dex: 12 }),
+  });
+  assert.equal(result.attackMode, "thrown");
+  assert.equal(result.ability, "str");
+  assert.equal(result.rangeBand, "long");
+  assert.equal(result.hasRangeDisadvantage, true);
+});
+
+test("Thrown ranged weapons such as Darts use their thrown range and ranged ability rule", () => {
+  const dart = {
+    id: "weapon:dart",
+    name: "Dart",
+    ruleset: "2024",
+    category: "weapon",
+    properties: ["finesse", "thrown"],
+    weaponProfile: {
+      weaponCategory: "simple",
+      weaponType: "ranged",
+      damage: [{ formula: "1d4", damageType: "piercing" }],
+      thrownRange: { normal: 20, long: 60 },
+    },
+  };
+  const result = attack({
+    ruleset: "2024",
+    weapon: { instanceId: "dart", definition: dart, equipped: true },
+    abilityScores: scores({ str: 12, dex: 18 }),
+    targetDistanceFeet: 30,
+  });
+  assert.equal(result.attackMode, "thrown");
+  assert.equal(result.ability, "dex");
+  assert.equal(result.rangeBand, "long");
+  assert.equal(result.hasDisadvantage, true);
+});
+
+test("2014 Lance has close-target disadvantage and requires two hands only while unmounted", () => {
+  const close = attack({
+    weapon: { instanceId: "lance", definition: lance2014(), equipped: true },
+    targetDistanceFeet: 5,
+    grip: "two-handed",
+  });
+  const atReach = attack({
+    weapon: { instanceId: "lance", definition: lance2014(), equipped: true },
+    targetDistanceFeet: 10,
+    grip: "two-handed",
+  });
+  const mountedClose = attack({
+    weapon: { instanceId: "lance", definition: lance2014(), equipped: true },
+    targetDistanceFeet: 5,
+    grip: "one-handed",
+    isMounted: true,
+  });
+  const unmountedOneHanded = attack({
+    weapon: { instanceId: "lance", definition: lance2014(), equipped: true },
+    grip: "one-handed",
+  });
+
+  assert.equal(close.hasRangeDisadvantage, true);
+  assert.deepEqual(close.rangeDisadvantageReasons, ["lance-close-range-2014"]);
+  assert.equal(atReach.hasRangeDisadvantage, false);
+  assert.equal(mountedClose.canAttack, true);
+  assert.equal(mountedClose.hasRangeDisadvantage, true);
+  assert.equal(unmountedOneHanded.canAttack, false);
+  assert.ok(unmountedOneHanded.issues.some((issue) => issue.code === "weapon-requires-two-hands"));
+});
+
+test("2024 Lance uses one hand while mounted, but Heavy still checks Strength", () => {
+  const mounted = attack({
+    ruleset: "2024",
+    weapon: { instanceId: "lance", definition: lance2024(), equipped: true },
+    abilityScores: scores({ str: 12 }),
+    grip: "one-handed",
+    isMounted: true,
+  });
+  const unmounted = attack({
+    ruleset: "2024",
+    weapon: { instanceId: "lance", definition: lance2024(), equipped: true },
+    grip: "one-handed",
+    isMounted: false,
+  });
+  assert.equal(mounted.canAttack, true);
+  assert.equal(mounted.hasHeavyWeaponDisadvantage, true);
+  assert.equal(unmounted.canAttack, false);
+  assert.ok(unmounted.issues.some((issue) => issue.code === "weapon-requires-two-hands"));
+});
+
+test("2014 Net can resolve a thrown attack without adding ordinary damage", () => {
+  const net = {
+    id: "weapon:net",
+    name: "Net",
+    ruleset: "2014",
+    category: "weapon",
+    properties: ["special", "thrown"],
+    weaponProfile: {
+      weaponCategory: "martial",
+      weaponType: "ranged",
+      damage: [],
+      thrownRange: { normal: 5, long: 15 },
+      specialRules: ["net-2014"],
+    },
+  };
+  const result = attack({
+    weapon: { instanceId: "net", definition: net, equipped: true },
+    targetDistanceFeet: 10,
+  });
+  assert.equal(result.attackMode, "thrown");
+  assert.equal(result.canAttack, true);
+  assert.equal(result.damage.length, 0);
+  assert.deepEqual(result.specialRules, ["net-2014"]);
+  assert.equal(result.hasRangeDisadvantage, true);
+});
+
+test("unsupported attack modes, missing ranges, and invalid distances are handled explicitly", () => {
+  const unsupported = attack({ attackMode: "ranged" });
+  assert.equal(unsupported.canAttack, false);
+  assert.ok(unsupported.issues.some((issue) => issue.code === "weapon-mode-not-supported"));
+
+  const missingRange = attack({
+    weapon: {
+      instanceId: "bow",
+      definition: {
+        id: "weapon:bow",
+        name: "Bow",
+        ruleset: "shared",
+        category: "weapon",
+        properties: [],
+        weaponProfile: {
+          weaponCategory: "martial",
+          weaponType: "ranged",
+          damage: [{ formula: "1d8", damageType: "piercing" }],
+        },
+      },
+      equipped: true,
+    },
+    targetDistanceFeet: 30,
+  });
+  assert.equal(missingRange.canAttack, false);
+  assert.ok(missingRange.issues.some((issue) => issue.code === "missing-weapon-range"));
+  assert.throws(() => attack({ targetDistanceFeet: -1 }), /non-negative integer/);
+});

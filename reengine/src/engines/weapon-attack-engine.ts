@@ -1,12 +1,16 @@
 import type { Ability, ContentRuleset } from "../domain/types";
-import type { ItemDefinition, WeaponProfile } from "../domain/item";
+import type { ItemDefinition, WeaponProfile, WeaponSpecialRuleId } from "../domain/item";
 import type {
   WeaponAttackInput,
   WeaponAttackIssue,
   WeaponAttackResult,
   WeaponProficiency,
+  WeaponHeavyDisadvantageReason,
+  WeaponRangeDisadvantageReason,
   WeaponAttackDisadvantageReason,
   CreatureSize,
+  WeaponAttackMode,
+  WeaponRangeBand,
 } from "../domain/combat";
 import { calculateAbilityModifier } from "./character-calculation-engine";
 
@@ -26,6 +30,19 @@ function assertAbilityScores(scores: Record<Ability, number>): void {
       throw new RangeError(ability.toUpperCase() + " score must be an integer from 1 to 30.");
     }
   }
+}
+
+/**
+ * Calculates the weapon's effective melee reach. Reuse this for ordinary melee
+ * attacks and Opportunity Attack reach so the two rules cannot drift apart.
+ */
+export function calculateWeaponReach(baseReachFeet = 5, hasReachProperty = false): number {
+  assertInteger(baseReachFeet, "Base reach");
+  if (baseReachFeet < 1) throw new RangeError("Base reach must be positive.");
+  if (typeof hasReachProperty !== "boolean") {
+    throw new TypeError("Reach property state must be boolean.");
+  }
+  return baseReachFeet + (hasReachProperty ? 5 : 0);
 }
 
 function getWeaponProfile(definition: ItemDefinition): WeaponProfile | undefined {
@@ -83,14 +100,33 @@ function displayFormula(formula: string, modifier: number): string {
   return formula;
 }
 
+function defaultAttackMode(profile: WeaponProfile, properties: Set<string>): WeaponAttackMode {
+  if (profile.weaponType === "melee") return "melee";
+  if (!profile.range && properties.has("thrown") && profile.thrownRange) return "thrown";
+  return "ranged";
+}
+
+function requiresTwoHands(
+  profile: WeaponProfile,
+  properties: Set<string>,
+  specialRules: readonly WeaponSpecialRuleId[],
+  isMounted: boolean,
+): boolean {
+  const 2024MountedException = isMounted && profile.twoHandedRule?.unlessMounted === true;
+  const has2014LanceRule = specialRules.includes("lance-2014");
+  return (properties.has("two-handed") && !2024MountedException) ||
+    (has2014LanceRule && !isMounted);
+}
+
 /**
  * Resolves a weapon attack snapshot. Melee weapons use Strength by default
  * and ranged weapons use Dexterity. Finesse permits an explicit Strength or
- * Dexterity choice on either weapon type; absent a choice, the higher modifier
- * is selected. A Thrown melee weapon retains the melee ability rule.
+ * Dexterity choice. A Thrown melee weapon retains its melee ability rule.
  *
- * Proficiency is added only when a category or exact/base-item grant matches.
- * The damage modifier is applied once to the first (primary) damage component.
+ * When targetDistanceFeet is supplied, melee reach or the selected ranged
+ * normal/long range is validated. Long range and the 2014 Lance close-target
+ * rule are returned as disadvantage reasons. Action-cycle restrictions and
+ * applying Special effects remain in the Action/Effect layer.
  */
 export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackResult {
   if (!input || typeof input !== "object") {
@@ -124,7 +160,12 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
   if (profile.weaponType !== "melee" && profile.weaponType !== "ranged") {
     throw new RangeError("Unknown weapon type.");
   }
-  if (!Array.isArray(profile.damage) || profile.damage.length === 0) {
+  if (!Array.isArray(profile.damage)) {
+    throw new TypeError("Weapon profile requires a damage component array.");
+  }
+  const specialRules = profile.specialRules ?? [];
+  const is2014Net = specialRules.includes("net-2014") && input.ruleset === "2014";
+  if (profile.damage.length === 0 && !is2014Net) {
     throw new TypeError("Weapon profile requires at least one damage component.");
   }
   profile.damage.forEach((component) => {
@@ -155,6 +196,19 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
   if (grip !== "one-handed" && grip !== "two-handed") {
     throw new RangeError("Weapon grip must be one-handed or two-handed.");
   }
+  const isMounted = input.isMounted ?? false;
+  if (typeof isMounted !== "boolean") {
+    throw new TypeError("Mounted state must be boolean.");
+  }
+  const baseReachFeet = input.baseReachFeet ?? 5;
+  assertInteger(baseReachFeet, "Base reach");
+  if (baseReachFeet < 1) throw new RangeError("Base reach must be positive.");
+  if (input.targetDistanceFeet !== undefined) {
+    assertInteger(input.targetDistanceFeet, "Target distance");
+    if (input.targetDistanceFeet < 0) {
+      throw new RangeError("Target distance must be non-negative.");
+    }
+  }
   const abilityModifierDamageMode = input.abilityModifierDamageMode ?? "normal";
   if (
     abilityModifierDamageMode !== "normal" &&
@@ -175,13 +229,42 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
     throw new TypeError("Weapon properties must be an array of strings.");
   }
   const properties = new Set(definition.properties ?? []);
+  const hasFinesse = properties.has("finesse");
+  const hasThrown = properties.has("thrown");
+  const specialRuleSet = new Set(specialRules);
   if (properties.has("versatile") && profile.weaponType !== "melee") {
     throw new RangeError("Versatile property requires a melee weapon.");
   }
+
+  const attackMode = input.attackMode ?? defaultAttackMode(profile, properties);
+  if (attackMode !== "melee" && attackMode !== "ranged" && attackMode !== "thrown") {
+    throw new RangeError("Unknown weapon attack mode.");
+  }
+
+  const issues: WeaponAttackIssue[] = [];
+  let canAttack = true;
+  if (attackMode === "melee" && profile.weaponType !== "melee") {
+    canAttack = false;
+    issues.push({
+      code: "weapon-mode-not-supported",
+      message: definition.name + " is not a melee weapon.",
+    });
+  } else if (attackMode === "ranged" && profile.weaponType !== "ranged") {
+    canAttack = false;
+    issues.push({
+      code: "weapon-mode-not-supported",
+      message: definition.name + " is not a ranged weapon; choose a Thrown attack if the property allows it.",
+    });
+  } else if (attackMode === "thrown" && !hasThrown) {
+    canAttack = false;
+    issues.push({
+      code: "weapon-mode-not-supported",
+      message: definition.name + " does not have the Thrown property.",
+    });
+  }
+
   const strengthModifier = calculateAbilityModifier(input.abilityScores.str);
   const dexterityModifier = calculateAbilityModifier(input.abilityScores.dex);
-  const hasFinesse = properties.has("finesse");
-
   if (input.abilityChoice !== undefined && input.abilityChoice !== "str" && input.abilityChoice !== "dex") {
     throw new RangeError("Finesse ability choice must be Strength or Dexterity.");
   }
@@ -191,8 +274,7 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
 
   let ability: Ability;
   if (hasFinesse) {
-    ability =
-      input.abilityChoice ??
+    ability = input.abilityChoice ??
       (dexterityModifier > strengthModifier ? "dex" : "str");
   } else {
     ability = profile.weaponType === "ranged" ? "dex" : "str";
@@ -201,9 +283,8 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
 
   const proficient = hasWeaponProficiency(definition, profile, proficiencies);
   const proficiencyContribution = proficient ? proficiencyBonus : 0;
-  const issues: WeaponAttackIssue[] = [];
-  const heavyWeaponDisadvantageReasons: WeaponAttackDisadvantageReason[] = [];
-  let canAttack = true;
+  const heavyWeaponDisadvantageReasons: WeaponHeavyDisadvantageReason[] = [];
+  const rangeDisadvantageReasons: WeaponRangeDisadvantageReason[] = [];
 
   if (!input.weapon.equipped) {
     canAttack = false;
@@ -221,11 +302,12 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
         " content and is not usable by a " + input.ruleset + " character.",
     });
   }
-  if (properties.has("two-handed") && grip !== "two-handed") {
+
+  if (requiresTwoHands(profile, properties, specialRules, isMounted) && grip !== "two-handed") {
     canAttack = false;
     issues.push({
       code: "weapon-requires-two-hands",
-      message: definition.name + " requires a two-handed grip.",
+      message: definition.name + " requires a two-handed grip in the current mounted state.",
     });
   }
 
@@ -261,13 +343,64 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
     });
   }
 
+  let effectiveReachFeet: number | undefined;
+  let rangeBand: WeaponRangeBand | null = null;
+  if (attackMode === "melee") {
+    effectiveReachFeet = calculateWeaponReach(baseReachFeet, properties.has("reach"));
+    rangeBand = "melee";
+    if (
+      input.targetDistanceFeet !== undefined &&
+      input.targetDistanceFeet > effectiveReachFeet
+    ) {
+      canAttack = false;
+      issues.push({
+        code: "target-out-of-reach",
+        message:
+          definition.name + " has an effective reach of " + effectiveReachFeet +
+          " feet, but the target is " + input.targetDistanceFeet + " feet away.",
+      });
+    }
+    if (
+      input.ruleset === "2014" &&
+      specialRuleSet.has("lance-2014") &&
+      input.targetDistanceFeet !== undefined &&
+      input.targetDistanceFeet <= 5
+    ) {
+      rangeDisadvantageReasons.push("lance-close-range-2014");
+    }
+  } else if (input.targetDistanceFeet !== undefined) {
+    const selectedRange = attackMode === "thrown" ? profile.thrownRange : profile.range;
+    if (!selectedRange) {
+      canAttack = false;
+      issues.push({
+        code: "missing-weapon-range",
+        message:
+          definition.name + " does not have a structured " +
+          (attackMode === "thrown" ? "Thrown" : "ranged") + " range profile.",
+      });
+    } else if (input.targetDistanceFeet > selectedRange.long) {
+      canAttack = false;
+      issues.push({
+        code: "target-out-of-range",
+        message:
+          definition.name + " cannot reach a target " + input.targetDistanceFeet +
+          " feet away; its long range is " + selectedRange.long + " feet.",
+      });
+    } else {
+      rangeBand = input.targetDistanceFeet > selectedRange.normal ? "long" : "normal";
+      if (rangeBand === "long") rangeDisadvantageReasons.push("long-range");
+    }
+  }
+
   const abilityDamageModifier =
     abilityModifierDamageMode === "normal"
       ? abilityModifier
       : abilityModifierDamageMode === "negative-only"
         ? Math.min(abilityModifier, 0)
         : 0;
-  const damageModifier = abilityDamageModifier + damageBonus;
+  const damageModifier = profile.damage.length > 0
+    ? abilityDamageModifier + damageBonus
+    : 0;
   const damage = profile.damage.map((component, index) => {
     let formula = component.formula;
     if (index === 0 && grip === "two-handed" && properties.has("versatile")) {
@@ -291,9 +424,14 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
     };
   });
 
+  const disadvantageReasons: WeaponAttackDisadvantageReason[] = [
+    ...heavyWeaponDisadvantageReasons,
+    ...rangeDisadvantageReasons,
+  ];
   return {
     canAttack,
     weaponInstanceId: input.weapon.instanceId,
+    attackMode,
     ability,
     abilityModifier,
     proficient,
@@ -302,7 +440,15 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
     damageModifier,
     hasHeavyWeaponDisadvantage: heavyWeaponDisadvantageReasons.length > 0,
     heavyWeaponDisadvantageReasons,
+    hasRangeDisadvantage: rangeDisadvantageReasons.length > 0,
+    rangeDisadvantageReasons,
+    hasDisadvantage: disadvantageReasons.length > 0,
+    disadvantageReasons,
+    ...(input.targetDistanceFeet !== undefined ? { targetDistanceFeet: input.targetDistanceFeet } : {}),
+    ...(effectiveReachFeet !== undefined ? { effectiveReachFeet } : {}),
+    rangeBand,
     grip,
+    specialRules: [...specialRules],
     damage,
     issues,
   };

@@ -161,3 +161,35 @@ test("duplicate instance IDs and malformed hand assignments are rejected", () =>
     ],
   }), /same hand twice/);
 });
+
+test("2014 Lance requires two hands unless mounted", () => {
+  const lance = weapon("lance-2014", ["reach", "special"], "melee", "2014");
+  lance.weaponProfile.specialRules = ["lance-2014"];
+  const unmounted = validateWeaponHandOccupancy({
+    ruleset: "2014",
+    heldItems: [{ instanceId: "lance", definition: lance, hands: ["main"] }],
+  });
+  const mounted = validateWeaponHandOccupancy({
+    ruleset: "2014",
+    isMounted: true,
+    heldItems: [{ instanceId: "lance", definition: lance, hands: ["main"] }],
+  });
+  assert.equal(unmounted.valid, false);
+  assert.equal(mounted.valid, true);
+});
+
+test("2024 Lance Two-Handed property is waived only while mounted", () => {
+  const lance = weapon("lance-2024", ["heavy", "reach", "two-handed"], "melee", "2024");
+  lance.weaponProfile.twoHandedRule = { unlessMounted: true };
+  const unmounted = validateWeaponHandOccupancy({
+    ruleset: "2024",
+    heldItems: [{ instanceId: "lance", definition: lance, hands: ["main"] }],
+  });
+  const mounted = validateWeaponHandOccupancy({
+    ruleset: "2024",
+    isMounted: true,
+    heldItems: [{ instanceId: "lance", definition: lance, hands: ["main"] }],
+  });
+  assert.equal(unmounted.valid, false);
+  assert.equal(mounted.valid, true);
+});

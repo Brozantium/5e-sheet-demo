@@ -33,6 +33,10 @@ export function validateWeaponHandOccupancy(
   if (input.ruleset !== "2014" && input.ruleset !== "2024") {
     throw new RangeError("Weapon hand occupancy ruleset must be 2014 or 2024.");
   }
+  if (input.isMounted !== undefined && typeof input.isMounted !== "boolean") {
+    throw new TypeError("Mounted state must be boolean.");
+  }
+  const isMounted = input.isMounted ?? false;
   if (!Array.isArray(input.heldItems)) {
     throw new TypeError("Held items must be an array.");
   }
@@ -84,11 +88,22 @@ export function validateWeaponHandOccupancy(
     const profile = getWeaponProfile(entry.definition);
     if (profile) {
       const properties = new Set(entry.definition.properties ?? []);
-      if (properties.has("two-handed") && hands.length !== 2) {
+      const mountedTwoHandedException =
+        input.ruleset === "2024" &&
+        isMounted &&
+        profile.twoHandedRule?.unlessMounted === true;
+      const 2014LanceRequiresTwoHands =
+        input.ruleset === "2014" &&
+        !isMounted &&
+        profile.specialRules?.includes("lance-2014") === true;
+      const requiresTwoHands =
+        (properties.has("two-handed") && !mountedTwoHandedException) ||
+        2014LanceRequiresTwoHands;
+      if (requiresTwoHands && hands.length !== 2) {
         issues.push({
           code: "weapon-requires-two-hands",
           instanceId: entry.instanceId,
-          message: entry.definition.name + " requires both hands.",
+          message: entry.definition.name + " requires both hands in the current mounted state.",
         });
       }
       heldWeapons.push({
