@@ -233,6 +233,33 @@ test("events at or before the instance application sequence cannot expire it", (
   assert.ok(result.issues.some((issue) => issue.code === "stale-event"));
 });
 
+test("events with turn, round, or clock values before application are stale", () => {
+  const conditions = [
+    condition("turn", [{ kind: "turn", creatureId: AFFECTED, boundary: "end", afterTurns: 1 }], {
+      appliedAt: { turn: 5 },
+    }),
+    condition("round", [{ kind: "round", boundary: "end", afterRounds: 1 }], {
+      appliedAt: { round: 5 },
+    }),
+    condition("time", [{ kind: "elapsed-time", minutes: 1 }], {
+      appliedAt: { timestampMs: 5000 },
+    }),
+  ];
+  const result = resolve(conditions, [
+    event("turn-before", 1, {
+      kind: "turn-boundary", creatureId: AFFECTED, boundary: "end", turnIndex: 4,
+    }),
+    event("round-before", 2, {
+      kind: "round-boundary", boundary: "end", round: 4,
+    }),
+    event("time-before", 3, {
+      kind: "time-advanced", timestampMs: 4000,
+    }),
+  ]);
+  assert.equal(result.remainingConditions.length, 3);
+  assert.equal(result.issues.filter((issue) => issue.code === "stale-event").length, 3);
+});
+
 test("duplicate event IDs are idempotently ignored", () => {
   const timed = condition("one", [{ kind: "rest", rest: "short" }]);
   const first = event("same", 1, { kind: "rest-completed", rest: "short" });
