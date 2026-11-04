@@ -184,7 +184,7 @@ test("only Two-Handed, not Heavy by itself, requires a two-handed grip", () => {
     creatureSize: "medium",
   });
   assert.equal(heavyOneHanded.canAttack, true);
-  assert.equal(heavyOneHanded.hasDisadvantage, false);
+  assert.equal(heavyOneHanded.hasHeavyWeaponDisadvantage, false);
 });
 
 test("Heavy weapon disadvantage follows the 2014 size and 2024 ability-score rules", () => {
@@ -223,13 +223,13 @@ test("Heavy weapon disadvantage follows the 2014 size and 2024 ability-score rul
     abilityScores: scores({ dex: 12 }),
   });
 
-  assert.equal(small2014.hasDisadvantage, true);
-  assert.deepEqual(small2014.disadvantageReasons, ["heavy-weapon-size"]);
-  assert.equal(medium2014.hasDisadvantage, false);
-  assert.equal(lowStrength2024.hasDisadvantage, true);
-  assert.deepEqual(lowStrength2024.disadvantageReasons, ["heavy-weapon-ability-score"]);
-  assert.equal(enoughStrength2024.hasDisadvantage, false);
-  assert.equal(lowDexterity2024.hasDisadvantage, true);
+  assert.equal(small2014.hasHeavyWeaponDisadvantage, true);
+  assert.deepEqual(small2014.heavyWeaponDisadvantageReasons, ["heavy-weapon-size"]);
+  assert.equal(medium2014.hasHeavyWeaponDisadvantage, false);
+  assert.equal(lowStrength2024.hasHeavyWeaponDisadvantage, true);
+  assert.deepEqual(lowStrength2024.heavyWeaponDisadvantageReasons, ["heavy-weapon-ability-score"]);
+  assert.equal(enoughStrength2024.hasHeavyWeaponDisadvantage, false);
+  assert.equal(lowDexterity2024.hasHeavyWeaponDisadvantage, true);
   assert.throws(() => attack({
     weapon: heavyMelee,
     ruleset: "2014",
