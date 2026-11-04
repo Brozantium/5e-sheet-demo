@@ -19,6 +19,7 @@ This directory is the clean-room workspace for the new 5e content model, builder
 - SESSION_HANDOFF.md — required continuation checkpoint for new chats/sessions; read this first, then verify live GitHub status.
 - REVERSE_ENGINEERING/ — verified observations from the legacy app.
   - `REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md` — RE-006E legacy condition/exhaustion call-path audit and acceptance criteria.
+  - `REVERSE_ENGINEERING/findings/movement-defenses-audit.md` — RE-006F0 bounded audit and initial contract boundaries for movement and derived defenses.
 - SCHEMAS/ — JSON contracts for canonical content and character state.
 - content/ — the only canonical content location for the new builder.
 - src/domain/ — domain types with no UI dependencies.
@@ -49,7 +50,7 @@ The unit suite uses Node's built-in test runner. JSON Schema validation uses Ajv
 - RE-005: schema/content validation complete for the current canonical model. Shared schemas, option-set/item contracts, ID/ruleset metadata enforcement, reference checks, Ajv fixtures, and TypeScript contract fixtures pass CI (47/47 tests).
 - RE-006A–D4: core character calculations, weapon and armor rules, HP, Hit Dice, Death Saves, and Long Rest pure-engine slices have implementation/test records in the roadmap and handoff.
 - RE-006E: legacy Conditions & Exhaustion audit is complete; E1 condition resolution, E2 ruleset-aware Exhaustion, and E3 condition lifecycle are implemented and CI verified on stacked PRs #14–#16, awaiting review/merge.
-- RE-006F: Movement & Derived Defenses is the next planned slice.
+- RE-006F0: Movement & Derived Defenses source audit and initial contract boundaries documented. F1 movement profiles, F2 effective movement resolver, and F3 defense aggregation remain planned.
 - RE-007: spellcasting engine.
 - RE-008: action, trigger, and effect engine.
 - RE-009+: migration, canonical content pilot, Owlbear adapter, Builder, Sheet, and final integration.
