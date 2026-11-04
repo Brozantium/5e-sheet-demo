@@ -56,7 +56,7 @@ test("2014 rejects ranged Light weapons for Two-Weapon Fighting", () => {
   const result = valid({
     primaryWeapon: weapon({ id: "hand-crossbow-a", weaponType: "ranged" }),
     extraWeapon: weapon({ id: "hand-crossbow-b", weaponType: "ranged" }),
-    extraAttackHeldInOtherHand: true,
+    extraWeaponHeldInOtherHand: true,
     extraAttackMode: "ranged",
   });
   assert.equal(result.canMakeExtraAttack, false);
