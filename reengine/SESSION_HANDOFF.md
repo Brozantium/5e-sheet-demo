@@ -156,7 +156,7 @@ The roadmap branch records a stacked implementation sequence. These PR links are
 | #15 | RE-006E2 Exhaustion resolver | [PR #15](https://github.com/Brozantium/5e-sheet-demo/pull/15) | 302 |
 | #16 | RE-006E3 condition lifecycle | [PR #16](https://github.com/Brozantium/5e-sheet-demo/pull/16) | 323 |
 | #17 | RE-006F0 movement/defense audit (documentation only) | [PR #17](https://github.com/Brozantium/5e-sheet-demo/pull/17) | documentation only |
-| #18 | RE-006F1–F3 movement profiles/resolver/defenses | [PR #18](https://github.com/Brozantium/5e-sheet-demo/pull/18) | 14 new cases; CI pending |
+| #18 | RE-006F1–F3 movement profiles/resolver/defenses | [PR #18](https://github.com/Brozantium/5e-sheet-demo/pull/18) | CI run 41806337613; 337 passed, 0 failed |
 
 Live PR metadata was checked on 2026-11-04 before this documentation update: PR #12 and #13 were open drafts; PR #14, #15, and #16 were open and not drafts. No submitted reviews were returned for PRs #12–#16. CI runs associated with the then-current implementation heads passed: PR #14 run 41787492057 (288 tests), PR #15 run 41788311442 (302 tests), and PR #16 run 41788839586 (323 tests). PR #12 records run 41779301323 (257 tests). This documentation update is being committed onto PR #16's head branch, so verify the latest head SHA and rerun/resulting CI before treating PR #16 as currently verified.
 
@@ -181,9 +181,9 @@ The PRs are stacked in dependency order: #13 → #14 → #15 → #16, with #13 b
 - Missing application clock/counter data is reported; the resolver preserves state rather than guessing.
 - The resolver is immutable and caller-driven; it does not own clocks, timers, turn order, persistence, UI, or action execution.
 
-**Current checkpoint:** RE-006E1–E3 are implemented and CI verified on stacked PRs #14–#16; review/merge is pending. RE-006F0 audit is documented in PR #17. F1–F3 movement and defense source/tests are implemented on `feat/re-006f-movement-defenses`, stacked on PR #17; CI/typecheck are pending. PR #18 is the implementation review. No UI/Owlbear integration has been performed.
+**Current checkpoint:** RE-006E1–E3 are implemented and CI verified on stacked PRs #14–#16; review/merge is pending. RE-006F0 audit is documented in PR #17. F1–F3 movement and defense source/tests are implemented on `feat/re-006f-movement-defenses`, stacked on PR #17. PR #18 run 41806337613 passed frozen install, typecheck, and 337 tests (0 failures) on head `acbb26b9245905a9f758cc4d923f9c949600e024`. Review/merge remains pending. No UI/Owlbear integration has been performed.
 
-**Immediate next task:** verify PR #18 CI on its latest head SHA. Inspect failures and fix only task-relevant issues. After successful CI, review F1–F3 semantics (especially the explicit caller-ordered modifier contract), then proceed to RE-007 or any RE-006 completion gap recorded by review. Define typed movement mode IDs and normalized per-character/creature base Speed profiles. Keep missing movement modes distinct from explicit zero Speed. Preserve source/provenance and keep base profiles separate from temporary modifiers. Follow [REENGINE_INDEX.md](./REENGINE_INDEX.md) and the F0 audit before reading additional source.
+**Immediate next task:** review PR #18's contract decisions and merge readiness, especially the caller-ordered Speed modifier contract, then complete the pending PR review/merge sequence for RE-006E/F. Do not begin RE-007 until the RE-006 completion gate and PR stack are reconciled. Define typed movement mode IDs and normalized per-character/creature base Speed profiles. Keep missing movement modes distinct from explicit zero Speed. Preserve source/provenance and keep base profiles separate from temporary modifiers. Follow [REENGINE_INDEX.md](./REENGINE_INDEX.md) and the F0 audit before reading additional source.
 
 **RE-006F boundaries to preserve:**
 
