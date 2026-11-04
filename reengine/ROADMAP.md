@@ -116,15 +116,15 @@ Split this into small, independently testable slices:
 
 - **B3C2 — Light extra-attack trigger contract:** 2014 two-weapon requirements versus 2024 Light trigger; negative-only ability modifier damage; Nick's action placement when the extra weapon's mastery is already unlocked and selected.
 
-  Status: implementation complete on `feat/re-006b3c2-light-nick-trigger`. Frozen install and typecheck passed; all 149 unit tests passed. Pending review/merge after the B3C1 dependency. Stateful execution and action consumption remain with RE-008.
+  Status: merged via PR #5 (`03dba0f509e3c702a548b4397aceea8e63b09f05`). CI passed on the merged head: frozen install, typecheck, and 149 unit tests. Stateful execution and action consumption remain with RE-008.
 
-Weapon Property/range/attack-cycle implementation (B3A–B3C2) is covered by independent stacked PRs. B4 completes mastery selection/eligibility; mastery effects and 2014/2024 Special effect execution remain in RE-008.
+Weapon Property/range/attack-cycle implementation (B3A–B3C2) is merged through PRs #2–#5. B4 completes mastery selection/eligibility; mastery effects and 2014/2024 Special effect execution remain in RE-008.
 
 - Keep editor compatibility/normalization (RE-003) separate from the actual rules mechanics. Do not make Heavy automatically mean Two-Handed in the combat domain.
 
 Acceptance: official 2014 and 2024 weapon lists can be represented without encoding mechanical parameters in display strings; every implemented rule has ruleset-specific regression tests.
 
-### RE-006B4 — Weapon Mastery Eligibility & Selection (current)
+### RE-006B4 — Weapon Mastery Eligibility & Selection
 
 - Store the assigned 2024 mastery on each canonical weapon definition, separate from ordinary weapon properties.
 - Model the eight mastery IDs (Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex).
@@ -136,7 +136,7 @@ Acceptance: official 2014 and 2024 weapon lists can be represented without encod
 - Validate selected weapon types and resolve whether the character owns the Weapon Mastery feature and selected the weapon before exposing that weapon's mastery to the combat/action layer.
 - Keep the eight mastery effects and their triggers in RE-008.
 
-  Status: implementation complete on `feat/re-006b4-weapon-mastery-selection`. Frozen install and typecheck passed; all 164 unit tests passed. Pending review/merge after the B3C2 dependency. Mastery effects and action triggers remain in RE-008.
+  Status: implementation complete on `feat/re-006b4-weapon-mastery-selection`; CI run `41826410157` passed on head `0b0404242fb50f23c53679727104904fa99e84ad` with frozen install, typecheck, and 164 unit tests. Pending final review/merge. Mastery effects and action triggers remain in RE-008.
 
 ### RE-006C — Armor Training Consequences
 
