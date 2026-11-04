@@ -410,19 +410,21 @@ export function resolveConditionEffects(
   );
   effects.movement.grappleDragRules = [...dragByGrappler.values()];
 
-  const uniqueStringLists: Array<keyof ConditionDerivedEffects> = [
-    "prohibitedHarmfulTargetCreatureIds",
-    "prohibitedDamagingTargetCreatureIds",
-    "automaticSavingThrowFailures",
-    "automaticAbilityCheckFailures",
-    "conditionImmunities",
-    "damageResistances",
-    "damageImmunities",
+  effects.prohibitedHarmfulTargetCreatureIds = [
+    ...new Set(effects.prohibitedHarmfulTargetCreatureIds),
   ];
-  for (const key of uniqueStringLists) {
-    const list = effects[key];
-    if (Array.isArray(list)) (effects as unknown as Record<string, unknown>)[key] = [...new Set(list)];
-  }
+  effects.prohibitedDamagingTargetCreatureIds = [
+    ...new Set(effects.prohibitedDamagingTargetCreatureIds),
+  ];
+  effects.automaticSavingThrowFailures = [
+    ...new Set(effects.automaticSavingThrowFailures),
+  ];
+  effects.automaticAbilityCheckFailures = [
+    ...new Set(effects.automaticAbilityCheckFailures),
+  ];
+  effects.conditionImmunities = [...new Set(effects.conditionImmunities)];
+  effects.damageResistances = [...new Set(effects.damageResistances)];
+  effects.damageImmunities = [...new Set(effects.damageImmunities)];
 
   return {
     valid: issues.length === 0,
