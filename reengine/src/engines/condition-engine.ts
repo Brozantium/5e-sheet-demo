@@ -405,6 +405,11 @@ export function resolveConditionEffects(
     );
   }
 
+  const dragByGrappler = new Map(
+    effects.movement.grappleDragRules.map((rule) => [rule.grapplerCreatureId, rule]),
+  );
+  effects.movement.grappleDragRules = [...dragByGrappler.values()];
+
   const uniqueStringLists: Array<keyof ConditionDerivedEffects> = [
     "prohibitedHarmfulTargetCreatureIds",
     "prohibitedDamagingTargetCreatureIds",
