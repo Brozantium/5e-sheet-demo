@@ -177,7 +177,7 @@ Status: complete. Merged via PR #9 (`9a46657a65a3cc8c852f8cbaec578defa6290d8c`).
 - Cap actual recovery at maximum HP, preserve Temporary HP, and never spend from another class pool or beyond its remaining count.
 - The rest coordinator owns duration/interruption/completion; this pure resolver accepts a completed Short Rest and the HP snapshot from when the rest began.
 
-Status: implementation complete; exact-`main` verification is pending in PR #10.
+Status: implementation complete. Exact-`main` verification in PR #10 passed frozen-lockfile install, `pnpm typecheck:reengine`, and all 212 unit tests.
 
 #### RE-006D3 — Death Saves & Stabilization
 
