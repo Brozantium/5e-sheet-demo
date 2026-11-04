@@ -206,9 +206,37 @@ Status: implementation complete on `feat/re-006d4-long-rest-recovery`. Frozen-lo
 
 ### RE-006E — Conditions & Exhaustion
 
-- Condition state and derived attack/check/save/movement restrictions.
-- Separate 2014 and 2024 Exhaustion behavior.
-- Duration, expiration, stacking, and removal rules with tests.
+**Audit status:** complete for the inspected legacy sheet path. **Implementation status:** not started. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md) for source evidence, ruleset comparison, gaps, and acceptance tests.
+
+#### RE-006E1 — Condition Instances & Derived Resolver
+
+- Preserve condition instances with unique identity, source/provenance, affected character/target, and independent duration/expiration.
+- Allow multiple instances of the same non-stacking condition; aggregate its mechanical effect by condition type while preserving each instance's lifecycle.
+- Return structured outgoing/incoming attack, check/save, action/Bonus Action/reaction, movement, automatic-failure, Concentration, and defense/immunity consequences.
+- Model context-dependent requirements (source/target identity, line of sight, distance) as structured inputs/results rather than reminder-only strings.
+- Do not execute attacks, actions, reactions, movement, or triggers; those remain downstream engine responsibilities.
+
+#### RE-006E2 — Ruleset-aware Exhaustion Resolver
+
+- 2014: cumulative Disadvantage ladder, Speed halving/zero, maximum HP halving, and death at level 6.
+- 2024: cumulative -2 per level to D20 Tests, -5 feet per level to Speed, and death at level 6.
+- Keep a dedicated numeric Exhaustion level and explicit ruleset policy; do not translate 2024 numeric penalties into Disadvantage.
+- Reuse RE-006D4 for Long Rest Exhaustion recovery. Do not duplicate D4's 2014 food/drink gate or 2024 unconditional one-level recovery.
+- Return an explicit death outcome at level 6 compatible with D3; do not synthesize failed Death Saves.
+
+#### RE-006E3 — Condition Lifecycle
+
+- Resolve structured duration/expiration events: turn/round boundaries, source/target events, successful removal saves, Short Rest, Long Rest, Dawn, and manual removal.
+- Expire/remove only the matching instance(s); preserve other instances of the same condition type.
+- Keep lifecycle operations pure and caller-driven. No internal timers, clocks, event scheduler, or persistence.
+
+**Audit findings that affect implementation:**
+
+- Legacy `ActiveCondition` already stores per-instance IDs, source, duration, expiration, save text, notes, and applied timestamp. The missing piece is structured behavior and lifecycle enforcement, not the existence of per-instance data.
+- Legacy resolver aggregates condition types and returns only roll modes, a coarse speed state, action/reaction flags, and reminder text. Incoming-attack context, automatic save failures, target/source context, and several movement/defense rules are not mechanically represented.
+- Legacy UI/effect application paths reject a second instance of an already-active condition even though the rules preserve independent durations for multiple sources.
+- Legacy `duration` and `appliedAt` do not drive timed expiry. Only Short Rest, Long Rest, Dawn, and manual persistence are observed.
+- Legacy Exhaustion helper is 2014-only. The reengine D4 Long Rest resolver already owns the ruleset-specific recovery decision.
 
 ### RE-006F — Movement & Derived Defenses
 
