@@ -65,6 +65,8 @@ export type ConditionExpiry =
 
 /** Caller-owned clock/turn snapshot recorded when the instance was applied. */
 export interface ConditionApplicationTime {
+  /** Monotonic caller-owned event sequence at the time this condition was applied. */
+  sequence?: number;
   timestampMs?: number;
   round?: number;
   turn?: number;
