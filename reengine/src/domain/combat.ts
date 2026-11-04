@@ -4,6 +4,10 @@ import type { EquipmentCalculationEntry } from "./equipment";
 
 export type WeaponCategory = WeaponProfile["weaponCategory"];
 export type WeaponGrip = "one-handed" | "two-handed";
+export type CreatureSize = "tiny" | "small" | "medium" | "large" | "huge" | "gargantuan";
+export type WeaponAttackDisadvantageReason =
+  | "heavy-weapon-size"
+  | "heavy-weapon-ability-score";
 
 export type WeaponProficiency =
   | { kind: "category"; category: WeaponCategory }
@@ -15,6 +19,10 @@ export interface WeaponAttackInput {
   abilityScores: Record<Ability, number>;
   proficiencyBonus: number;
   weaponProficiencies?: readonly WeaponProficiency[];
+  /** Explicit STR/DEX choice for a Finesse weapon; otherwise the higher modifier is used. */
+  abilityChoice?: "str" | "dex";
+  /** Required for 2014 Heavy weapons so the Small/Tiny size rule can be resolved. */
+  creatureSize?: CreatureSize;
   grip?: WeaponGrip;
   attackBonus?: number;
   damageBonus?: number;
@@ -51,6 +59,8 @@ export interface WeaponAttackResult {
   proficiencyContribution: number;
   attackBonus: number;
   damageModifier: number;
+  hasDisadvantage: boolean;
+  disadvantageReasons: WeaponAttackDisadvantageReason[];
   grip: WeaponGrip;
   damage: WeaponDamageCalculation[];
   issues: WeaponAttackIssue[];
