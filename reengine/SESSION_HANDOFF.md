@@ -176,23 +176,45 @@ The PRs are stacked in dependency order: #13 → #14 → #15 → #16, with #13 b
 - Missing application clock/counter data is reported; the resolver preserves state rather than guessing.
 - The resolver is immutable and caller-driven; it does not own clocks, timers, turn order, persistence, UI, or action execution.
 
-**Immediate next task:** begin **RE-006F — Movement & Derived Defenses** from branch `feat/re-006e3-condition-lifecycle`. Inspect the existing movement-related domain/engine contracts first, then define movement modes, Speed modifiers, and composition with the E1 condition movement output and E2 Exhaustion output.
+**Checkpoint (2026-11-04):** RE-006E1/E2/E3 remain implemented and CI verified on stacked PRs #14/#15/#16. RE-006F legacy/source audit is now recorded on branch `docs/re-006f-movement-defenses-audit`, based on `feat/re-006e3-condition-lifecycle`. No RE-006F runtime implementation has been added yet.
 
-**RE-006F boundaries to preserve:**
+- **PR #12 — RE-006D4:** open at last verification; run 41779301323 passed 257 tests. [PR #12](https://github.com/Brozantium/5e-sheet-demo/pull/12)
+- **PR #13 — RE-006E audit/docs:** documentation-only stacked PR. [PR #13](https://github.com/Brozantium/5e-sheet-demo/pull/13)
+- **PR #14 — RE-006E1:** ready for review, not merged at last verification; run 41787492057 passed 288 tests. [PR #14](https://github.com/Brozantium/5e-sheet-demo/pull/14)
+- **PR #15 — RE-006E2:** ready for review, not merged at last verification; run 41788054920 passed 302 tests. [PR #15](https://github.com/Brozantium/5e-sheet-demo/pull/15)
+- **PR #16 — RE-006E3:** ready for review, not merged at last verification; run 41788696223 passed 323 tests. [PR #16](https://github.com/Brozantium/5e-sheet-demo/pull/16)
+- **PR #17 — RE-006F audit/docs:** documentation-only PR from `docs/re-006f-movement-defenses-audit`; see [PR #17](https://github.com/Brozantium/5e-sheet-demo/pull/17) after it is opened.
 
-1. Character movement modes (walking, climbing, swimming, flying, etc.) and their base values remain separate from temporary modifiers.
-2. Compose condition constraints (Speed 0, Prone/crawl/stand, Frightened approach restrictions, Grappled drag) with Exhaustion and other Speed modifiers in a documented order.
-3. Do not fold mount/vehicle stat blocks into the character's base Speed. Mount effective movement belongs to RE-010; preserve native movement for dismount.
-4. Vehicle speed comes from its own stat block and never overwrites/adds to character walking Speed.
-5. Keep the engine pure; no Owlbear token movement or UI integration before RE-009/RE-010.
+### RE-006F audit conclusions
+
+- B1 Armor Class already returns a separate `speedPenalty` (10 feet when heavy-armor Strength requirement is not met); no unified movement resolver consumes it.
+- E1 conditions return movement restrictions and a small set of defense facts; E2 Exhaustion returns ruleset-aware speed effects.
+- Canonical `EffectDefinition` supports resistance, immunity, and vulnerability declarations, but there is no source-aware defense aggregator.
+- 2024 rules explicitly propagate Speed changes to special speeds; 2014 and 2024 flight-fall conditions differ.
+- E1 `crawlAllowed` is only a permission flag; F1 must resolve the actual movement cost of crawling and difficult terrain.
+- AC stays in B1, armor-training consequences stay C1/C2, damage application stays RE-008, and mounts/vehicles stay RE-010.
+
+See [movement-defenses-audit.md](./REVERSE_ENGINEERING/findings/movement-defenses-audit.md) for the full source audit, official rules references, and acceptance tests.
+
+**Immediate next task:** implement **RE-006F1 — Movement Profiles & Speed Resolver** on a branch based on `docs/re-006f-movement-defenses-audit`. First define the movement profile/modifier domain contracts and composition order, then add the pure resolver and tests. F2 Derived Defense Profile follows F1.
+
+**F1 boundaries:**
+
+1. Movement modes are distinct: walk, climb, swim, fly, burrow. A missing special speed is unavailable, not automatically equal to walking speed.
+2. Keep base mode values immutable and source-aware.
+3. Compose E1 condition restrictions, E2 Exhaustion, and B1 armor speed penalty with structured modifiers in one documented order.
+4. For 2024, apply Speed changes to special speeds as the rules specify. Keep 2014 exhaustion policy distinct.
+5. Model climb/swim/crawl and difficult-terrain movement costs; stand-up and Grappled drag are derived facts, not turn execution.
+6. Return flight-fall/hover safety facts according to each ruleset; do not execute fall damage.
+7. Never include mount or vehicle speeds in the character's movement profile. RE-010 owns those stat blocks and mounted effective movement.
 
 **Recommended next sequence:**
 
-1. Verify PR #14/#15/#16 heads, reviews, and CI on resume.
-2. Inspect existing movement references in the reengine and condition/exhaustion outputs.
-3. Define precedence and composition rules for base movement modes, flat/percentage bonuses, conditions, and Exhaustion.
-4. Add acceptance tests for all movement types, multiple speed modifiers, Speed 0 precedence, Prone/crawl/stand, Frightened, Grappled, and 2014/2024 Exhaustion.
-5. Implement RE-006F in small pure-engine slices; update ROADMAP and this handoff with exact branch, commit, test count, CI, and PR status.
+1. Verify PR #12–#17 heads/reviews/CI; do not assume any PR is merged.
+2. Implement F1 types and pure resolver with tests for every acceptance case in the audit.
+3. Verify frozen install, `pnpm typecheck:reengine`, and `pnpm test:reengine`.
+4. Implement F2 defense aggregation separately.
+5. Update roadmap and handoff with exact branch, PR, commit, tests, CI, and review status.
 
 ## How to maintain this safeguard
 
