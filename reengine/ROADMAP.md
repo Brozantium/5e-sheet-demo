@@ -189,7 +189,7 @@ Status: implementation complete. Exact-`main` verification in PR #10 passed froz
 - A Stable character remains at 0 HP and unconscious; damage ends Stability. After the rules-defined 1d4 hours without healing, the character regains 1 HP.
 - Keep shared Death Save outcomes common while retaining edition-specific stabilization action costs. Melee knockout action semantics remain a combat/action integration concern.
 
-Status: implementation complete; exact-`main` verification is pending in PR #11. Turn orchestration, condition application, and knockout action handling remain with RE-006E/RE-008.
+Status: implementation complete. Exact-`main` workflow `41888312987` passed frozen-lockfile install, `pnpm typecheck:reengine`, and all 236 unit tests. Turn orchestration, condition application, and knockout action handling remain with RE-006E/RE-008.
 
 #### RE-006D4 — Rest & Recovery
 
