@@ -4,7 +4,7 @@
 >
 > **Last reviewed:** 2026-11-04 (Asia/Jakarta)  
 > **Repository:** [Brozantium/5e-sheet-demo](https://github.com/Brozantium/5e-sheet-demo)  
-> **Working branch at checkpoint:** `feat/re-006e3-condition-lifecycle`  
+> **Working branch at checkpoint:** `feat/re-006f0-movement-audit`  
 > **Repository index:** [reengine/REENGINE_INDEX.md](./REENGINE_INDEX.md)  
 > **Current roadmap:** [reengine/ROADMAP.md](./ROADMAP.md)
 
@@ -21,7 +21,7 @@
 
 ### Copy/paste prompt for a new chat
 
-> Continue the 5e Sheet Reengine project in repository `Brozantium/5e-sheet-demo`. First read `reengine/SESSION_HANDOFF.md`, `reengine/REENGINE_INDEX.md`, and `reengine/ROADMAP.md`. Verify the live GitHub branch, PR stack, exact head SHAs, reviews, and CI. Follow the index's incremental-reading protocol: compare the last verified commit, inspect changed files first, then only relevant direct dependencies and tests; do not reread unchanged repository files without a reason. Preserve all architecture and ruleset boundaries. The current checkpoint is RE-006E implemented through E3 and awaiting review/merge; the next planned slice is RE-006F — Movement & Derived Defenses. Do not wire the clean-room engine into `src/App.tsx` or legacy runtime before the approved RE-009 integration phase.
+> Continue the 5e Sheet Reengine project in repository `Brozantium/5e-sheet-demo`. First read `reengine/SESSION_HANDOFF.md`, `reengine/REENGINE_INDEX.md`, and `reengine/ROADMAP.md`. Verify the live GitHub branch, PR stack, exact head SHAs, reviews, and CI. Follow the index's incremental-reading protocol: compare the last verified commit, inspect changed files first, then only relevant direct dependencies and tests; do not reread unchanged repository files without a reason. Preserve all architecture and ruleset boundaries. The current checkpoint is RE-006E implemented through E3 and awaiting review/merge. RE-006F0 movement/defense audit is documented; the next implementation slice is RE-006F1 — Movement Profiles. Do not wire the clean-room engine into `src/App.tsx` or legacy runtime before the approved RE-009 integration phase.
 
 ## Project purpose
 
@@ -85,7 +85,7 @@ This is a compact history of the decisions and slices already recorded in the re
 | RE-006D3 | Death Saves, damage at 0 HP, stabilization | Pure state resolution; turn/timer/action orchestration remains caller-owned. |
 | RE-006D4 | Ruleset-aware Long Rest and recovery | Completed before RE-006E; see PR #12 and its verification record below. |
 | RE-006E | Conditions & Exhaustion | Legacy audit complete. E1 Condition Resolver, E2 Exhaustion Resolver, and E3 Condition Lifecycle are implemented and CI verified on open stacked PRs #14/#15/#16; review/merge is pending. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md). |
-| RE-006F | Movement & derived defenses | Planned after RE-006E. |
+| RE-006F | Movement & derived defenses | F0 legacy audit and contract boundaries documented; F1–F3 remain. See [movement-defenses-audit.md](./REVERSE_ENGINEERING/findings/movement-defenses-audit.md). |
 | RE-007 | Spellcasting engine | Planned. |
 | RE-008 | Action, trigger, and effect engine | Planned; owns action execution, event triggers, reactions, mastery effects, and condition/action timing. |
 | RE-009 | Migration, content, UI, Owlbear integration | Planned integration phase. |
@@ -179,7 +179,9 @@ The PRs are stacked in dependency order: #13 → #14 → #15 → #16, with #13 b
 - Missing application clock/counter data is reported; the resolver preserves state rather than guessing.
 - The resolver is immutable and caller-driven; it does not own clocks, timers, turn order, persistence, UI, or action execution.
 
-**Immediate next task:** begin **RE-006F — Movement & Derived Defenses** from branch `feat/re-006e3-condition-lifecycle`. Inspect the existing movement-related domain/engine contracts first, then define movement modes, Speed modifiers, and composition with the E1 condition movement output and E2 Exhaustion output.
+**Current checkpoint:** RE-006E1–E3 are implemented and CI verified on stacked PRs #14–#16; review/merge is pending. RE-006F0 bounded source audit and initial contract boundaries are documented on `feat/re-006f0-movement-audit`. No movement or defense engine code has been added yet.
+
+**Immediate next task:** begin **RE-006F1 — Movement Profiles** from branch `feat/re-006f0-movement-audit`. Define typed movement mode IDs and normalized per-character/creature base Speed profiles. Keep missing movement modes distinct from explicit zero Speed. Preserve source/provenance and keep base profiles separate from temporary modifiers. Follow [REENGINE_INDEX.md](./REENGINE_INDEX.md) and the F0 audit before reading additional source.
 
 **RE-006F boundaries to preserve:**
 
@@ -191,11 +193,12 @@ The PRs are stacked in dependency order: #13 → #14 → #15 → #16, with #13 b
 
 **Recommended next sequence:**
 
-1. Verify PR #14/#15/#16 heads, reviews, and CI on resume.
-2. Inspect existing movement references in the reengine and condition/exhaustion outputs.
-3. Define precedence and composition rules for base movement modes, flat/percentage bonuses, conditions, and Exhaustion.
-4. Add acceptance tests for all movement types, multiple speed modifiers, Speed 0 precedence, Prone/crawl/stand, Frightened, Grappled, and 2014/2024 Exhaustion.
-5. Implement RE-006F in small pure-engine slices; update ROADMAP and this handoff with exact branch, commit, test count, CI, and PR status.
+1. Verify PR #14–#17 heads, reviews, and CI on resume.
+2. Implement F1 typed movement profiles and domain tests.
+3. Finalize ruleset-specific modifier stacking/precedence before F2 implementation; verify official rule text instead of assuming all bonuses stack.
+4. Implement F2 effective movement composition using E1 and E2 outputs, with movement costs and target restrictions kept separate from Speed.
+5. Implement F3 pure derived-defense aggregation without duplicating E1 defenses or AC ownership.
+6. Update the roadmap, repository index, and handoff only when module ownership, contracts, status, or checkpoint changes.
 
 ## How to maintain this safeguard
 
