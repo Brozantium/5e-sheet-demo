@@ -184,6 +184,7 @@ export interface ConditionDerivedEffects {
   awareOfSurroundings: boolean;
   invisible: boolean;
   cannotBeTargetedBySightRequiredEffectsUnlessVisible: boolean;
+  invisibleEquipmentConcealed: boolean;
   physicalProperties: {
     transformedToInanimateSubstance: boolean;
     nonmagicalWornAndCarriedEquipmentTransforms: boolean;
