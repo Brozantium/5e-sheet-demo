@@ -129,7 +129,7 @@ function expiresOnEvent(
 ): boolean {
   switch (expiry.kind) {
     case "manual":
-      return event.kind === "manual-remove" && event.conditionId === condition.id;
+      return false;
 
     case "rest":
       if (event.kind !== "rest-completed") return false;
@@ -358,7 +358,34 @@ export function resolveConditionLifecycle(
         continue;
       }
 
-      const expired = condition.expiresOn.some((expiry) =>
+      const explicitlyRemoved =
+        event.kind === "manual-remove" && event.conditionId === condition.id;
+      if (!explicitlyRemoved) {
+        for (const expiry of condition.expiresOn) {
+          const missingApplicationTime =
+            (expiry.kind === "turn" &&
+              event.kind === "turn-boundary" &&
+              expiry.creatureId === event.creatureId &&
+              expiry.boundary === event.boundary &&
+              condition.appliedAt?.turn === undefined) ||
+            (expiry.kind === "round" &&
+              event.kind === "round-boundary" &&
+              expiry.boundary === event.boundary &&
+              condition.appliedAt?.round === undefined) ||
+            (expiry.kind === "elapsed-time" &&
+              event.kind === "time-advanced" &&
+              condition.appliedAt?.timestampMs === undefined);
+          if (missingApplicationTime) {
+            issues.push({
+              code: "missing-application-time",
+              eventId: event.eventId,
+              conditionId: condition.id,
+              message: "The matching expiry rule needs an application turn, round, or timestamp; the condition was preserved.",
+            });
+          }
+        }
+      }
+      const expired = explicitlyRemoved || condition.expiresOn.some((expiry) =>
         expiresOnEvent(expiry, condition, event),
       );
       if (expired) {
