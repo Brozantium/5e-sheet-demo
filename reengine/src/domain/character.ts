@@ -1,4 +1,5 @@
 import type { Ability } from "./types";
+import type { ArmorTrainingCategory } from "./equipment";
 
 export const SKILL_DEFINITIONS = [
   { id: "acrobatics", name: "Acrobatics", ability: "dex" },
@@ -37,6 +38,10 @@ export type ProficiencyRank = "none" | "half" | "proficient" | "expertise";
 export interface CharacterProficiencies {
   skills?: Partial<Record<SkillId, ProficiencyRank>>;
   savingThrows?: Ability[];
+  /** Normalized grants from owned class, subclass, species, background, and feat content. */
+  armorTraining?: ArmorTrainingCategory[];
+  /** Shield training is separate from Light/Medium/Heavy armor training. */
+  shieldTraining?: boolean;
   /** Explicit grants only; ordinary initiative adds no proficiency bonus. */
   initiative?: ProficiencyRank;
 }

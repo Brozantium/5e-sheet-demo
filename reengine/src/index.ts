@@ -15,3 +15,4 @@ export * from "./engines/weapon-attack-cycle-engine";
 export * from "./engines/light-weapon-extra-attack-engine";
 export * from "./engines/weapon-mastery-engine";
 export * from "./engines/armor-training-consequence-engine";
+export * from "./engines/armor-training-grant-engine";
