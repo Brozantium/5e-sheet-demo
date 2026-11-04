@@ -3,7 +3,7 @@
 > **Audit date:** 2026-11-04 (Asia/Jakarta)  
 > **Legacy source:** `src/App.tsx` and `src/combat-rules.ts` on `feat/re-006d4-long-rest-recovery`  
 > **Rules references:** official D&D Basic Rules 2014 and D&D Beyond Basic Rules 2024 (links below)  
-> **Status:** legacy call path and ruleset gaps audited; no RE-006E runtime code changed.
+> **Status:** legacy call path and ruleset gaps audited; E1 and E2 are implemented on stacked review branches and have passed CI, but are not yet merged.
 
 ## Executive summary
 
@@ -154,7 +154,7 @@ This is a comparison of the legacy resolver with the official 2014/2024 definiti
 | Poisoned | Outgoing attacks and ability checks Disadvantage | Core roll-mode consequence is represented. |
 | Prone | Outgoing attacks Disadvantage | Incoming attack Advantage/Disadvantage by distance is reminder-only. Crawl-only movement and the movement cost/eligibility to stand are not represented. |
 | Restrained | Speed 0; outgoing attacks Disadvantage; DEX saves Disadvantage | Incoming attacks Advantage is reminder-only. |
-| Stunned | Cannot act/react; speed 0 | Automatic STR/DEX save failure and incoming attack Advantage are reminder-only. |
+| Stunned | Both: no actions/reactions, STR/DEX save failure, incoming Advantage. 2014: Speed 0 and faltering speech. 2024: no Speed 0 rule; speech is blocked through Incapacitated. | The 2014 movement restriction must not leak into 2024. The 2024 Incapacitated package also breaks Concentration and imposes Initiative Disadvantage. |
 | Unconscious | Cannot act/react; speed 0 | Dropping held objects, Prone, automatic STR/DEX save failure, incoming attack Advantage, and automatic critical hits within 5 feet are not applied as structured state/effects in this helper. |
 
 ## Ruleset distinctions that must remain explicit
@@ -170,6 +170,7 @@ Both 2014 and 2024 rules state that multiple sources can impose the same conditi
 - **Grappled:** 2014 defines Speed 0 and the conditions for ending the grapple. 2024 retains Speed 0 and additionally gives Disadvantage on attacks against targets other than the grappler, plus explicit drag/carry movement rules.
 - **Incapacitated:** 2014 says no actions or reactions. 2024 explicitly lists Actions, Bonus Actions, and Reactions, and adds Concentration, speech, and Initiative consequences.
 - **Petrified:** 2014 includes immunity to poison and disease. 2024 specifically says immunity to the Poisoned condition; its glossary wording must not be silently replaced with the 2014 poison/disease wording.
+- **Stunned:** 2014 explicitly prevents movement and allows only faltering speech. 2024 inherits Incapacitated but omits the 2014 movement restriction; Incapacitated makes the creature speechless. Keep the ruleset policy split.
 - **Prone:** both rules restrict movement to crawling or standing, with standing costing half the creature's Speed/movement. 2024 explicitly says a creature with Speed 0 cannot right itself.
 - **Unconscious:** both versions impose the practical Incapacitated/Prone package, but the 2024 glossary explicitly states those conditions as part of Unconscious.
 - **Invisible:** 2024 adds Advantage on Initiative and more explicit target-visibility protection; preserve the normal attack-roll interactions and the exception for observers who can see the invisible creature.
@@ -283,4 +284,4 @@ A completed Long Rest removes one level. There is no 2014-style level 4 maximum-
 
 The condition model itself is not absent. The legacy app has per-instance records, persistence normalization, a visible condition panel, and some mechanical integration. The central defect is the narrow aggregate resolver and the mismatch between per-instance duration semantics and duplicate-prevention/application behavior. Exhaustion is implemented as a 2014-only ladder in the legacy sheet; the clean-room D4 Long Rest engine already handles the rest-based recovery difference. 
 
-**Audit status: complete for the inspected legacy sheet path. RE-006E implementation status: not started.** Next work should formalize E1 contracts and acceptance fixtures before adding runtime code.
+**Audit status: complete for the inspected legacy sheet path. RE-006E1 and RE-006E2 are implemented and CI verified on stacked PRs #14 and #15; neither is merged at this checkpoint. RE-006E3 lifecycle implementation remains the next slice.**
