@@ -164,10 +164,10 @@ Status: implementation complete on `feat/re-006c2-armor-training-grants`. Frozen
 #### RE-006D1 — Maximum HP & HP State
 
 - Calculate maximum HP per character level, respecting each multiclass level's Hit Die, first-level maximum, later fixed average or supplied roll, Constitution modifier, and explicit flat bonuses.
-- Apply damage with Temporary HP absorbed first; apply healing up to maximum HP; Temporary HP never stacks.
+- Apply damage with Temporary HP absorbed first and healing up to maximum HP. Temporary HP never stacks; when a grant arrives while Temporary HP already exists, preserve the player's choice to keep the current amount or take the new amount, even when the new amount is lower.
 - Return immutable snapshots and explicit applied/overflow amounts; death-state transitions remain D3.
 
-Status: implementation in progress on `feat/re-006d1-hit-point-calculation`; frozen install, typecheck, and unit-test verification pending.
+Status: implementation complete on `feat/re-006d1-hit-point-calculation`. Frozen-lockfile install and `pnpm typecheck:reengine` passed; all 199 unit tests passed. Temporary HP replacement preserves the player's explicit choice rather than automatically selecting the larger amount.
 
 #### RE-006D2 — Hit Dice Pools & Short Rest
 
@@ -220,6 +220,7 @@ RE-006 is complete only when all slices above have explicit acceptance tests, cl
 - Passive and conditional effects.
 - Explicit event payloads and effect application contracts.
 - Implement weapon mastery effects (Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex), Light/Loading/Ammunition action-cycle interactions, and their turn/Reaction/expiration semantics.
+- Execute 2014 Special weapon rules, including Net target eligibility, Restrained effect, escape, and the one-attack-per-Action/Bonus Action/Reaction limit. Keep 2024 mastery effects and 2014 Special behavior ruleset-scoped.
 - Resolve cross-feature interactions without duplicating the rules already calculated by RE-006.
 
 ## RE-009 — Migration, Content, UI & Integration
