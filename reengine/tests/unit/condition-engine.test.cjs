@@ -340,7 +340,6 @@ test("Paralyzed imposes automatic STR/DEX save failure, incoming Advantage, and 
   assert.equal(result.effects.movement.speedIsZero, true);
   assert.equal(result.effects.automaticCriticalHitWithinFeet, 5);
   assert.equal(result.effects.actions.speech, "none");
-  assert.equal(result.effects.automaticCriticalHitWithinFeet, 5);
 });
 
 test("Petrified 2014 grants all-damage resistance, poison and disease immunity", () => {
