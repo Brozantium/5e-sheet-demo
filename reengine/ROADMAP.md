@@ -182,9 +182,15 @@ Status: implementation complete on `feat/re-006d2-hit-dice-short-rest`. Frozen-l
 
 #### RE-006D3 — Death Saves & Stabilization
 
-- Track successes/failures, natural 1/20 outcomes, stabilization, and death at three failures.
-- Resolve damage while at 0 HP, massive damage, and healing reset behavior.
-- Keep edition-specific edge cases explicit.
+- Track non-consecutive Death Save successes/failures: DC 10, three successes become Stable, three failures cause death; a natural 1 adds two failures and a natural 20 restores 1 HP.
+- Reset both tallies when HP is regained or the character becomes Stable.
+- Resolve damage while at 0 HP: one failure for damage, two for a Critical Hit; apply instant death when the damage equals or exceeds maximum HP. Also resolve massive damage when dropping from positive HP to 0.
+- 2014 stabilization: Action + DC 10 Wisdom (Medicine), or expend one Healer's Kit use as an Action without a check.
+- 2024 stabilization: Help action + DC 10 Wisdom (Medicine), or expend one Healer's Kit use as a Utilize action without a check.
+- A Stable character remains at 0 HP and unconscious; damage ends Stability. After the rules-defined 1d4 hours without healing, the character regains 1 HP.
+- Keep the shared death-save outcomes common while retaining edition-specific stabilization action costs. Melee knockout action semantics remain a combat/action integration concern.
+
+Status: implementation in progress on `feat/re-006d3-death-saves-stabilization`.
 
 #### RE-006D4 — Rest & Recovery
 
