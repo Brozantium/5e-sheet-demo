@@ -258,7 +258,7 @@ Status: audit complete. The legacy single-Speed path, visible movement grants, E
 - Preserve absent modes separately from explicit zero Speed.
 - Retain provenance and keep base profiles separate from temporary modifiers.
 
-Status: implemented with regression tests on `feat/re-006f-movement-defenses`; CI pending.
+Status: implemented and CI verified on PR #18; run 41806337613 passed the full reengine suite (337 tests, 0 failures). Review/merge pending.
 
 #### RE-006F2 — Effective Movement Resolver
 
@@ -267,7 +267,7 @@ Status: implemented with regression tests on `feat/re-006f-movement-defenses`; C
 - Apply E1 hard Speed-zero / cannot-increase constraints last; preserve crawl/stand, source-approach, and Grappled drag metadata without executing movement.
 - Keep movement costs and target restrictions separate from Speed values.
 
-Status: implemented with regression tests on `feat/re-006f-movement-defenses`; CI pending.
+Status: implemented and CI verified on PR #18; run 41806337613 passed the full reengine suite (337 tests, 0 failures). Review/merge pending.
 
 #### RE-006F3 — Derived Defense Aggregation
 
@@ -275,7 +275,7 @@ Status: implemented with regression tests on `feat/re-006f-movement-defenses`; C
 - Coalesce duplicate labels while preserving unique source provenance.
 - Preserve AC bonus source records without owning AC arithmetic; leave damage conflict resolution downstream.
 
-Status: implemented with regression tests on `feat/re-006f-movement-defenses`; CI pending.
+Status: implemented and CI verified on PR #18; run 41806337613 passed the full reengine suite (337 tests, 0 failures). Review/merge pending.
 
 **RE-006F boundaries:** no mount, familiar, summoned creature, or vehicle entity model (RE-010); no turn/action/pathfinding/movement consumption (RE-008); no Owlbear/UI/persistence integration (RE-009).
 
