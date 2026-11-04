@@ -265,6 +265,17 @@ test("2024 Grappled with multiple grapplers exempts attacks against any active g
   assert.equal(result.effects.movement.grappleDragRules.length, 2);
 });
 
+test("duplicate Grappled instances from one source preserve expiry but derive one movement rule", () => {
+  const first = sourceCondition("grappled", { id: "grapple:first" });
+  const second = sourceCondition("grappled", {
+    id: "grapple:second",
+    expiresOn: [{ kind: "rest", rest: "long" }],
+  });
+  const result = resolve([first, second], "2024");
+  assert.equal(result.effects.activeTypes.filter((type) => type === "grappled").length, 1);
+  assert.equal(result.effects.movement.grappleDragRules.length, 1);
+});
+
 test("Grappled requires source identity for lifecycle resolution in both rulesets", () => {
   for (const ruleset of ["2014", "2024"]) {
     const result = resolve([condition({ type: "grappled" })], ruleset);
