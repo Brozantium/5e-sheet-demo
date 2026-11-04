@@ -141,14 +141,21 @@ Acceptance: official 2014 and 2024 weapon lists can be represented without encod
 
 ### RE-006C — Armor Training Consequences
 
-- Resolve armor and shield training grants from character features in the builder/content layer.
-- Implement ruleset-specific consequences as a pure derived result, separate from Armor Class:
-  - 2014: untrained armor or shield imposes Disadvantage on STR/DEX ability checks, saving throws, and attack rolls, and prevents spellcasting. An untrained shield still grants its AC bonus.
-  - 2024: untrained Light/Medium/Heavy armor imposes Disadvantage on STR/DEX D20 Tests and prevents spellcasting. An untrained shield only loses its AC benefit.
-- Return a deduplicated consequence state for downstream attack/check/save/spellcasting engines; do not mutate rolls or spell state here.
-- Cover worn armor, shields, magic armor/shields, mixed cases, and ruleset compatibility with regression tests.
+#### RE-006C1 — Consequence Resolver
 
-Status: implementation in progress on `feat/re-006c-armor-training-consequences`; frozen install, typecheck, and unit-test verification pending.
+- Resolve consequences from an already-normalized armor/shield training snapshot, separate from AC calculation.
+- 2014: untrained armor or shield imposes Disadvantage on STR/DEX ability checks, saving throws, and attack rolls, and prevents spellcasting. An untrained shield still contributes its AC bonus.
+- 2024: untrained Light/Medium/Heavy armor imposes Disadvantage on STR/DEX D20 Tests and prevents spellcasting; an untrained Shield only loses its AC benefit.
+- Return deduplicated derived flags for downstream attack/check/save/spellcasting engines without mutating rolls or character state.
+
+Status: implementation complete on `feat/re-006c-armor-training-consequences`. Frozen install and typecheck passed; all 177 unit tests passed. Pending review/merge after the B4 dependency.
+
+#### RE-006C2 — Training Grant Resolution (remaining)
+
+- Normalize armor and shield training grants from class, subclass, species, background, feat, and other owned feature content.
+- Support category grants (Light/Medium/Heavy) and Shield training without inferring proficiency from display text.
+- Handle multiclass grant unions and feature-specific exceptions through explicit normalized inputs.
+- Add regression tests for class combinations, feature choices, and ruleset content compatibility.
 
 ### RE-006D — Hit Points, Hit Dice & Recovery
 
