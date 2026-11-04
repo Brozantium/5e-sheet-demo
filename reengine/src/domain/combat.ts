@@ -59,8 +59,8 @@ export interface WeaponAttackResult {
   proficiencyContribution: number;
   attackBonus: number;
   damageModifier: number;
-  hasDisadvantage: boolean;
-  disadvantageReasons: WeaponAttackDisadvantageReason[];
+  hasHeavyWeaponDisadvantage: boolean;
+  heavyWeaponDisadvantageReasons: WeaponAttackDisadvantageReason[];
   grip: WeaponGrip;
   damage: WeaponDamageCalculation[];
   issues: WeaponAttackIssue[];
