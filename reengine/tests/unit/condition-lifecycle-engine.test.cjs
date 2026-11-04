@@ -257,7 +257,7 @@ test("out-of-order sequences, clocks, turns, and rounds are reported and ignored
     appliedAt: { timestampMs: 100 },
   });
   const clockResult = resolve([clock], [
-    event("time-later", 1, { kind: "time-advanced", timestampMs: 1000 }),
+    event("time-later", 1, { kind: "time-advanced", timestampMs: 601_000 }),
     event("time-back", 2, { kind: "time-advanced", timestampMs: 500 }),
   ]);
   assert.ok(clockResult.issues.some((issue) => issue.code === "out-of-order-event"));
