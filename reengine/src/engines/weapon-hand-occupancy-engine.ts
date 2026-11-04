@@ -21,8 +21,8 @@ function getWeaponProfile(definition: ItemDefinition): WeaponProfile | undefined
 /**
  * Validates physical hand occupancy independently from combat benefits.
  * Two weapons may be held in separate hands even when they do not qualify
- * for the Light-property extra attack. That eligibility is returned separately
- * and follows the 2014/2024 ruleset distinction.
+ * for the Light-property extra attack. Pair eligibility is returned separately
+ * from the Attack-action trigger and follows the 2014/2024 ruleset distinction.
  */
 export function validateWeaponHandOccupancy(
   input: WeaponHandOccupancyInput,
