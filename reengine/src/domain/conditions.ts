@@ -168,6 +168,8 @@ export interface ConditionActionAvailability {
 export interface ConditionDerivedEffects {
   /** Unique active types; duplicate instances do not increase severity. */
   activeTypes: ConditionType[];
+  /** Conditions imposed as part of another condition, without mutating stored instances. */
+  impliedConditions: ConditionType[];
   rollModifiers: ConditionRollModifier[];
   automaticSavingThrowFailures: Ability[];
   automaticAbilityCheckFailures: ConditionAbilityCheckSense[];
