@@ -27,17 +27,17 @@ export const WEAPON_MASTERY_CLASS_POLICIES: Record<WeaponMasteryClassId, WeaponM
   paladin: {
     classId: "paladin", initialChoices: 2, capacitySource: "fixed",
     weaponType: "any", requiresWeaponProficiency: true,
-    replacement: { when: "long-rest", count: 1 },
+    replacement: { when: "long-rest", count: 2 },
   },
   ranger: {
     classId: "ranger", initialChoices: 2, capacitySource: "fixed",
     weaponType: "any", requiresWeaponProficiency: true,
-    replacement: { when: "long-rest", count: 1 },
+    replacement: { when: "long-rest", count: 2 },
   },
   rogue: {
     classId: "rogue", initialChoices: 2, capacitySource: "fixed",
     weaponType: "any", requiresWeaponProficiency: true,
-    replacement: { when: "long-rest", count: 1 },
+    replacement: { when: "long-rest", count: 2 },
   },
 };
 
