@@ -16,3 +16,4 @@ export * from "./engines/light-weapon-extra-attack-engine";
 export * from "./engines/weapon-mastery-engine";
 export * from "./engines/armor-training-consequence-engine";
 export * from "./engines/armor-training-grant-engine";
+export * from "./engines/hit-point-engine";

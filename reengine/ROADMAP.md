@@ -147,7 +147,7 @@ Acceptance: official 2014 and 2024 weapon lists can be represented without encod
 - 2024: untrained Light/Medium/Heavy armor imposes Disadvantage on STR/DEX D20 Tests and prevents spellcasting; an untrained Shield only loses its AC benefit.
 - Return deduplicated derived flags for downstream attack/check/save/spellcasting engines without mutating rolls or character state.
 
-Status: implementation complete on `feat/re-006c-armor-training-consequences`; PR #6 is merged and this slice now targets `main`. The earlier exact-head run passed frozen install, typecheck, and all 177 unit tests; re-verification is triggered by this update.
+Status: complete. Merged via PR #7 (`4942339f56b4d51282e9225f1b32e81b12a77fb9`). CI run `41831774283` passed frozen install, typecheck, and 177 unit tests on the exact head.
 
 #### RE-006C2 — Training Grant Resolution
 
@@ -156,14 +156,35 @@ Status: implementation complete on `feat/re-006c-armor-training-consequences`; P
 - Handle multiclass grant unions, shared content, and ruleset-incompatible sources with diagnostics.
 - Retain grant provenance for builder diagnostics and auditability.
 
-Status: implementation complete on `feat/re-006c2-armor-training-grants`. The previous-base CI passed frozen install, typecheck, and 184 unit tests; exact-head verification is rerun after the merge-base conflict resolution.
+Status: complete. Merged via PR #8 (`d2210d3c961240e4e65cca7423bd7a74dc29374d`). CI runs `41835792260` and `41835787859` passed frozen install, typecheck, and 184 unit tests on the exact head.
 
 ### RE-006D — Hit Points, Hit Dice & Recovery
 
-- Maximum/current/temporary HP and damage/healing application.
-- Hit Dice pools and spending.
-- Death saves and stabilization.
-- Short Rest, Long Rest, and other recovery boundaries, including resource restoration.
+#### RE-006D1 — Maximum HP & HP State
+
+- Calculate maximum HP per character level, respecting each multiclass level's Hit Die, first-level maximum, later fixed average or supplied roll, Constitution modifier, and explicit flat bonuses.
+- Apply damage with Temporary HP absorbed first and healing up to maximum HP. Temporary HP never stacks; when a grant arrives while Temporary HP already exists, preserve the player's choice to keep the current amount or take the new amount, even when the new amount is lower.
+- Return immutable snapshots and explicit applied/overflow amounts; death-state transitions remain D3.
+
+Status: implementation complete on `feat/re-006d1-hit-point-calculation`. Previous-base CI passed frozen install, typecheck, and 199 unit tests; exact-head verification is rerun after syncing with PR #8.
+
+#### RE-006D2 — Hit Dice Pools & Short Rest
+
+- Build per-class Hit Die pools for multiclass characters.
+- Spend Hit Dice during Short Rest, applying roll plus Constitution modifier with minimum 1 HP per die.
+- Track remaining Hit Dice separately by class/size and validate spending limits.
+
+#### RE-006D3 — Death Saves & Stabilization
+
+- Track successes/failures, natural 1/20 outcomes, stabilization, and death at three failures.
+- Resolve damage while at 0 HP, massive damage, and healing reset behavior.
+- Keep edition-specific edge cases explicit.
+
+#### RE-006D4 — Rest & Recovery
+
+- Implement 2014 and 2024 Long Rest Hit Dice recovery differences.
+- Restore HP, Temporary HP, class features, spell/resource pools, and time-expiring effects using explicit rest events.
+- Coordinate resource-engine recovery semantics without duplicating recovery state.
 
 ### RE-006E — Conditions & Exhaustion
 
