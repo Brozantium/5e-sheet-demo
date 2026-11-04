@@ -15,7 +15,7 @@ const weapon = ({
   name = id,
   category = "simple",
   weaponType = "melee",
-  mastery = "sap",
+  mastery,
   ruleset = "2024",
   baseItemId,
 } = {}) => ({
@@ -28,7 +28,7 @@ const weapon = ({
     weaponCategory: category,
     weaponType,
     damage: [{ formula: "1d6", damageType: "slashing" }],
-    mastery,
+    ...(mastery ? { mastery } : {}),
   },
 });
 
