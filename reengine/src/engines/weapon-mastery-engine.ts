@@ -10,7 +10,7 @@ export interface WeaponMasteryClassPolicy {
   capacitySource: "class-progression" | "fixed";
   weaponType: "melee" | "any";
   requiresWeaponProficiency: boolean;
-  replacement: { when: "long-rest"; count: 1 };
+  replacement: { when: "long-rest"; count: number };
 }
 
 export const WEAPON_MASTERY_CLASS_POLICIES: Record<WeaponMasteryClassId, WeaponMasteryClassPolicy> = {
