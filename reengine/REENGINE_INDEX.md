@@ -161,7 +161,7 @@ The test command compiles test TypeScript and runs `node --test reengine/tests/u
 
 1. **Public barrel exports need deliberate review:** `src/domain/index.ts` re-exports the Conditions, Condition Lifecycle, and Exhaustion domain contracts. However, at the inspected snapshot, `src/index.ts` does not re-export `condition-engine.ts`, `condition-lifecycle-engine.ts`, or `exhaustion-engine.ts`. Do not assume those engine functions are available from the root barrel; import-path/API intent should be checked before external consumers rely on it. This index records the observation and does not change it.
 2. **UI and persistence are not integrated:** the inspected UI subfolders and serialization area contain placeholders. The existence of domain engines does not mean the Owlbear sheet uses them.
-3. **Movement implementation is new and awaiting CI:** F1–F3 source and test files are now present on the movement branch. Verify CI on the exact PR head before claiming them CI verified; this does not imply Owlbear/UI integration.
+3. **Movement F1–F3 are implemented and CI verified:** PR #18 run 41806337613 passed typecheck and 337 tests. This does not imply Owlbear/UI integration.
 4. **Legacy sources remain separate:** `src/App.tsx`, `src/combat-rules.ts`, `assets/`, and `data/` are reference/legacy areas. Do not make them runtime dependencies of `reengine/`.
 
 ## Maintenance rule
