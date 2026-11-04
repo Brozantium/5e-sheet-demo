@@ -65,8 +65,16 @@ function resolveSpeed(
   const effectiveSpeed = input.baseSpeed === undefined
     ? undefined
     : Math.max(0, input.baseSpeed - reductionFeet);
+  if (reductionFeet === 0) {
+    return {
+      kind: "normal",
+      multiplier: 1,
+      reductionFeet: 0,
+      ...(effectiveSpeed !== undefined ? { effectiveSpeed } : {}),
+    };
+  }
   return {
-    kind: reductionFeet > 0 ? "reduced" : "normal",
+    kind: "reduced",
     multiplier: 1,
     reductionFeet,
     ...(effectiveSpeed !== undefined ? { effectiveSpeed } : {}),
