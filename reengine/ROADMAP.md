@@ -137,7 +137,7 @@ Acceptance: official 2014 and 2024 weapon lists can be represented without encod
 - Validate selected weapon types and resolve whether the character owns the Weapon Mastery feature and selected the weapon before exposing that weapon's mastery to the combat/action layer.
 - Keep the eight mastery effects and their triggers in RE-008.
 
-  Status: implementation in progress on `feat/re-006b4-weapon-mastery-selection`; frozen install, typecheck, and unit-test verification pending.
+  Status: implementation complete on `feat/re-006b4-weapon-mastery-selection`. Frozen install and typecheck passed; all 164 unit tests passed. Pending review/merge after the B3C2 dependency. Mastery effects and action triggers remain in RE-008.
 
 ### RE-006C — Armor Training Consequences
 
