@@ -154,6 +154,6 @@ Implemented on `feat/re-006f-movement-defenses`:
 - **F2:** pure per-mode movement resolver with deterministic caller-supplied modifier order. It consumes the E2 Exhaustion speed result for each mode and applies E1 Speed-zero / cannot-increase constraints without duplicating E1/E2 policy. Prone, Frightened, and Grappled metadata is preserved, not executed.
 - **F3:** pure defense aggregation for resistance, vulnerability, immunity, condition immunity, and individual AC-bonus contributions. Duplicate labels are coalesced case-insensitively while unique source provenance is retained. Resistance/immunity conflicts and AC arithmetic remain downstream responsibilities.
 - Added 14 regression test cases across movement and defense engine tests.
-- CI/typecheck has not yet been verified for this implementation branch; no local test run was performed through this GitHub-only workflow.
+- GitHub Actions run [41806337613](https://github.com/Brozantium/5e-sheet-demo/actions/runs/41806337613) passed frozen-lockfile install, `pnpm typecheck:reengine`, and `pnpm test:reengine`: 337 tests passed, 0 failures. The run verified PR #18 head `acbb26b9245905a9f758cc4d923f9c949600e024`.
 
-**F1–F3 status: implemented with regression tests; CI pending.**
+**F1–F3 status: implemented and CI verified on PR #18 head `acbb26b9245905a9f758cc4d923f9c949600e024`; 337 tests passed, 0 failures. Review/merge remains pending.**
