@@ -98,7 +98,7 @@ RE-006B2 acceptance coverage:
 - Category and exact/base-item weapon proficiency are supported; non-proficient attacks omit PB without being prohibited.
 - Attack and damage adjustments are explicit; the ability modifier is applied once to the primary damage component.
 - Versatile weapons use their alternate primary damage formula only when wielded in two hands.
-- Only the explicit Two-Handed property requires both hands; Heavy is handled independently. Heavy grants disadvantage to Tiny/Small creatures in 2014 and when the relevant STR/DEX score is below 13 in 2024. Shields can occupy one hand. Physical hand occupancy is validated separately from Light-property extra-attack eligibility: 2014 requires two Light melee weapons, while 2024 requires two different Light weapons (including ranged weapons).
+- Only the explicit Two-Handed property requires both hands; Heavy is handled independently. Heavy grants disadvantage to Tiny/Small creatures in 2014 and when the relevant STR/DEX score is below 13 in 2024. Shields can occupy one hand. Physical hand occupancy is validated separately from Light weapon-pair eligibility (the Attack-action trigger is not checked here): 2014 requires two Light melee weapons, while 2024 requires two different Light weapons (including ranged weapons).
 - Ruleset mismatches and malformed equipment states are surfaced rather than silently normalized.
 
 Status: in progress. Armor training consequences, HP/rest/death saves, and ruleset-aware condition/exhaustion behavior remain.
