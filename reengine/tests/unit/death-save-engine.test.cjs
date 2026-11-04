@@ -287,11 +287,14 @@ test("Death Save operations reject invalid rolls, states, and dead-character tra
     roll: 21,
   }), /1 to 20/);
 
-  assert.throws(() => makeDeathSavingThrow({
+  const noRoll = makeDeathSavingThrow({
     hitPoints: hp({ currentHitPoints: 1 }),
     deathSaveState: death(),
     roll: 10,
-  }), /Death Save tallies reset/);
+  });
+  assert.equal(noRoll.made, false);
+  assert.equal(noRoll.outcome, "no-roll");
+  assert.equal(noRoll.issue.code, "not-at-zero-hit-points");
 
   assert.throws(() => stabilizeCharacter({
     ruleset: "2014",
