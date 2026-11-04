@@ -52,7 +52,7 @@ test("melee defaults to Strength and Finesse permits either ability choice", () 
   assert.equal(finesseDex.attackBonus, 7);
   assert.equal(finesseDex.damage[0].displayFormula, "1d8 + 4");
   assert.equal(finesseStr.ability, "str");
-  assert.equal(finesseStr.attackBonus, 5);
+  assert.equal(finesseStr.attackBonus, 4);
   assert.equal(finesseStr.damage[0].displayFormula, "1d8 + 1");
 });
 
