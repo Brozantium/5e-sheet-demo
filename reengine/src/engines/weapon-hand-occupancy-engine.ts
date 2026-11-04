@@ -88,17 +88,17 @@ export function validateWeaponHandOccupancy(
     const profile = getWeaponProfile(entry.definition);
     if (profile) {
       const properties = new Set(entry.definition.properties ?? []);
-      const mountedTwoHandedException =
+      const hasMountedTwoHandedException =
         input.ruleset === "2024" &&
         isMounted &&
         profile.twoHandedRule?.unlessMounted === true;
-      const 2014LanceRequiresTwoHands =
+      const has2014LanceRequiresTwoHands =
         input.ruleset === "2014" &&
         !isMounted &&
         profile.specialRules?.includes("lance-2014") === true;
       const requiresTwoHands =
-        (properties.has("two-handed") && !mountedTwoHandedException) ||
-        2014LanceRequiresTwoHands;
+        (properties.has("two-handed") && !hasMountedTwoHandedException) ||
+        has2014LanceRequiresTwoHands;
       if (requiresTwoHands && hands.length !== 2) {
         issues.push({
           code: "weapon-requires-two-hands",
