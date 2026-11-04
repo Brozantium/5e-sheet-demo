@@ -8,6 +8,7 @@ import type {
 } from "../domain/long-rest";
 
 const HIT_DIE_SIZES = [6, 8, 10, 12] as const;
+const ABILITIES = ["str", "dex", "con", "int", "wis", "cha"] as const;
 
 function assertMinute(value: number, label: string): void {
   if (!Number.isInteger(value) || value < 0) {
@@ -52,6 +53,35 @@ function validateLongRestInput(input: LongRestInput): void {
   validateResources(input.resources);
   if (!Number.isInteger(input.exhaustionLevel) || input.exhaustionLevel < 0 || input.exhaustionLevel > 5) {
     throw new RangeError("A living character's Exhaustion level must be an integer from 0 to 5.");
+  }
+  if (input.restorableMaximumHitPoints !== undefined) {
+    if (!Number.isInteger(input.restorableMaximumHitPoints) ||
+        input.restorableMaximumHitPoints < input.hitPoints.maximumHitPoints) {
+      throw new RangeError("Restorable maximum Hit Points must be an integer no lower than the current maximum.");
+    }
+  }
+  if (input.restorableAbilityScores !== undefined && input.abilityScores === undefined) {
+    throw new TypeError("Current ability scores are required when restorable ability scores are supplied.");
+  }
+  if (input.abilityScores !== undefined) {
+    for (const ability of ABILITIES) {
+      const score = input.abilityScores[ability];
+      if (!Number.isInteger(score) || score < 1 || score > 30) {
+        throw new RangeError(ability.toUpperCase() + " score must be an integer from 1 to 30.");
+      }
+    }
+  }
+  if (input.restorableAbilityScores !== undefined) {
+    for (const [ability, score] of Object.entries(input.restorableAbilityScores)) {
+      if (!(ABILITIES as readonly string[]).includes(ability) ||
+          !Number.isInteger(score) || (score as number) < 1 || (score as number) > 30) {
+        throw new RangeError("Restorable ability scores must use ability IDs and integer values from 1 to 30.");
+      }
+      const current = input.abilityScores?.[ability as keyof typeof input.abilityScores];
+      if (current === undefined || (score as number) < current) {
+        throw new RangeError("A restorable ability score cannot be lower than its current score.");
+      }
+    }
   }
 }
 
@@ -302,7 +332,23 @@ export function completeLongRest(input: LongRestInput): LongRestResult {
   }));
   const hitDiceRecovered = hitDiceRecoveryChoices.reduce((total, choice) => total + choice.count, 0);
 
-  const healed = applyHitPointHealing(input.hitPoints, input.hitPoints.maximumHitPoints);
+  const restoresReducedHitPointMaximum =
+    input.ruleset === "2024" && input.restorableMaximumHitPoints !== undefined;
+  const maximumHitPoints = restoresReducedHitPointMaximum
+    ? input.restorableMaximumHitPoints as number
+    : input.hitPoints.maximumHitPoints;
+  const hpBeforeHealing = {
+    ...input.hitPoints,
+    maximumHitPoints,
+  };
+  const healed = applyHitPointHealing(hpBeforeHealing, maximumHitPoints);
+  const restoresReducedAbilityScores =
+    input.ruleset === "2024" && input.restorableAbilityScores !== undefined;
+  const abilityScores = input.abilityScores === undefined
+    ? undefined
+    : restoresReducedAbilityScores
+      ? { ...input.abilityScores, ...input.restorableAbilityScores }
+      : { ...input.abilityScores };
   const resources = input.resources.map((entry) => {
     const resource: ResourceState = {
       maximum: entry.maximum,
@@ -324,6 +370,9 @@ export function completeLongRest(input: LongRestInput): LongRestResult {
     hitDicePools,
     resources,
     exhaustionLevel,
+    ...(abilityScores ? { abilityScores } : {}),
+    restoresReducedAbilityScores,
+    restoresReducedHitPointMaximum,
     hitDiceRecovered,
     hitDiceRecoveryLimit: recoveryLimit,
     hitDiceRecoveryChoices,
