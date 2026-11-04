@@ -17,5 +17,7 @@ export * from "./engines/weapon-mastery-engine";
 export * from "./engines/armor-training-consequence-engine";
 export * from "./engines/armor-training-grant-engine";
 export * from "./engines/hit-point-engine";
+export * from "./engines/long-rest-engine";
+
 export * from "./engines/death-save-engine";
 
