@@ -155,9 +155,13 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
   if (grip !== "one-handed" && grip !== "two-handed") {
     throw new RangeError("Weapon grip must be one-handed or two-handed.");
   }
-  const includeAbilityModifier = input.includeAbilityModifierInDamage ?? true;
-  if (typeof includeAbilityModifier !== "boolean") {
-    throw new TypeError("Ability modifier damage policy must be boolean.");
+  const abilityModifierDamageMode = input.abilityModifierDamageMode ?? "normal";
+  if (
+    abilityModifierDamageMode !== "normal" &&
+    abilityModifierDamageMode !== "none" &&
+    abilityModifierDamageMode !== "negative-only"
+  ) {
+    throw new RangeError("Unknown ability modifier damage mode.");
   }
 
   const proficiencies = input.weaponProficiencies ?? [];
@@ -171,6 +175,9 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
     throw new TypeError("Weapon properties must be an array of strings.");
   }
   const properties = new Set(definition.properties ?? []);
+  if (properties.has("versatile") && profile.weaponType !== "melee") {
+    throw new RangeError("Versatile property requires a melee weapon.");
+  }
   const strengthModifier = calculateAbilityModifier(input.abilityScores.str);
   const dexterityModifier = calculateAbilityModifier(input.abilityScores.dex);
   const hasFinesse = properties.has("finesse");
@@ -254,8 +261,13 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
     });
   }
 
-  const damageModifier =
-    (includeAbilityModifier ? abilityModifier : 0) + damageBonus;
+  const abilityDamageModifier =
+    abilityModifierDamageMode === "normal"
+      ? abilityModifier
+      : abilityModifierDamageMode === "negative-only"
+        ? Math.min(abilityModifier, 0)
+        : 0;
+  const damageModifier = abilityDamageModifier + damageBonus;
   const damage = profile.damage.map((component, index) => {
     let formula = component.formula;
     if (index === 0 && grip === "two-handed" && properties.has("versatile")) {
