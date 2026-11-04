@@ -2,7 +2,8 @@ import { calculateAbilityModifier } from "./character-calculation-engine";
 import type {
   HitDieSize, HitPointDamageResult, HitPointHealingResult, HitPointLevelCalculation,
   HitPointLevelInput, HitPointState, MaximumHitPointsInput, MaximumHitPointsResult,
-  TemporaryHitPointResult,
+  TemporaryHitPointResult, HitDicePool, ShortRestHitDieSpendInput,
+  ShortRestHitDieSpendResult,
 } from "../domain/hit-points";
 
 const HIT_DIE_SIZES: readonly HitDieSize[] = [6, 8, 10, 12];
@@ -155,5 +156,185 @@ export function grantTemporaryHitPoints(
     state: { ...state, temporaryHitPoints: next },
     temporaryHitPointsGained: Math.max(0, next - state.temporaryHitPoints),
     replacedExistingTemporaryHitPoints: replace && state.temporaryHitPoints > 0,
+  };
+}
+
+
+/**
+ * Builds one Hit Dice pool per class from the validated per-level HP snapshot.
+ * Character-level order is checked so a malformed multiclass progression
+ * cannot silently create or lose Hit Dice.
+ */
+export function createHitDicePools(
+  levels: readonly Pick<HitPointLevelCalculation, "characterLevel" | "classId" | "classLevel" | "hitDie">[],
+): HitDicePool[] {
+  if (!Array.isArray(levels) || levels.length === 0) {
+    throw new TypeError("At least one character level is required to build Hit Dice pools.");
+  }
+  if (levels.length > 20) {
+    throw new RangeError("A character cannot have more than 20 Hit Dice.");
+  }
+  const grouped = new Map<string, { hitDie: HitDieSize; classLevels: number[] }>();
+  levels.forEach((level, index) => {
+    if (!level || typeof level !== "object") {
+      throw new TypeError("Hit Dice level entries must be objects.");
+    }
+    if (!Number.isInteger(level.characterLevel) || level.characterLevel !== index + 1) {
+      throw new RangeError("Hit Dice levels must cover each character level from 1 without gaps.");
+    }
+    if (typeof level.classId !== "string" || !level.classId.trim()) {
+      throw new TypeError("Hit Dice class ID must be non-empty.");
+    }
+    if (!Number.isInteger(level.classLevel) || level.classLevel < 1 || level.classLevel > 20) {
+      throw new RangeError("Hit Dice class level must be an integer from 1 to 20.");
+    }
+    if (!HIT_DIE_SIZES.includes(level.hitDie)) {
+      throw new RangeError("Hit Die must be d6, d8, d10, or d12.");
+    }
+    const current = grouped.get(level.classId);
+    if (!current) {
+      grouped.set(level.classId, { hitDie: level.hitDie, classLevels: [level.classLevel] });
+      return;
+    }
+    if (current.hitDie !== level.hitDie) {
+      throw new RangeError("Hit Die size changed within class " + level.classId + ".");
+    }
+    current.classLevels.push(level.classLevel);
+  });
+
+  const pools: HitDicePool[] = [];
+  for (const [classId, entry] of grouped) {
+    const sortedLevels = [...entry.classLevels].sort((a, b) => a - b);
+    sortedLevels.forEach((classLevel, index) => {
+      if (classLevel !== index + 1) {
+        throw new RangeError("Class levels for " + classId + " must be consecutive from 1.");
+      }
+    });
+    pools.push({
+      classId,
+      hitDie: entry.hitDie,
+      total: sortedLevels.length,
+      spent: 0,
+    });
+  }
+  return pools.sort((a, b) => a.classId.localeCompare(b.classId));
+}
+
+function validateHitDicePools(pools: readonly HitDicePool[]): void {
+  if (!Array.isArray(pools)) throw new TypeError("Hit Dice pools must be an array.");
+  const seen = new Set<string>();
+  let totalHitDice = 0;
+  for (const pool of pools) {
+    if (!pool || typeof pool !== "object") throw new TypeError("Hit Dice pool entries must be objects.");
+    if (typeof pool.classId !== "string" || !pool.classId.trim()) {
+      throw new TypeError("Hit Dice pool class ID must be non-empty.");
+    }
+    if (seen.has(pool.classId)) throw new RangeError("Duplicate Hit Dice pool for class " + pool.classId + ".");
+    seen.add(pool.classId);
+    if (!HIT_DIE_SIZES.includes(pool.hitDie)) throw new RangeError("Hit Die must be d6, d8, d10, or d12.");
+    if (!Number.isInteger(pool.total) || pool.total < 1 || pool.total > 20) {
+      throw new RangeError("Total Hit Dice must be an integer from 1 to 20.");
+    }
+    if (!Number.isInteger(pool.spent) || pool.spent < 0 || pool.spent > pool.total) {
+      throw new RangeError("Spent Hit Dice must be between zero and the pool total.");
+    }
+    totalHitDice += pool.total;
+  }
+  if (totalHitDice > 20) throw new RangeError("A character cannot have more than 20 total Hit Dice.");
+}
+
+/**
+ * Spends exactly one class-specific Hit Die at the end of a completed Short Rest.
+ * Call again with the returned HP/pool snapshots only after the player decides
+ * whether to spend another die. This resolver does not track rest duration or
+ * interruption; the rest coordinator owns those state transitions.
+ *
+ * 2014: each die restores max(0, roll + CON modifier).
+ * 2024: a character must have at least 1 HP when the rest starts, and each die
+ * restores max(1, roll + CON modifier).
+ */
+export function spendShortRestHitDie(
+  input: ShortRestHitDieSpendInput,
+): ShortRestHitDieSpendResult {
+  if (!input || typeof input !== "object") {
+    throw new TypeError("Short Rest Hit Die spend input is required.");
+  }
+  if (input.ruleset !== "2014" && input.ruleset !== "2024") {
+    throw new RangeError("Short Rest ruleset must be 2014 or 2024.");
+  }
+  assertHitPointState(input.hitPoints);
+  validateHitDicePools(input.hitDicePools);
+  if (typeof input.classId !== "string" || !input.classId.trim()) {
+    throw new TypeError("Hit Die spend class ID must be non-empty.");
+  }
+  assertNonNegativeInteger(input.shortRestStartedAtHitPoints, "Short Rest starting Hit Points");
+  if (input.shortRestStartedAtHitPoints > input.hitPoints.maximumHitPoints) {
+    throw new RangeError("Short Rest starting Hit Points cannot exceed maximum Hit Points.");
+  }
+  if (!Number.isInteger(input.roll) || input.roll < 1) {
+    throw new RangeError("Hit Die roll must be a positive integer.");
+  }
+  const constitutionModifier = calculateAbilityModifier(input.constitutionScore);
+  const selectedPool = input.hitDicePools.find((pool) => pool.classId === input.classId);
+  const baseResult: ShortRestHitDieSpendResult = {
+    canSpend: false,
+    hitPoints: { ...input.hitPoints },
+    hitDicePools: input.hitDicePools.map((pool) => ({ ...pool })),
+    classId: input.classId,
+    hitDie: selectedPool?.hitDie ?? null,
+    rollValue: input.roll,
+    constitutionModifier,
+    healingBeforeMaximum: 0,
+    hitPointsRestored: 0,
+  };
+
+  if (input.ruleset === "2024" && input.shortRestStartedAtHitPoints < 1) {
+    return {
+      ...baseResult,
+      issue: {
+        code: "short-rest-requires-positive-hit-points",
+        message: "A 2024 character must have at least 1 Hit Point to start a Short Rest.",
+      },
+    };
+  }
+  if (!selectedPool) {
+    return {
+      ...baseResult,
+      issue: {
+        code: "unknown-hit-die-pool",
+        message: "No Hit Dice pool exists for class " + input.classId + ".",
+      },
+    };
+  }
+  if (input.roll > selectedPool.hitDie) {
+    throw new RangeError("Hit Die roll must be from 1 to " + selectedPool.hitDie + ".");
+  }
+  if (selectedPool.spent >= selectedPool.total) {
+    return {
+      ...baseResult,
+      issue: {
+        code: "no-hit-dice-remaining",
+        message: "No unspent Hit Dice remain for class " + input.classId + ".",
+      },
+    };
+  }
+
+  const healingBeforeMaximum = input.ruleset === "2014"
+    ? Math.max(0, input.roll + constitutionModifier)
+    : Math.max(1, input.roll + constitutionModifier);
+  const healing = applyHitPointHealing(input.hitPoints, healingBeforeMaximum);
+  const hitDicePools = input.hitDicePools.map((pool) =>
+    pool.classId === input.classId ? { ...pool, spent: pool.spent + 1 } : { ...pool },
+  );
+  return {
+    canSpend: true,
+    hitPoints: healing.state,
+    hitDicePools,
+    classId: input.classId,
+    hitDie: selectedPool.hitDie,
+    rollValue: input.roll,
+    constitutionModifier,
+    healingBeforeMaximum,
+    hitPointsRestored: healing.hitPointsRestored,
   };
 }
