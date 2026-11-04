@@ -93,12 +93,12 @@ Implemented:
 
 RE-006B2 acceptance coverage:
 
-- Melee weapons use Strength; Finesse melee weapons use the higher Strength/Dexterity modifier; ranged weapons use Dexterity.
+- Melee weapons use Strength and ranged weapons use Dexterity by default. Finesse weapons permit an explicit Strength or Dexterity choice on either weapon type; the higher modifier is the fallback when no choice is supplied.
 - Thrown melee weapons retain the melee ability rule.
 - Category and exact/base-item weapon proficiency are supported; non-proficient attacks omit PB without being prohibited.
 - Attack and damage adjustments are explicit; the ability modifier is applied once to the primary damage component.
 - Versatile weapons use their alternate primary damage formula only when wielded in two hands.
-- Heavy/Two-Handed weapons require both hands; shields can occupy one hand. Physical hand occupancy is validated separately from Light-property extra-attack eligibility: 2014 requires two Light melee weapons, while 2024 requires two different Light weapons (including ranged weapons).
+- Only the explicit Two-Handed property requires both hands; Heavy is handled independently. Heavy grants disadvantage to Tiny/Small creatures in 2014 and when the relevant STR/DEX score is below 13 in 2024. Shields can occupy one hand. Physical hand occupancy is validated separately from Light-property extra-attack eligibility: 2014 requires two Light melee weapons, while 2024 requires two different Light weapons (including ranged weapons).
 - Ruleset mismatches and malformed equipment states are surfaced rather than silently normalized.
 
 Status: in progress. Armor training consequences, HP/rest/death saves, and ruleset-aware condition/exhaustion behavior remain.
