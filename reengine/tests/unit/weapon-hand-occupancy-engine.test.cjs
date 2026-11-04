@@ -53,7 +53,7 @@ test("two Light melee weapons qualify for the Light extra attack in both ruleset
       ],
     });
     assert.equal(result.valid, true);
-    assert.equal(result.lightWeaponExtraAttackEligible, true);
+    assert.equal(result.lightWeaponPairEligible, true);
     assert.equal(result.issues.length, 0);
   }
 });
@@ -67,7 +67,7 @@ test("two non-Light weapons may be held but do not qualify for the Light extra a
     ],
   });
   assert.equal(result.valid, true);
-  assert.equal(result.lightWeaponExtraAttackEligible, false);
+  assert.equal(result.lightWeaponPairEligible, false);
 });
 
 test("2014 Light extra attacks require melee weapons, while 2024 accepts Light ranged weapons", () => {
@@ -79,7 +79,7 @@ test("2014 Light extra attacks require melee weapons, while 2024 accepts Light r
     ],
   });
   assert.equal(result.valid, true);
-  assert.equal(result.lightWeaponExtraAttackEligible, false);
+  assert.equal(result.lightWeaponPairEligible, false);
 
   const rules2024 = validateWeaponHandOccupancy({
     ruleset: "2024",
@@ -89,7 +89,7 @@ test("2014 Light extra attacks require melee weapons, while 2024 accepts Light r
     ],
   });
   assert.equal(rules2024.valid, true);
-  assert.equal(rules2024.lightWeaponExtraAttackEligible, true);
+  assert.equal(rules2024.lightWeaponPairEligible, true);
 });
 
 test("Only Two-Handed requires both hands; Heavy alone does not", () => {
@@ -142,7 +142,7 @@ test("edition-incompatible held content is reported", () => {
     ],
   });
   assert.equal(result.valid, false);
-  assert.equal(result.lightWeaponExtraAttackEligible, false);
+  assert.equal(result.lightWeaponPairEligible, false);
   assert.ok(result.issues.some((issue) => issue.code === "incompatible-ruleset-item"));
 });
 
