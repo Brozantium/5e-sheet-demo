@@ -135,7 +135,7 @@ export function applyDamageWithDeathSaveState(
       outcome: "dead",
     };
   }
-  const failures = prior.failures + (input.isCritical ? 2 : 1);
+  const failures = Math.min(3, prior.failures + (input.isCritical ? 2 : 1));
   const died = failures >= 3;
   return {
     applied: true,
@@ -201,7 +201,7 @@ export function makeDeathSavingThrow(
     };
   }
   if (input.roll === 1) {
-    const failures = input.deathSaveState.failures + 2;
+    const failures = Math.min(3, input.deathSaveState.failures + 2);
     const died = failures >= 3;
     return {
       made: true,
@@ -226,7 +226,7 @@ export function makeDeathSavingThrow(
       outcome: stabilized ? "stable" : "success",
     };
   }
-  const failures = input.deathSaveState.failures + 1;
+  const failures = Math.min(3, input.deathSaveState.failures + 1);
   const died = failures >= 3;
   return {
     made: true,
