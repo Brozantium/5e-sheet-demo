@@ -2,7 +2,7 @@
 
 > **Purpose:** durable continuation checkpoint for work across chat/session limits. This is a project handoff, not a raw chat transcript.
 >
-> **Last reviewed:** 2026-11-04 (Asia/Jakarta)  
+> **Last reviewed:** 2026-11-05 (Asia/Jakarta)  
 > **Repository:** [Brozantium/5e-sheet-demo](https://github.com/Brozantium/5e-sheet-demo)  
 > **Working branch at checkpoint:** `feat/re-006d4-long-rest-recovery`  
 > **Current roadmap:** [reengine/ROADMAP.md](./ROADMAP.md)
@@ -142,14 +142,14 @@ The roadmap branch records a stacked implementation sequence. These PR links are
 | #8 | RE-006C2 armor/shield training grants | [PR #8](https://github.com/Brozantium/5e-sheet-demo/pull/8) | 184 |
 | #9 | RE-006D1 HP calculation/state | [PR #9](https://github.com/Brozantium/5e-sheet-demo/pull/9) | 199 |
 | #10 | RE-006D2 Hit Dice/Short Rest | [PR #10](https://github.com/Brozantium/5e-sheet-demo/pull/10) | 212 |
-| #11 | RE-006D3 Death Saves/stabilization | [PR #11](https://github.com/Brozantium/5e-sheet-demo/pull/11) | 235 |
-| #12 | RE-006D4 Long Rest/recovery | [PR #12](https://github.com/Brozantium/5e-sheet-demo/pull/12) | 257 |
+| #11 | RE-006D3 Death Saves/stabilization | [PR #11](https://github.com/Brozantium/5e-sheet-demo/pull/11) | 236 |
+| #12 | RE-006D4 Long Rest/recovery | [PR #12](https://github.com/Brozantium/5e-sheet-demo/pull/12) | 258 |
 
-At checkpoint review (2026-11-04), branch `feat/re-006d4-long-rest-recovery` was confirmed to exist and PR #12's review list returned no reviews. The PR search response did not reliably expose the current state field, so do not infer merged/open status from this note. PR #12's description records successful frozen-lockfile install, `pnpm typecheck:reengine`, and `pnpm test:reengine` with 257 tests, plus [workflow run 41779301323](https://github.com/Brozantium/5e-sheet-demo/actions/runs/41779301323). Recheck the exact head commit and CI on resume.
+At checkpoint update (2026-11-05), PR #12 targets `main` from `feat/re-006d4-long-rest-recovery`; the branch is 19 commits ahead and 0 behind. Exact-main head `fe1e6e403106d116118019d649b497138f4371dd` passed frozen-lockfile install, `pnpm typecheck:reengine`, and all 258 unit tests in [workflow run 41890063977](https://github.com/Brozantium/5e-sheet-demo/actions/runs/41890063977). Final review/merge status must still be checked live.
 
 ## Current checkpoint and next action
 
-**Checkpoint:** latest documented rules-engine slice is RE-006D4. RE-006E has not been implemented. The immediate next task is to complete the Conditions & Exhaustion evidence audit, not to start RE-007/RE-008 and not to wire UI.
+**Checkpoint:** RE-006D1–D3 are merged; RE-006D4 is implemented and exact-main CI verified in PR #12, with final review/merge pending at this checkpoint. RE-006E has not been implemented. Once D4 is merged, the immediate next task is the Conditions & Exhaustion evidence audit, not RE-007/RE-008 and not UI integration.
 
 **Recommended next sequence:**
 

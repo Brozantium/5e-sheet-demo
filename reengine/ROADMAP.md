@@ -201,7 +201,7 @@ Status: implementation complete. Exact-`main` workflow `41888312987` passed froz
 - 2014 Hit Dice recovery is a player choice, limited to half total Hit Dice (minimum one); 2024 automatically restores all expended Hit Dice.
 - Keep the rest lifecycle and interruption event log explicit; do not duplicate D2 Hit Die spending or RE-006E Exhaustion effects.
 
-Status: implementation complete; exact-`main` verification is pending in PR #12. The caller supplies the resolved rest event log; persistence and UI orchestration remain later integration work.
+Status: implementation complete and exact-`main` CI verified on PR #12 head `fe1e6e403106d116118019d649b497138f4371dd`: frozen-lockfile install, `pnpm typecheck:reengine`, and all 258 unit tests passed. The caller supplies the resolved rest event log; persistence and UI orchestration remain later integration work.
 
 ### RE-006E — Conditions & Exhaustion
 
