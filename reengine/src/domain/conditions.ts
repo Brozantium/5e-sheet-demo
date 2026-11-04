@@ -104,6 +104,7 @@ export type ConditionRollPredicate =
   | { kind: "always" }
   | { kind: "source-visible" }
   | { kind: "affected-creature-unseen" }
+  | { kind: "target-cannot-see-affected" }
   | { kind: "target-is-source" }
   | { kind: "target-is-not-source" }
   | { kind: "within-distance"; feet: number }
@@ -132,6 +133,8 @@ export interface ConditionRollContext {
   distanceFeet?: number;
   /** Creature IDs visible to the roller in this specific situation. */
   visibleCreatureIds?: readonly string[];
+  /** Used when the affected creature is the roller and the target may perceive it. */
+  targetCanSeeAffectedCreature?: boolean;
   socialInteraction?: boolean;
 }
 
