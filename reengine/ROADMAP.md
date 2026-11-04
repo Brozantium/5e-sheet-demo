@@ -206,7 +206,7 @@ Status: implementation complete on `feat/re-006d4-long-rest-recovery`. Frozen-lo
 
 ### RE-006E — Conditions & Exhaustion
 
-**Audit status:** complete for the inspected legacy sheet path. **E1 and E2 status:** implemented and CI verified on stacked PRs #14 and #15; awaiting review/merge. **E3 status:** not started. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md) for source evidence, ruleset comparison, gaps, and acceptance tests.
+**Audit status:** complete for the inspected legacy sheet path. **E1, E2, and E3 status:** implemented and CI verified on stacked PRs #14, #15, and #16; awaiting review/merge. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md) for source evidence, ruleset comparison, gaps, and acceptance tests.
 
 #### RE-006E1 — Condition Instances & Derived Resolver
 
@@ -234,6 +234,8 @@ Status: implemented and CI verified in [PR #15](https://github.com/Brozantium/5e
 - Expire/remove only the matching instance(s); preserve other instances of the same condition type.
 - Keep lifecycle operations pure and caller-driven. No internal timers, clocks, event scheduler, or persistence.
 
+Status: implemented and CI verified in [PR #16](https://github.com/Brozantium/5e-sheet-demo/pull/16). Run 41788696223 passed install, typecheck, and 323 tests (0 failures).
+
 **Audit findings that affect implementation:**
 
 - Legacy `ActiveCondition` already stores per-instance IDs, source, duration, expiration, save text, notes, and applied timestamp. The missing piece is structured behavior and lifecycle enforcement, not the existence of per-instance data.
@@ -251,7 +253,7 @@ Status: implemented and CI verified in [PR #15](https://github.com/Brozantium/5e
 
 ### RE-006 completion gate
 
-RE-006 is complete only when all slices above have explicit acceptance tests, clean-room typecheck and unit tests pass, and the derived calculations are documented. UI integration and legacy migration remain later work.
+RE-006 is complete only when all slices above have explicit acceptance tests, clean-room typecheck and unit tests pass, and the derived calculations are documented. RE-006E is now implemented and CI verified across E1–E3; PR review/merge remains pending. UI integration and legacy migration remain later work.
 
 ## RE-007 — Spellcasting Engine
 
