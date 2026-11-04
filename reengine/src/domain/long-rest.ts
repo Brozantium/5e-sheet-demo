@@ -29,6 +29,8 @@ export type LongRestIssueCode =
 
 export interface LongRestInput {
   ruleset: "2014" | "2024";
+  /** HP before the Long Rest begins; eligibility is checked at the start, not at completion. */
+  hitPointsAtStart: number;
   hitPoints: {
     currentHitPoints: number;
     maximumHitPoints: number;
