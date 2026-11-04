@@ -94,7 +94,7 @@ export interface WeaponHandOccupancyIssue {
 export interface WeaponHandOccupancyResult {
   valid: boolean;
   occupiedHands: Record<WeaponHand, string | null>;
-  /** Whether the held pair qualifies for the ruleset's Light-property extra attack. */
-  lightWeaponExtraAttackEligible: boolean;
+  /** Whether the held pair satisfies the weapon-property prerequisites for Light's extra-attack feature; the required Attack-action trigger is validated separately. */
+  lightWeaponPairEligible: boolean;
   issues: WeaponHandOccupancyIssue[];
 }
