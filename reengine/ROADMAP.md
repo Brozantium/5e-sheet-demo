@@ -90,14 +90,14 @@ Status: complete. Armor-training consequences beyond AC remain in the later armo
 
 ### RE-006B2 — Weapon Attack, Damage & Hand Occupancy
 
-Implemented on branch `feat/re-006b2-weapon-attacks`; PR #1 is open for review.
+Implemented and merged via PR #1 (`443c3d700a8bdfd98c6eb9f70250bb64e984dd03`).
 
 - Default melee STR and ranged DEX, explicit Finesse STR/DEX choice.
 - Weapon/category proficiency, attack adjustments, damage adjustments, and Versatile damage formulas.
 - 2014 and 2024 Heavy disadvantage rules.
 - Hand occupancy and Light weapon-pair prerequisite validation.
 
-Status: implementation and tests complete for this bounded slice; pending PR review/merge. It does not complete Weapon Properties as a whole.
+Status: complete. PR #1 is merged to `main`. This slice does not complete Weapon Properties as a whole.
 
 ### RE-006B3 — Weapon Properties & Range (current priority)
 
@@ -105,27 +105,27 @@ Split this into small, independently testable slices:
 
 - **B3A — Canonical property model and range contracts:** ruleset-aware 2014/2024 property definitions; normal and long range; distinct thrown range; ammunition type; Versatile damage metadata; structured Special rules; schema and registry validation.
 
-  Status: implementation complete on `feat/re-006b3a-weapon-property-model`. Frozen install and typecheck passed; all 113 unit tests passed. Pending review/merge after the B2 dependency.
+  Status: complete. Merged via PR #2 (`a5e6b609d48009f7d73e0a96ec092475903fe9d6`); its CI passed frozen install, typecheck, and 113 unit tests.
 
 - **B3B — Property calculations:** Reach and Opportunity Attack reach; Thrown attack mode and ability selection; range-band validation and long-range Disadvantage; Two-Handed constraints including the 2024 mounted Lance exception; 2014 Lance close-range rule and Net non-damaging attack profile.
 
-  Status: implementation complete on `feat/re-006b3b-weapon-range-reach`. Frozen install and typecheck passed; all 123 unit tests passed. Pending review/merge after the B3A dependency.
+  Status: complete. Merged via PR #3 (`74993e5c28e81aa77928dae20fa6dbf9c16a3f14`); its CI passed frozen install, typecheck, and 123 unit tests.
 - **B3C1 — Ammunition & Loading:** ammunition availability and consumption per ranged attack; the free-hand requirement for loading one-handed weapons; Loading's one-shot limit per Action, Bonus Action, or Reaction; post-battle ammunition recovery; improvised-weapon handoff for ranged weapons used in melee.
 
-  Status: implementation complete on `feat/re-006b3c1-ammunition-loading`. Frozen install and typecheck passed; all 133 unit tests passed. Pending review/merge after the B3B dependency.
+  Status: complete. Merged via PR #4 (`317c3b1f24fed68d5190cc1b45628725a8444798`); its CI passed frozen install, typecheck, and 133 unit tests.
 
 - **B3C2 — Light extra-attack trigger contract:** 2014 two-weapon requirements versus 2024 Light trigger; negative-only ability modifier damage; Nick's action placement when the extra weapon's mastery is already unlocked and selected.
 
-  Status: implementation complete on `feat/re-006b3c2-light-nick-trigger`. Frozen install and typecheck passed; all 149 unit tests passed. Pending review/merge after the B3C1 dependency. Stateful execution and action consumption remain with RE-008.
+  Status: complete. Merged via PR #5 (`03dba0f509e3c702a548b4397aceea8e63b09f05`); its CI passed frozen install, typecheck, and 149 unit tests. Stateful execution and action consumption remain with RE-008.
 
-Weapon Property/range/attack-cycle implementation (B3A–B3C2) is covered by independent stacked PRs. B4 completes mastery selection/eligibility; mastery effects and 2014/2024 Special effect execution remain in RE-008.
+Weapon Property/range/attack-cycle implementation (B3A–B3C2) is merged through PRs #2–#5. Mastery effects and 2014/2024 Special effect execution remain in RE-008.
 
-Weapon Property/range/attack-cycle implementation (B3A–B3C2) is now covered by independent stacked PRs. Remaining weapon-specific RE-006 scope is B4 mastery eligibility/selection; mastery effects and 2014/2024 Special effect execution remain in RE-008.
+Weapon Property/range/attack-cycle implementation (B3A–B3C2) is merged through PRs #2–#5. Remaining weapon-specific RE-006 scope is B4 mastery eligibility/selection; mastery effects and 2014/2024 Special effect execution remain in RE-008.
 - Keep editor compatibility/normalization (RE-003) separate from the actual rules mechanics. Do not make Heavy automatically mean Two-Handed in the combat domain.
 
 Acceptance: official 2014 and 2024 weapon lists can be represented without encoding mechanical parameters in display strings; every implemented rule has ruleset-specific regression tests.
 
-### RE-006B4 — Weapon Mastery Eligibility & Selection (current)
+### RE-006B4 — Weapon Mastery Eligibility & Selection
 
 - Store the assigned 2024 mastery on each canonical weapon definition, separate from ordinary weapon properties.
 - Model the eight mastery IDs (Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex).
@@ -133,11 +133,11 @@ Acceptance: official 2014 and 2024 weapon lists can be represented without encod
   - Barbarian: Simple or Martial melee weapons; starts with 2 choices and scales by class progression.
   - Fighter: Simple or Martial weapons; starts with 3 choices and scales by class progression.
   - Paladin, Ranger, Rogue: 2 proficient weapon types.
-- Reuse the generic multiple SelectionMechanic with Long Rest replacement of one choice; resolve the actual number of choices from the class progression table for Barbarian/Fighter.
+- Reuse the generic multiple SelectionMechanic. Barbarian/Fighter replace one weapon-type choice after a Long Rest; Paladin/Ranger/Rogue can change both of their two choices. Resolve Barbarian/Fighter capacity from class progression.
 - Validate selected weapon types and resolve whether the character owns the Weapon Mastery feature and selected the weapon before exposing that weapon's mastery to the combat/action layer.
 - Keep the eight mastery effects and their triggers in RE-008.
 
-  Status: implementation complete on `feat/re-006b4-weapon-mastery-selection`. Frozen install and typecheck passed; all 164 unit tests passed. Pending review/merge after the B3C2 dependency. Mastery effects and action triggers remain in RE-008.
+  Status: complete. Merged via PR #6 (`7938d4b6ee72cc2279b22f5b74b1efc719569203`); its CI passed frozen install, typecheck, and 164 unit tests. Mastery effects and action triggers remain in RE-008.
 
 ### RE-006C — Armor Training Consequences
 
@@ -148,7 +148,7 @@ Acceptance: official 2014 and 2024 weapon lists can be represented without encod
 - 2024: untrained Light/Medium/Heavy armor imposes Disadvantage on STR/DEX D20 Tests and prevents spellcasting; an untrained Shield only loses its AC benefit.
 - Return deduplicated derived flags for downstream attack/check/save/spellcasting engines without mutating rolls or character state.
 
-Status: implementation complete on `feat/re-006c-armor-training-consequences`. Frozen install and typecheck passed; all 177 unit tests passed. Pending review/merge after the B4 dependency.
+Status: complete. Merged via PR #7 (`4942339f56b4d51282e9225f1b32e81b12a77fb9`). CI run `41831774283` passed frozen install, typecheck, and 177 unit tests on its exact head.
 
 #### RE-006C2 — Training Grant Resolution
 
@@ -157,7 +157,7 @@ Status: implementation complete on `feat/re-006c-armor-training-consequences`. F
 - Handle multiclass grant unions, shared content, and ruleset-incompatible sources with diagnostics.
 - Retain grant provenance for builder diagnostics and auditability.
 
-Status: implementation complete on `feat/re-006c2-armor-training-grants`. Frozen install and typecheck passed; all 184 unit tests passed. Pending review/merge after the C1 dependency.
+Status: implementation complete on `feat/re-006c2-armor-training-grants`. The previous-base CI passed frozen install, typecheck, and 184 unit tests; final verification is rerun after retargeting this PR to `main`.
 
 ### RE-006D — Hit Points, Hit Dice & Recovery
 
