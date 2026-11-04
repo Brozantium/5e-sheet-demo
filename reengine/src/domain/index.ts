@@ -8,4 +8,5 @@ export * from "./hit-points";
 export * from "./long-rest";
 
 export * from "./death-saves";
+export * from "./conditions";
 
