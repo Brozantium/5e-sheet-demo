@@ -150,12 +150,14 @@ Acceptance: official 2014 and 2024 weapon lists can be represented without encod
 
 Status: implementation complete on `feat/re-006c-armor-training-consequences`. Frozen install and typecheck passed; all 177 unit tests passed. Pending review/merge after the B4 dependency.
 
-#### RE-006C2 — Training Grant Resolution (remaining)
+#### RE-006C2 — Training Grant Resolution
 
 - Normalize armor and shield training grants from class, subclass, species, background, feat, and other owned feature content.
 - Support category grants (Light/Medium/Heavy) and Shield training without inferring proficiency from display text.
-- Handle multiclass grant unions and feature-specific exceptions through explicit normalized inputs.
-- Add regression tests for class combinations, feature choices, and ruleset content compatibility.
+- Handle multiclass grant unions, shared content, and ruleset-incompatible sources with diagnostics.
+- Retain grant provenance for builder diagnostics and auditability.
+
+Status: implementation in progress on `feat/re-006c2-armor-training-grants`; frozen install, typecheck, and unit-test verification pending.
 
 ### RE-006D — Hit Points, Hit Dice & Recovery
 

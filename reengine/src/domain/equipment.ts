@@ -2,6 +2,26 @@ import type { Ability, Ruleset } from "./types";
 import type { ArmorProfile, ItemDefinition } from "./item";
 
 export type ArmorTrainingCategory = "light" | "medium" | "heavy";
+export type ArmorTrainingGrant = ArmorTrainingCategory | "shield";
+
+export interface ArmorTrainingGrantSource {
+  sourceId: string;
+  ruleset: "2014" | "2024" | "shared";
+  grants: readonly ArmorTrainingGrant[];
+}
+
+export interface ArmorTrainingGrantIssue {
+  code: "incompatible-ruleset-source";
+  sourceId: string;
+  message: string;
+}
+
+export interface ArmorTrainingGrantResolution {
+  armorTraining: ArmorTrainingCategory[];
+  shieldTraining: boolean;
+  sourcesByGrant: Record<ArmorTrainingGrant, string[]>;
+  issues: ArmorTrainingGrantIssue[];
+}
 
 /**
  * Character-owned inventory instance linked to an immutable canonical item.

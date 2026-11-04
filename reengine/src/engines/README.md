@@ -12,6 +12,7 @@ Current first-pass modules:
 - item-engine: normalizes weapon-property combinations with exhaustive legacy parity coverage.
 - character-calculation-engine: calculates ability modifiers, total character level, proficiency bonus, saving throws, skills, initiative, and passive Perception.
 - armor-class-engine: calculates unarmored, armor, and shield AC from canonical item profiles and character training.
+- armor-training-grant-engine: unions explicit armor and shield training grants from owned feature sources, filters edition-incompatible content, and retains provenance for diagnostics.
 - armor-training-consequence-engine: resolves ruleset-aware consequences of untrained worn armor and shields, separately from the AC total.
 - weapon-attack-engine: resolves player-selectable Finesse ability, category/item proficiency, attack bonus, damage modifier, Versatile damage dice, ruleset-specific Heavy disadvantage, attack modes (melee/ranged/thrown), melee reach, normal/long range bands, and the 2014 Lance close-target rule. Its effective-reach helper is shared with Opportunity Attack validation.
 - weapon-hand-occupancy-engine: validates main/off-hand occupancy, two-handed requirements, mounted Lance exceptions, and shields; separately reports ruleset-specific Light weapon-pair eligibility; the Attack-action trigger is not evaluated here.
