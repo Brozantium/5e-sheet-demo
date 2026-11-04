@@ -141,9 +141,14 @@ Acceptance: official 2014 and 2024 weapon lists can be represented without encod
 
 ### RE-006C — Armor Training Consequences
 
-- Resolve armor and shield training grants from character features.
-- Implement the ruleset-specific consequences of lacking required armor training, beyond AC calculation.
-- Cover spellcasting and other consequences with regression tests.
+- Resolve armor and shield training grants from character features in the builder/content layer.
+- Implement ruleset-specific consequences as a pure derived result, separate from Armor Class:
+  - 2014: untrained armor or shield imposes Disadvantage on STR/DEX ability checks, saving throws, and attack rolls, and prevents spellcasting. An untrained shield still grants its AC bonus.
+  - 2024: untrained Light/Medium/Heavy armor imposes Disadvantage on STR/DEX D20 Tests and prevents spellcasting. An untrained shield only loses its AC benefit.
+- Return a deduplicated consequence state for downstream attack/check/save/spellcasting engines; do not mutate rolls or spell state here.
+- Cover worn armor, shields, magic armor/shields, mixed cases, and ruleset compatibility with regression tests.
+
+Status: implementation in progress on `feat/re-006c-armor-training-consequences`; frozen install, typecheck, and unit-test verification pending.
 
 ### RE-006D — Hit Points, Hit Dice & Recovery
 

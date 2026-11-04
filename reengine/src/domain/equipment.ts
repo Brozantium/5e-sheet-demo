@@ -64,3 +64,40 @@ export type ResolvedArmorProfile = {
   profile: ArmorProfile;
   kind: "armor" | "shield";
 };
+
+export interface ArmorTrainingConsequenceInput {
+  ruleset: Ruleset;
+  equipment: EquipmentCalculationEntry[];
+  armorTraining: readonly ArmorTrainingCategory[];
+  shieldTraining: boolean;
+}
+
+export type ArmorTrainingConsequenceIssueCode =
+  | "incompatible-ruleset-item"
+  | "armor-not-proficient"
+  | "shield-not-proficient";
+
+export interface ArmorTrainingConsequenceIssue {
+  code: ArmorTrainingConsequenceIssueCode;
+  message: string;
+  instanceId: string;
+}
+
+/**
+ * Rule consequences from wearing armor / wielding a shield without the
+ * appropriate training. This is deliberately separate from AC calculation:
+ * the AC engine decides whether a shield grants AC; this engine resolves
+ * attack/check/save Disadvantage and spellcasting restrictions.
+ */
+export interface ArmorTrainingConsequenceResult {
+  untrainedArmorInstanceIds: string[];
+  untrainedArmorCategories: ArmorTrainingCategory[];
+  untrainedShieldInstanceIds: string[];
+  /** Disadvantage on D20 Tests/checks/saves/attacks that involve STR or DEX. */
+  disadvantageOnStrengthDexterityD20Tests: boolean;
+  /** Whether the character is prohibited from casting spells. */
+  cannotCastSpells: boolean;
+  /** 2024: an untrained Shield does not grant its AC benefit. */
+  shieldACBenefitDenied: boolean;
+  issues: ArmorTrainingConsequenceIssue[];
+}
