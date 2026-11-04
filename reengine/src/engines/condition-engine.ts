@@ -52,6 +52,7 @@ function emptyEffects(): ConditionDerivedEffects {
     cannotBeTargetedBySightRequiredEffectsUnlessVisible: false,
     physicalProperties: {
       transformedToInanimateSubstance: false,
+      nonmagicalWornAndCarriedEquipmentTransforms: false,
       weightMultiplier: 1,
       ceasesAging: false,
     },
@@ -186,9 +187,9 @@ export function resolveConditionEffects(
     "paralyzed",
     "petrified",
     "restrained",
-    "stunned",
     "unconscious",
-  ].some((type) => activeTypes.has(type as (typeof CONDITION_TYPES)[number]));
+  ].some((type) => activeTypes.has(type as (typeof CONDITION_TYPES)[number])) ||
+    (input.ruleset === "2014" && activeTypes.has("stunned"));
   const prone = activeTypes.has("prone") || activeTypes.has("unconscious");
 
   if (["paralyzed", "petrified", "stunned", "unconscious"].some((type) => activeTypes.has(type as (typeof CONDITION_TYPES)[number]))) {
@@ -245,6 +246,7 @@ export function resolveConditionEffects(
 
   if (activeTypes.has("petrified")) {
     effects.physicalProperties.transformedToInanimateSubstance = true;
+    effects.physicalProperties.nonmagicalWornAndCarriedEquipmentTransforms = true;
     effects.physicalProperties.weightMultiplier = 10;
     effects.physicalProperties.ceasesAging = true;
     effects.damageResistances.push("all");
@@ -312,10 +314,6 @@ export function resolveConditionEffects(
         effects.movement.speedCannotIncrease = true;
         if (input.ruleset === "2024") {
           if (sourceCreatureId) {
-            addRollModifier(
-              effects, instance, "attack", "self", "disadvantage",
-              { kind: "target-is-not-source" }, sourceCreatureId,
-            );
             effects.movement.grappleDragRules.push({
               grapplerCreatureId: sourceCreatureId,
               extraFeetPerFootMoved: 1,
@@ -374,6 +372,24 @@ export function resolveConditionEffects(
         addRollModifier(effects, instance, "attack", "against-subject", "advantage");
         addRollModifier(effects, instance, "saving-throw", "self", "disadvantage");
         break;
+    }
+  }
+
+  if (input.ruleset === "2024" && activeTypes.has("grappled")) {
+    const grapplerIds = [...new Set(uniqueInstances
+      .filter((entry) => entry.type === "grappled")
+      .map((entry) => getSourceCreatureId(entry.source))
+      .filter((id): id is string => !!id))];
+    if (grapplerIds.length > 0) {
+      const grappledInstance = uniqueInstances.find((entry) => entry.type === "grappled")!;
+      addRollModifier(
+        effects,
+        grappledInstance,
+        "attack",
+        "self",
+        "disadvantage",
+        { kind: "target-is-not-any-source", creatureIds: grapplerIds },
+      );
     }
   }
 
@@ -453,7 +469,9 @@ export function conditionRollModifierApplies(
     case "target-is-source":
       return !!modifier.sourceCreatureId && context.targetCreatureId === modifier.sourceCreatureId;
     case "target-is-not-source":
-      return !!modifier.sourceCreatureId && context.targetCreatureId !== modifier.sourceCreatureId;
+      return !!modifier.sourceCreatureId && !!context.targetCreatureId && context.targetCreatureId !== modifier.sourceCreatureId;
+    case "target-is-not-any-source":
+      return !!context.targetCreatureId && !modifier.when.creatureIds.includes(context.targetCreatureId);
     case "within-distance":
       return typeof context.distanceFeet === "number" &&
         context.distanceFeet >= 0 &&
