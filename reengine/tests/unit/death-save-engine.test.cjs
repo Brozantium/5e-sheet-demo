@@ -316,3 +316,35 @@ test("Death Save operations reject invalid rolls, states, and dead-character tra
     5,
   ), /dead character/);
 });
+
+
+test("a Critical Hit after two existing failures caps the final tally at three", () => {
+  const result = applyDamageWithDeathSaveState({
+    hitPoints: hp(),
+    deathSaveState: death({ failures: 2 }),
+    amount: 1,
+    isCritical: true,
+  });
+
+  assert.equal(result.outcome, "dead");
+  assert.deepEqual(result.deathSaveState, {
+    status: "dead",
+    successes: 0,
+    failures: 3,
+  });
+});
+
+test("a natural 1 after two existing failures caps the final tally at three", () => {
+  const result = makeDeathSavingThrow({
+    hitPoints: hp(),
+    deathSaveState: death({ failures: 2 }),
+    roll: 1,
+  });
+
+  assert.equal(result.outcome, "dead");
+  assert.deepEqual(result.deathSaveState, {
+    status: "dead",
+    successes: 0,
+    failures: 3,
+  });
+});
