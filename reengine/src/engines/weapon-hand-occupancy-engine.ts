@@ -84,7 +84,7 @@ export function validateWeaponHandOccupancy(
     const profile = getWeaponProfile(entry.definition);
     if (profile) {
       const properties = new Set(entry.definition.properties ?? []);
-      if ((properties.has("heavy") || properties.has("two-handed")) && hands.length !== 2) {
+      if (properties.has("two-handed") && hands.length !== 2) {
         issues.push({
           code: "weapon-requires-two-hands",
           instanceId: entry.instanceId,
@@ -122,6 +122,7 @@ export function validateWeaponHandOccupancy(
     (weapon.definition.properties ?? []).includes("light"),
   );
   const lightWeaponExtraAttackEligible =
+    issues.length === 0 &&
     hasTwoWeaponsInSeparateHands &&
     bothWeaponsAreLight &&
     (input.ruleset === "2024" ||
