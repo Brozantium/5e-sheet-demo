@@ -31,13 +31,13 @@ test("negative Constitution modifier never reduces a level gain below one HP",()
   const r=calculateMaximumHitPoints({constitutionScore:6,levels:[
     level(1,"wizard",1,6,"first-level"),level(2,"wizard",2,6,"roll",1)
   ]});
-  assert.deepEqual(r.levels.map(x=>x.gainedHitPoints),[1,1]);assert.equal(r.maximumHitPoints,2);
+  assert.deepEqual(r.levels.map(x=>x.gainedHitPoints),[4,1]);assert.equal(r.maximumHitPoints,5);
 });
 test("flat additional maximum HP is added after per-level gains",()=>{
   const r=calculateMaximumHitPoints({constitutionScore:12,additionalHitPoints:3,levels:[
     level(1,"fighter",1,10,"first-level"),level(2,"fighter",2,10,"average")
   ]});
-  assert.equal(r.maximumHitPoints,18);assert.equal(r.additionalHitPoints,3);
+  assert.equal(r.maximumHitPoints,21);assert.equal(r.additionalHitPoints,3);
 });
 test("multiclass Hit Point levels require consecutive character and class levels",()=>{
   assert.throws(()=>calculateMaximumHitPoints({constitutionScore:10,levels:[
@@ -84,17 +84,25 @@ test("healing can restore a character from zero HP",()=>{
   const r=applyHitPointHealing(state({currentHitPoints:0}),5);
   assert.equal(r.state.currentHitPoints,5);assert.equal(r.hitPointsRestored,5);
 });
-test("Temporary HP does not stack and only replaces a smaller grant",()=>{
+test("Temporary HP grants require an explicit choice when temporary HP already exists",()=>{
   const first=grantTemporaryHitPoints(state(),6);
-  const smaller=grantTemporaryHitPoints(first.state,4);
-  const larger=grantTemporaryHitPoints(smaller.state,9);
   assert.equal(first.state.temporaryHitPoints,6);
-  assert.equal(smaller.state.temporaryHitPoints,6);
-  assert.equal(smaller.temporaryHitPointsGained,0);
-  assert.equal(smaller.replacedExistingTemporaryHitPoints,false);
-  assert.equal(larger.state.temporaryHitPoints,9);
-  assert.equal(larger.temporaryHitPointsGained,3);
-  assert.equal(larger.replacedExistingTemporaryHitPoints,true);
+  assert.throws(()=>grantTemporaryHitPoints(first.state,4),/choose whether to keep or replace/);
+
+  const kept=grantTemporaryHitPoints(first.state,4,"keep-current");
+  assert.equal(kept.state.temporaryHitPoints,6);
+  assert.equal(kept.temporaryHitPointsGained,0);
+  assert.equal(kept.replacedExistingTemporaryHitPoints,false);
+
+  const replacedWithMore=grantTemporaryHitPoints(first.state,9,"take-new");
+  assert.equal(replacedWithMore.state.temporaryHitPoints,9);
+  assert.equal(replacedWithMore.temporaryHitPointsGained,3);
+  assert.equal(replacedWithMore.replacedExistingTemporaryHitPoints,true);
+
+  const replacedWithLess=grantTemporaryHitPoints(first.state,4,"take-new");
+  assert.equal(replacedWithLess.state.temporaryHitPoints,4);
+  assert.equal(replacedWithLess.temporaryHitPointsGained,0);
+  assert.equal(replacedWithLess.replacedExistingTemporaryHitPoints,true);
 });
 test("zero Temporary HP grant leaves a larger current amount unchanged",()=>{
   const r=grantTemporaryHitPoints(state({temporaryHitPoints:3}),0);
