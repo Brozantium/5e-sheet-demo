@@ -191,12 +191,17 @@ Status: implementation complete. Exact-`main` verification in PR #10 passed froz
 
 Status: implementation complete. Exact-`main` workflow `41888312987` passed frozen-lockfile install, `pnpm typecheck:reengine`, and all 236 unit tests. Turn orchestration, condition application, and knockout action handling remain with RE-006E/RE-008.
 
-#### RE-006D4 — Rest & Recovery
+#### RE-006D4 — Long Rest & Recovery
 
-- Implement edition-specific Long Rest Hit Dice recovery: 2014 restores up to half the character's total Hit Dice (minimum 1); 2024 restores all expended Hit Dice.
-- Apply edition-specific Long Rest eligibility, duration, interruption, and HP recovery rules as explicit rest events.
-- Restore HP, Temporary HP, class features, spell/resource pools, and time-expiring effects without duplicating recovery state.
-- Keep Short Rest Hit Die spending (D2) separate from Long Rest pool recovery (D4).
+- Validate a Long Rest snapshot: at least 8 hours, at least 6 hours of sleep, and no more than 2 hours of light activity; require at least 1 HP when starting under both rulesets.
+- 2014: a character cannot benefit from more than one Long Rest in 24 hours; an interruption by at least 1 hour of strenuous activity requires restarting the rest. A completed rest restores all HP and up to half the total Hit Dice (minimum one, capped by spent dice), with player-selected multiclass pools.
+- 2024: wait at least 16 hours after finishing a Long Rest before starting another; Initiative, a non-cantrip spell, taking damage, or at least 1 hour of physical exertion interrupts the rest. Resume immediately with one extra hour required per interruption. If at least 1 hour elapsed before interruption, grant Short Rest eligibility.
+- Restore all lost HP while leaving Temporary HP unchanged. Restore resources tagged Short Rest or Long Rest through the existing resource engine.
+- 2014 removes one Exhaustion level only if the character has consumed food and drink; 2024 removes one level on every completed Long Rest.
+- 2014 Hit Dice recovery is a player choice, limited to half total Hit Dice (minimum one); 2024 automatically restores all expended Hit Dice.
+- Keep the rest lifecycle and interruption event log explicit; do not duplicate D2 Hit Die spending or RE-006E Exhaustion effects.
+
+Status: implementation complete and exact-`main` CI verified on PR #12 head `fe1e6e403106d116118019d649b497138f4371dd`: frozen-lockfile install, `pnpm typecheck:reengine`, and all 258 unit tests passed. The caller supplies the resolved rest event log; persistence and UI orchestration remain later integration work.
 
 ### RE-006E — Conditions & Exhaustion
 

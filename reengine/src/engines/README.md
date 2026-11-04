@@ -21,6 +21,7 @@ Current first-pass modules:
 - light-weapon-extra-attack-engine: validates the 2014 Two-Weapon Fighting Light trigger and the 2024 Light extra-attack trigger; resolves Bonus Action versus Attack-action placement when the extra weapon's Nick mastery is available.
 - weapon-mastery-engine: exposes the eight 2024 mastery definitions, class-specific weapon-choice eligibility, Long Rest replacement selection mechanics, and the resolver that checks feature ownership plus selected weapon type before making a weapon's mastery available.
 - death-save-engine: applies damage consequences at 0 HP, resolves Death Saving Throws and natural 1/20 outcomes, stabilizes with ruleset-specific Action/Help/Utilize methods, and handles the Stable 1d4-hour recovery event.
+- long-rest-engine: validates ruleset-aware Long Rest timing, eligibility, interruption, Hit Dice recovery, HP and resource restoration, Exhaustion reduction, and 2024 stat restoration from a resolved activity/event snapshot.
 
 Weapon calculations consume normalized character ability scores, proficiency grants, and item definitions. They do not read class, feat, or legacy data directly; builder/content layers resolve those grants before calling the engines.
 
@@ -29,6 +30,6 @@ Planned modules / extensions:
 - action-engine
 - trigger-engine
 - equipment inventory state, equip/unequip persistence, and weapon equip validation
-- Hit Dice spending and death-save/stabilization resolution are present as pure state engines; rest duration/interruption orchestration, Long Rest recovery, and condition/exhaustion policies remain
+- Hit Dice spending, death-save/stabilization, and Long Rest benefit resolution are present as pure state engines; rest clocks, interruption orchestration, persistence, and condition/exhaustion lifecycle remain
 - 2014 Special weapon effects (including Net target eligibility, Restrained effect, escape, and per-action attack limit), the eight 2024 Weapon Mastery effects, and stateful execution/commit of Light/Nick/Ammunition/Loading interactions (RE-008)
 - spellcasting-engine
