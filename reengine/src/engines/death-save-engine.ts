@@ -165,7 +165,7 @@ export function makeDeathSavingThrow(
       made: false,
       hitPoints: { ...input.hitPoints },
       deathSaveState: copyDeathSaveState(input.deathSaveState),
-      outcome: "success",
+      outcome: "no-roll",
       issue: { code: "not-at-zero-hit-points", message: "Death Saving Throws are made only at 0 Hit Points." },
     };
   }
