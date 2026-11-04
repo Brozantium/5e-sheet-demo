@@ -140,9 +140,21 @@ Acceptance: official 2014 and 2024 weapon lists can be represented without encod
 
 ### RE-006C — Armor Training Consequences
 
-- Resolve armor and shield training grants from character features.
-- Implement the ruleset-specific consequences of lacking required armor training, beyond AC calculation.
-- Cover spellcasting and other consequences with regression tests.
+#### RE-006C1 — Consequence Resolver
+
+- Resolve consequences from an already-normalized armor/shield training snapshot, separate from AC calculation.
+- 2014: untrained armor or shield imposes Disadvantage on STR/DEX ability checks, saving throws, and attack rolls, and prevents spellcasting. An untrained shield still contributes its AC bonus.
+- 2024: untrained Light/Medium/Heavy armor imposes Disadvantage on STR/DEX D20 Tests and prevents spellcasting; an untrained Shield only loses its AC benefit.
+- Return deduplicated derived flags for downstream attack/check/save/spellcasting engines without mutating rolls or character state.
+
+Status: implementation complete on `feat/re-006c-armor-training-consequences`; PR #6 is merged and this slice now targets `main`. The earlier exact-head run passed frozen install, typecheck, and all 177 unit tests; re-verification is triggered by this update.
+
+#### RE-006C2 — Training Grant Resolution (remaining)
+
+- Normalize armor and shield training grants from class, subclass, species, background, feat, and other owned feature content.
+- Support category grants (Light/Medium/Heavy) and Shield training without inferring proficiency from display text.
+- Handle multiclass grant unions and feature-specific exceptions through explicit normalized inputs.
+- Add regression tests for class combinations, feature choices, and ruleset content compatibility.
 
 ### RE-006D — Hit Points, Hit Dice & Recovery
 
