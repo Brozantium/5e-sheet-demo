@@ -28,6 +28,6 @@ Planned modules / extensions:
 - action-engine
 - trigger-engine
 - equipment inventory state, equip/unequip persistence, and weapon equip validation
-- character HP, death saves, rest, and condition/exhaustion policies
+- Hit Dice pools, death saves, rest, and condition/exhaustion policies (RE-006D2–D4 and RE-006E)
 - 2014 Special weapon effects (including Net target eligibility, Restrained effect, escape, and per-action attack limit), the eight 2024 Weapon Mastery effects, and stateful execution/commit of Light/Nick/Ammunition/Loading interactions (RE-008)
 - spellcasting-engine
