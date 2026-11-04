@@ -104,7 +104,6 @@ export type ConditionRollPredicate =
   | { kind: "always" }
   | { kind: "source-visible" }
   | { kind: "affected-creature-unseen" }
-  | { kind: "target-cannot-see-affected" }
   | { kind: "target-is-source" }
   | { kind: "target-is-not-source" }
   | { kind: "within-distance"; feet: number }
