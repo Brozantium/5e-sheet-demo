@@ -1,7 +1,7 @@
 import { applyHitPointHealing } from "./hit-point-engine";
 import { recoverResource, type ResourceState } from "./resource-engine";
+import type { HitDicePool } from "../domain/hit-points";
 import type {
-  HitDicePool,
   LongRestInput,
   LongRestInterruption,
   LongRestResult,
