@@ -26,11 +26,12 @@ const attack = (overrides = {}) => calculateWeaponAttack({
   weapon: { instanceId: "weapon-1", definition: rapier(), equipped: true },
   abilityScores: scores(),
   proficiencyBonus: 3,
+  creatureSize: "medium",
   weaponProficiencies: [{ kind: "category", category: "martial" }],
   ...overrides,
 });
 
-test("melee defaults to Strength and Finesse selects the higher Dexterity modifier", () => {
+test("melee defaults to Strength and Finesse permits either ability choice", () => {
   const ordinary = calculateWeaponAttack({
     ruleset: "2014",
     weapon: { instanceId: "club", definition: rapier({ properties: [] }), equipped: true },
@@ -38,14 +39,21 @@ test("melee defaults to Strength and Finesse selects the higher Dexterity modifi
     proficiencyBonus: 2,
     weaponProficiencies: [{ kind: "category", category: "martial" }],
   });
-  const finesse = attack({ abilityScores: scores({ str: 12, dex: 18 }) });
+  const finesseDex = attack({ abilityScores: scores({ str: 12, dex: 18 }) });
+  const finesseStr = attack({
+    abilityScores: scores({ str: 12, dex: 18 }),
+    abilityChoice: "str",
+  });
 
   assert.equal(ordinary.ability, "str");
   assert.equal(ordinary.attackBonus, 4);
-  assert.equal(finesse.ability, "dex");
-  assert.equal(finesse.abilityModifier, 4);
-  assert.equal(finesse.attackBonus, 7);
-  assert.equal(finesse.damage[0].displayFormula, "1d8 + 4");
+  assert.equal(finesseDex.ability, "dex");
+  assert.equal(finesseDex.abilityModifier, 4);
+  assert.equal(finesseDex.attackBonus, 7);
+  assert.equal(finesseDex.damage[0].displayFormula, "1d8 + 4");
+  assert.equal(finesseStr.ability, "str");
+  assert.equal(finesseStr.attackBonus, 5);
+  assert.equal(finesseStr.damage[0].displayFormula, "1d8 + 1");
 });
 
 test("Finesse ties retain Strength and ranged weapons use Dexterity", () => {
@@ -67,6 +75,7 @@ test("Finesse ties retain Strength and ranged weapons use Dexterity", () => {
     weapon: { instanceId: "bow", definition: bow, equipped: true },
     abilityScores: scores({ str: 18, dex: 14 }),
     proficiencyBonus: 2,
+    creatureSize: "medium",
     weaponProficiencies: [{ kind: "category", category: "martial" }],
     grip: "two-handed",
   });
@@ -74,6 +83,32 @@ test("Finesse ties retain Strength and ranged weapons use Dexterity", () => {
   assert.equal(tie.ability, "str");
   assert.equal(ranged.ability, "dex");
   assert.equal(ranged.attackBonus, 4);
+});
+
+test("Finesse ranged weapons such as Darts allow Strength or Dexterity", () => {
+  const dart = {
+    id: "weapon:dart",
+    name: "Dart",
+    ruleset: "shared",
+    category: "weapon",
+    properties: ["finesse", "thrown"],
+    weaponProfile: {
+      weaponCategory: "simple",
+      weaponType: "ranged",
+      damage: [{ formula: "1d4", damageType: "piercing" }],
+    },
+  };
+  const result = calculateWeaponAttack({
+    ruleset: "2024",
+    weapon: { instanceId: "dart-1", definition: dart, equipped: true },
+    abilityScores: scores({ str: 18, dex: 12 }),
+    proficiencyBonus: 2,
+    abilityChoice: "str",
+    weaponProficiencies: [{ kind: "category", category: "simple" }],
+  });
+  assert.equal(result.ability, "str");
+  assert.equal(result.attackBonus, 6);
+  assert.equal(result.damage[0].displayFormula, "1d4 + 4");
 });
 
 test("Thrown melee weapons keep the melee ability rule", () => {
@@ -136,6 +171,70 @@ test("universal and edition-specific item compatibility is respected", () => {
   assert.equal(incompatible.canAttack, false);
   assert.ok(incompatible.issues.some((issue) => issue.code === "incompatible-ruleset-item"));
   assert.equal(shared.canAttack, true);
+});
+
+test("only Two-Handed, not Heavy by itself, requires a two-handed grip", () => {
+  const heavyOneHanded = attack({
+    weapon: {
+      instanceId: "heavy-one-handed",
+      definition: rapier({ properties: ["heavy"] }),
+      equipped: true,
+    },
+    ruleset: "2014",
+    creatureSize: "medium",
+  });
+  assert.equal(heavyOneHanded.canAttack, true);
+  assert.equal(heavyOneHanded.hasDisadvantage, false);
+});
+
+test("Heavy weapon disadvantage follows the 2014 size and 2024 ability-score rules", () => {
+  const heavyMelee = {
+    instanceId: "heavy-melee",
+    definition: rapier({ properties: ["heavy"] }),
+    equipped: true,
+  };
+  const small2014 = attack({ weapon: heavyMelee, ruleset: "2014", creatureSize: "small" });
+  const medium2014 = attack({ weapon: heavyMelee, ruleset: "2014", creatureSize: "medium" });
+  const lowStrength2024 = attack({
+    weapon: heavyMelee,
+    ruleset: "2024",
+    abilityScores: scores({ str: 12 }),
+  });
+  const enoughStrength2024 = attack({
+    weapon: heavyMelee,
+    ruleset: "2024",
+    abilityScores: scores({ str: 13 }),
+  });
+  const heavyRanged = {
+    instanceId: "heavy-ranged",
+    definition: rapier({
+      properties: ["heavy"],
+      weaponProfile: {
+        weaponCategory: "martial",
+        weaponType: "ranged",
+        damage: [{ formula: "1d8", damageType: "piercing" }],
+      },
+    }),
+    equipped: true,
+  };
+  const lowDexterity2024 = attack({
+    weapon: heavyRanged,
+    ruleset: "2024",
+    abilityScores: scores({ dex: 12 }),
+  });
+
+  assert.equal(small2014.hasDisadvantage, true);
+  assert.deepEqual(small2014.disadvantageReasons, ["heavy-weapon-size"]);
+  assert.equal(medium2014.hasDisadvantage, false);
+  assert.equal(lowStrength2024.hasDisadvantage, true);
+  assert.deepEqual(lowStrength2024.disadvantageReasons, ["heavy-weapon-ability-score"]);
+  assert.equal(enoughStrength2024.hasDisadvantage, false);
+  assert.equal(lowDexterity2024.hasDisadvantage, true);
+  assert.throws(() => attack({
+    weapon: heavyMelee,
+    ruleset: "2014",
+    creatureSize: undefined,
+  }), /Creature size/);
 });
 
 test("unequipped weapons and weapons that require two hands cannot be attacked with", () => {
@@ -219,10 +318,12 @@ test("damage can explicitly omit ability modifier while retaining a flat bonus",
   assert.equal(result.damage[0].displayFormula, "1d8 + 1");
 });
 
-test("invalid scores, bonuses, grip, and proficiency records are rejected", () => {
+test("invalid scores, bonuses, grip, finesse choices, and proficiency records are rejected", () => {
   assert.throws(() => attack({ abilityScores: scores({ str: 31 }) }), /STR score/);
   assert.throws(() => attack({ proficiencyBonus: 7 }), /Proficiency bonus/);
   assert.throws(() => attack({ attackBonus: 1.5 }), /Additional attack bonus/);
   assert.throws(() => attack({ grip: "three-hands" }), /Weapon grip/);
+  assert.throws(() => attack({ abilityChoice: "con" }), /Finesse ability choice/);
+  assert.throws(() => attack({ abilityChoice: "dex", weapon: { instanceId: "club", definition: rapier({ properties: [] }), equipped: true } }), /only valid for a Finesse/);
   assert.throws(() => attack({ weaponProficiencies: [{ kind: "category", category: "exotic" }] }), /category/);
 });
