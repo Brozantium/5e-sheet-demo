@@ -92,15 +92,22 @@ test("2014 Light extra attacks require melee weapons, while 2024 accepts Light r
   assert.equal(rules2024.lightWeaponExtraAttackEligible, true);
 });
 
-test("Heavy and Two-Handed weapons must occupy both hands", () => {
-  const result = validateWeaponHandOccupancy({
+test("Only Two-Handed requires both hands; Heavy alone does not", () => {
+  const heavy = validateWeaponHandOccupancy({
     ruleset: "2024",
     heldItems: [
-      { instanceId: "greatsword", definition: weapon("greatsword", ["heavy", "two-handed"]), hands: ["main"] },
+      { instanceId: "heavy-weapon", definition: weapon("heavy-weapon", ["heavy"]), hands: ["main"] },
     ],
   });
-  assert.equal(result.valid, false);
-  assert.ok(result.issues.some((issue) => issue.code === "weapon-requires-two-hands"));
+  const twoHanded = validateWeaponHandOccupancy({
+    ruleset: "2024",
+    heldItems: [
+      { instanceId: "two-handed-weapon", definition: weapon("two-handed-weapon", ["two-handed"]), hands: ["main"] },
+    ],
+  });
+  assert.equal(heavy.valid, true);
+  assert.equal(twoHanded.valid, false);
+  assert.ok(twoHanded.issues.some((issue) => issue.code === "weapon-requires-two-hands"));
 });
 
 test("a two-handed weapon blocks a shield or another held item", () => {
@@ -135,6 +142,7 @@ test("edition-incompatible held content is reported", () => {
     ],
   });
   assert.equal(result.valid, false);
+  assert.equal(result.lightWeaponExtraAttackEligible, false);
   assert.ok(result.issues.some((issue) => issue.code === "incompatible-ruleset-item"));
 });
 
