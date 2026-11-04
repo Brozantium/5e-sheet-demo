@@ -8,6 +8,7 @@ export type CreatureSize = "tiny" | "small" | "medium" | "large" | "huge" | "gar
 export type WeaponAttackDisadvantageReason =
   | "heavy-weapon-size"
   | "heavy-weapon-ability-score";
+export type AbilityModifierDamageMode = "normal" | "none" | "negative-only";
 
 export type WeaponProficiency =
   | { kind: "category"; category: WeaponCategory }
@@ -26,8 +27,8 @@ export interface WeaponAttackInput {
   grip?: WeaponGrip;
   attackBonus?: number;
   damageBonus?: number;
-  /** Set false for effects that explicitly omit the ability modifier from damage. */
-  includeAbilityModifierInDamage?: boolean;
+  /** Supports normal attacks and rules such as Light's negative-modifier-only damage. */
+  abilityModifierDamageMode?: AbilityModifierDamageMode;
 }
 
 export type WeaponAttackIssueCode =
