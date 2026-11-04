@@ -116,11 +116,10 @@ Split this into small, independently testable slices:
 
 - **B3C2 — Light extra-attack trigger contract:** 2014 two-weapon requirements versus 2024 Light trigger; negative-only ability modifier damage; Nick's action placement when the extra weapon's mastery is already unlocked and selected.
 
-  Status: complete. Merged via PR #5 (`03dba0f509e3c702a548b4397aceea8e63b09f05`); its CI passed frozen install, typecheck, and 149 unit tests. Stateful execution and action consumption remain with RE-008.
+  Status: merged via PR #5 (`03dba0f509e3c702a548b4397aceea8e63b09f05`). CI passed on the merged head: frozen install, typecheck, and 149 unit tests. Stateful execution and action consumption remain with RE-008.
 
-Weapon Property/range/attack-cycle implementation (B3A–B3C2) is merged through PRs #2–#5. Mastery effects and 2014/2024 Special effect execution remain in RE-008.
+Weapon Property/range/attack-cycle implementation (B3A–B3C2) is merged through PRs #2–#5. B4 mastery eligibility/selection is also merged; mastery effects and 2014/2024 Special effect execution remain in RE-008.
 
-Weapon Property/range/attack-cycle implementation (B3A–B3C2) is merged through PRs #2–#5. Remaining weapon-specific RE-006 scope is B4 mastery eligibility/selection; mastery effects and 2014/2024 Special effect execution remain in RE-008.
 - Keep editor compatibility/normalization (RE-003) separate from the actual rules mechanics. Do not make Heavy automatically mean Two-Handed in the combat domain.
 
 Acceptance: official 2014 and 2024 weapon lists can be represented without encoding mechanical parameters in display strings; every implemented rule has ruleset-specific regression tests.
@@ -133,7 +132,7 @@ Acceptance: official 2014 and 2024 weapon lists can be represented without encod
   - Barbarian: Simple or Martial melee weapons; starts with 2 choices and scales by class progression.
   - Fighter: Simple or Martial weapons; starts with 3 choices and scales by class progression.
   - Paladin, Ranger, Rogue: 2 proficient weapon types.
-- Reuse the generic multiple SelectionMechanic. Barbarian/Fighter replace one weapon-type choice after a Long Rest; Paladin/Ranger/Rogue can change both of their two choices. Resolve Barbarian/Fighter capacity from class progression.
+- Reuse the generic multiple SelectionMechanic; Barbarian/Fighter replace one choice after a Long Rest, while Paladin/Ranger/Rogue can change their full two-weapon selection. Resolve Barbarian/Fighter capacity from class progression.
 - Validate selected weapon types and resolve whether the character owns the Weapon Mastery feature and selected the weapon before exposing that weapon's mastery to the combat/action layer.
 - Keep the eight mastery effects and their triggers in RE-008.
 
@@ -148,7 +147,7 @@ Acceptance: official 2014 and 2024 weapon lists can be represented without encod
 - 2024: untrained Light/Medium/Heavy armor imposes Disadvantage on STR/DEX D20 Tests and prevents spellcasting; an untrained Shield only loses its AC benefit.
 - Return deduplicated derived flags for downstream attack/check/save/spellcasting engines without mutating rolls or character state.
 
-Status: complete. Merged via PR #7 (`4942339f56b4d51282e9225f1b32e81b12a77fb9`). CI run `41831774283` passed frozen install, typecheck, and 177 unit tests on its exact head.
+Status: implementation complete on `feat/re-006c-armor-training-consequences`; PR #6 is merged and this slice now targets `main`. The earlier exact-head run passed frozen install, typecheck, and all 177 unit tests; re-verification is triggered by this update.
 
 #### RE-006C2 — Training Grant Resolution
 
@@ -157,7 +156,7 @@ Status: complete. Merged via PR #7 (`4942339f56b4d51282e9225f1b32e81b12a77fb9`).
 - Handle multiclass grant unions, shared content, and ruleset-incompatible sources with diagnostics.
 - Retain grant provenance for builder diagnostics and auditability.
 
-Status: implementation complete on `feat/re-006c2-armor-training-grants`. The previous-base CI passed frozen install, typecheck, and 184 unit tests; final verification is rerun after retargeting this PR to `main`.
+Status: implementation complete on `feat/re-006c2-armor-training-grants`. The previous-base CI passed frozen install, typecheck, and 184 unit tests; exact-head verification is rerun after the merge-base conflict resolution.
 
 ### RE-006D — Hit Points, Hit Dice & Recovery
 
