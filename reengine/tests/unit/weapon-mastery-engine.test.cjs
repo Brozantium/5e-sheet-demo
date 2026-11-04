@@ -101,7 +101,7 @@ test("2014 characters do not receive Weapon Mastery choice options", () => {
   assert.deepEqual(result, []);
 });
 
-test("generic SelectionMechanic models Long Rest replacement and class progression capacity", () => {
+test("Barbarian and Fighter replace one mastery choice; Paladin, Ranger, and Rogue can replace both", () => {
   const barbarian = createWeaponMasterySelectionMechanic({
     classId: "barbarian",
     id: "barbarian:weapon-mastery",
@@ -121,7 +121,22 @@ test("generic SelectionMechanic models Long Rest replacement and class progressi
   assert.equal(barbarian.count.kind, "class-table");
   assert.deepEqual(barbarian.replacement, { when: "long-rest", count: 1 });
   assert.deepEqual(paladin.count, { kind: "fixed", value: 2 });
-  assert.deepEqual(paladin.replacement, { when: "long-rest", count: 1 });
+  assert.deepEqual(paladin.replacement, { when: "long-rest", count: 2 });
+  for (const classId of ["ranger", "rogue"]) {
+    const mechanic = createWeaponMasterySelectionMechanic({
+      classId,
+      id: classId + ":weapon-mastery",
+      optionSetId: "weapon-mastery:" + classId,
+    });
+    assert.deepEqual(mechanic.replacement, { when: "long-rest", count: 2 });
+  }
+  const fighter = createWeaponMasterySelectionMechanic({
+    classId: "fighter",
+    id: "fighter:weapon-mastery",
+    optionSetId: "weapon-mastery:fighter",
+    classProgressionCount: { kind: "class-table", tableId: "fighter", column: "weaponMastery" },
+  });
+  assert.deepEqual(fighter.replacement, { when: "long-rest", count: 1 });
   assert.throws(() => createWeaponMasterySelectionMechanic({
     classId: "fighter",
     id: "fighter:weapon-mastery",
