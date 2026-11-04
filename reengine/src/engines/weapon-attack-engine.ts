@@ -195,7 +195,7 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
   const proficient = hasWeaponProficiency(definition, profile, proficiencies);
   const proficiencyContribution = proficient ? proficiencyBonus : 0;
   const issues: WeaponAttackIssue[] = [];
-  const disadvantageReasons: WeaponAttackDisadvantageReason[] = [];
+  const heavyWeaponDisadvantageReasons: WeaponAttackDisadvantageReason[] = [];
   let canAttack = true;
 
   if (!input.weapon.equipped) {
@@ -235,7 +235,7 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
         throw new RangeError("Unknown creature size.");
       }
       if (input.creatureSize === "tiny" || input.creatureSize === "small") {
-        disadvantageReasons.push("heavy-weapon-size");
+        heavyWeaponDisadvantageReasons.push("heavy-weapon-size");
       }
     } else {
       const requiredAbilityScore =
@@ -243,7 +243,7 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
           ? input.abilityScores.str
           : input.abilityScores.dex;
       if (requiredAbilityScore < 13) {
-        disadvantageReasons.push("heavy-weapon-ability-score");
+        heavyWeaponDisadvantageReasons.push("heavy-weapon-ability-score");
       }
     }
   }
@@ -288,8 +288,8 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
     proficiencyContribution,
     attackBonus: abilityModifier + proficiencyContribution + attackBonusAdjustment,
     damageModifier,
-    hasDisadvantage: disadvantageReasons.length > 0,
-    disadvantageReasons,
+    hasHeavyWeaponDisadvantage: heavyWeaponDisadvantageReasons.length > 0,
+    heavyWeaponDisadvantageReasons,
     grip,
     damage,
     issues,
