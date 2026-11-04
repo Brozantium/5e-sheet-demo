@@ -118,17 +118,26 @@ Split this into small, independently testable slices:
 
   Status: implementation complete on `feat/re-006b3c2-light-nick-trigger`. Frozen install and typecheck passed; all 149 unit tests passed. Pending review/merge after the B3C1 dependency. Stateful execution and action consumption remain with RE-008.
 
+Weapon Property/range/attack-cycle implementation (B3A–B3C2) is covered by independent stacked PRs. B4 completes mastery selection/eligibility; mastery effects and 2014/2024 Special effect execution remain in RE-008.
+
 Weapon Property/range/attack-cycle implementation (B3A–B3C2) is now covered by independent stacked PRs. Remaining weapon-specific RE-006 scope is B4 mastery eligibility/selection; mastery effects and 2014/2024 Special effect execution remain in RE-008.
 - Keep editor compatibility/normalization (RE-003) separate from the actual rules mechanics. Do not make Heavy automatically mean Two-Handed in the combat domain.
 
 Acceptance: official 2014 and 2024 weapon lists can be represented without encoding mechanical parameters in display strings; every implemented rule has ruleset-specific regression tests.
 
-### RE-006B4 — Weapon Mastery Eligibility & Selection
+### RE-006B4 — Weapon Mastery Eligibility & Selection (current)
 
-- Store the mastery assigned to each weapon definition.
-- Model class-granted Weapon Mastery choices, eligible weapon types, choice capacity by level, and Long Rest replacement.
-- Validate that a character can use a weapon's mastery only when the character has the relevant feature and selected that weapon.
+- Store the assigned 2024 mastery on each canonical weapon definition, separate from ordinary weapon properties.
+- Model the eight mastery IDs (Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex).
+- Model class-specific eligible weapon choices:
+  - Barbarian: Simple or Martial melee weapons; starts with 2 choices and scales by class progression.
+  - Fighter: Simple or Martial weapons; starts with 3 choices and scales by class progression.
+  - Paladin, Ranger, Rogue: 2 proficient weapon types.
+- Reuse the generic multiple SelectionMechanic with Long Rest replacement of one choice; resolve the actual number of choices from the class progression table for Barbarian/Fighter.
+- Validate selected weapon types and resolve whether the character owns the Weapon Mastery feature and selected the weapon before exposing that weapon's mastery to the combat/action layer.
 - Keep the eight mastery effects and their triggers in RE-008.
+
+  Status: implementation in progress on `feat/re-006b4-weapon-mastery-selection`; frozen install, typecheck, and unit-test verification pending.
 
 ### RE-006C — Armor Training Consequences
 

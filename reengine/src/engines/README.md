@@ -16,6 +16,7 @@ Current first-pass modules:
 - weapon-hand-occupancy-engine: validates main/off-hand occupancy, two-handed requirements, mounted Lance exceptions, and shields; separately reports ruleset-specific Light weapon-pair eligibility; the Attack-action trigger is not evaluated here.
 - weapon-attack-cycle-engine: validates Ammunition availability/consumption, the free-hand requirement for loading one-handed weapons, and the one-shot Loading limit per Action/Bonus Action/Reaction; reports when a ranged weapon used for a melee attack must be handled as an improvised weapon.
 - light-weapon-extra-attack-engine: validates the 2014 Two-Weapon Fighting Light trigger and the 2024 Light extra-attack trigger; resolves Bonus Action versus Attack-action placement when the extra weapon's Nick mastery is available.
+- weapon-mastery-engine: exposes the eight 2024 mastery definitions, class-specific weapon-choice eligibility, Long Rest replacement selection mechanics, and the resolver that checks feature ownership plus selected weapon type before making a weapon's mastery available.
 
 Weapon calculations consume normalized character ability scores, proficiency grants, and item definitions. They do not read class, feat, or legacy data directly; builder/content layers resolve those grants before calling the engines.
 
@@ -25,5 +26,5 @@ Planned modules / extensions:
 - trigger-engine
 - equipment inventory state, equip/unequip persistence, and weapon equip validation
 - character HP, death saves, rest, and condition/exhaustion policies
-- 2014/2024 Special weapon effects and stateful execution/commit of Light/Nick attacks (RE-008)
+- 2014/2024 Special weapon effects, the eight Weapon Mastery effects, and stateful execution/commit of Light/Nick attacks (RE-008)
 - spellcasting-engine

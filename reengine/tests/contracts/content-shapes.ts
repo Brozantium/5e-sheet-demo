@@ -170,3 +170,16 @@ export const lance2024 = {
     twoHandedRule: { unlessMounted: true },
   },
 } satisfies ItemDefinition;
+
+export const longsword2024WithSap = {
+  id: "weapon:longsword",
+  name: "Longsword",
+  ruleset: "2024",
+  category: "weapon",
+  weaponProfile: {
+    weaponCategory: "martial",
+    weaponType: "melee",
+    damage: [{ formula: "1d8", damageType: "slashing", versatileFormula: "1d10" }],
+    mastery: "sap",
+  },
+} satisfies ItemDefinition;
