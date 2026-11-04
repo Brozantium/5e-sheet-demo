@@ -4,21 +4,24 @@
 >
 > **Last reviewed:** 2026-11-04 (Asia/Jakarta)  
 > **Repository:** [Brozantium/5e-sheet-demo](https://github.com/Brozantium/5e-sheet-demo)  
-> **Working branch at checkpoint:** `feat/re-006d4-long-rest-recovery`  
+> **Working branch at checkpoint:** `feat/re-006e3-condition-lifecycle`  
+> **Repository index:** [reengine/REENGINE_INDEX.md](./REENGINE_INDEX.md)  
 > **Current roadmap:** [reengine/ROADMAP.md](./ROADMAP.md)
 
 ## Start here when a chat is full
 
-1. Read this file first.
-2. Read [ROADMAP.md](./ROADMAP.md) for the current slice order and implementation status.
-3. Read [ARCHITECTURE.md](./ARCHITECTURE.md) before changing boundaries or data flow.
-4. Check the actual GitHub branch, PR stack, latest commits, review state, and CI. This document is a checkpoint, not a substitute for live repository state.
-5. Inspect the relevant source and tests before accepting any historical audit statement as current truth.
-6. Continue from **Current checkpoint** below. Do not restart earlier completed work unless a regression or new evidence requires it.
+1. Read this file first for durable decisions and the latest checkpoint.
+2. Read [REENGINE_INDEX.md](./REENGINE_INDEX.md) for the repository map and incremental-reading protocol.
+3. Read [ROADMAP.md](./ROADMAP.md) to confirm slice order, status, and completion gates.
+4. Read [ARCHITECTURE.md](./ARCHITECTURE.md) when a task changes boundaries, data flow, or runtime ownership.
+5. Verify the live branch, PR stack, review state, latest commit SHAs, and CI; this handoff is not a substitute for live GitHub state.
+6. Compare the last verified commit with the current branch/PR head. Inspect changed files first, then only their direct imports/callers/contracts/tests that are relevant.
+7. Avoid blanket repository reads. Do not reread unchanged files unless the task or changed dependencies require them.
+8. Continue from **Current checkpoint** below.
 
 ### Copy/paste prompt for a new chat
 
-> Continue the 5e Sheet Reengine project in repository `Brozantium/5e-sheet-demo`. First read `reengine/SESSION_HANDOFF.md`, `reengine/ROADMAP.md`, and `reengine/ARCHITECTURE.md`. Verify the live GitHub branch/PR/CI state and inspect the relevant source/tests before changing anything. Preserve all recorded architecture boundaries and ruleset distinctions. The current checkpoint is RE-006E: complete the evidence-based Conditions & Exhaustion audit, document findings, then implement in small tested slices. Do not wire the clean-room engine into `src/App.tsx` or legacy runtime unless the roadmap explicitly reaches RE-009 and that integration is approved.
+> Continue the 5e Sheet Reengine project in repository `Brozantium/5e-sheet-demo`. First read `reengine/SESSION_HANDOFF.md`, `reengine/REENGINE_INDEX.md`, and `reengine/ROADMAP.md`. Verify the live GitHub branch, PR stack, exact head SHAs, reviews, and CI. Follow the index's incremental-reading protocol: compare the last verified commit, inspect changed files first, then only relevant direct dependencies and tests; do not reread unchanged repository files without a reason. Preserve all architecture and ruleset boundaries. The current checkpoint is RE-006E implemented through E3 and awaiting review/merge; the next planned slice is RE-006F — Movement & Derived Defenses. Do not wire the clean-room engine into `src/App.tsx` or legacy runtime before the approved RE-009 integration phase.
 
 ## Project purpose
 
@@ -80,7 +83,7 @@ This is a compact history of the decisions and slices already recorded in the re
 | RE-006D1 | Maximum HP and HP state | Damage/healing/Temporary HP operations. |
 | RE-006D2 | Hit Dice pools and Short Rest | Per-class multiclass pools and ruleset-aware healing. |
 | RE-006D3 | Death Saves, damage at 0 HP, stabilization | Pure state resolution; turn/timer/action orchestration remains caller-owned. |
-| RE-006D4 | Ruleset-aware Long Rest and recovery | Latest documented implementation checkpoint; see PR #12 and its verification record below. |
+| RE-006D4 | Ruleset-aware Long Rest and recovery | Completed before RE-006E; see PR #12 and its verification record below. |
 | RE-006E | Conditions & Exhaustion | Legacy audit complete. E1 Condition Resolver, E2 Exhaustion Resolver, and E3 Condition Lifecycle are implemented and CI verified on open stacked PRs #14/#15/#16; review/merge is pending. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md). |
 | RE-006F | Movement & derived defenses | Planned after RE-006E. |
 | RE-007 | Spellcasting engine | Planned. |
@@ -153,17 +156,17 @@ The roadmap branch records a stacked implementation sequence. These PR links are
 | #15 | RE-006E2 Exhaustion resolver | [PR #15](https://github.com/Brozantium/5e-sheet-demo/pull/15) | 302 |
 | #16 | RE-006E3 condition lifecycle | [PR #16](https://github.com/Brozantium/5e-sheet-demo/pull/16) | 323 |
 
-At checkpoint review (2026-11-04), branch `feat/re-006d4-long-rest-recovery` was confirmed to exist and PR #12's review list returned no reviews. The PR search response did not reliably expose the current state field, so do not infer merged/open status from this note. PR #12's description records successful frozen-lockfile install, `pnpm typecheck:reengine`, and `pnpm test:reengine` with 257 tests, plus [workflow run 41779301323](https://github.com/Brozantium/5e-sheet-demo/actions/runs/41779301323). Recheck the exact head commit and CI on resume.
+Live PR metadata was checked on 2026-11-04 before this documentation update: PR #12 and #13 were open drafts; PR #14, #15, and #16 were open and not drafts. No submitted reviews were returned for PRs #12–#16. CI runs associated with the then-current implementation heads passed: PR #14 run 41787492057 (288 tests), PR #15 run 41788311442 (302 tests), and PR #16 run 41788839586 (323 tests). PR #12 records run 41779301323 (257 tests). This documentation update is being committed onto PR #16's head branch, so verify the latest head SHA and rerun/resulting CI before treating PR #16 as currently verified.
 
 ## Current checkpoint and next action
 
 **Checkpoint (2026-11-04):** RE-006E1, RE-006E2, and RE-006E3 are implemented and CI verified on clean-room `reengine/` branches. No legacy `src/App.tsx` or `src/combat-rules.ts` source was changed.
 
-- **PR #12 — RE-006D4:** open; run 41779301323 passed install, typecheck, and 257 tests. [PR #12](https://github.com/Brozantium/5e-sheet-demo/pull/12)
-- **PR #13 — RE-006E audit/docs:** documentation-only stacked PR. [PR #13](https://github.com/Brozantium/5e-sheet-demo/pull/13)
-- **PR #14 — RE-006E1:** open, ready for review, not merged; run 41787492057 passed install, typecheck, and 288 tests. [PR #14](https://github.com/Brozantium/5e-sheet-demo/pull/14)
-- **PR #15 — RE-006E2:** open, ready for review, not merged; run 41788054920 passed install, typecheck, and 302 tests. [PR #15](https://github.com/Brozantium/5e-sheet-demo/pull/15)
-- **PR #16 — RE-006E3:** open, ready for review, not merged; run 41788696223 passed install, typecheck, and 323 tests. [PR #16](https://github.com/Brozantium/5e-sheet-demo/pull/16)
+- **PR #12 — RE-006D4:** open draft; run 41779301323 passed install, typecheck, and 257 tests on its recorded head. [PR #12](https://github.com/Brozantium/5e-sheet-demo/pull/12)
+- **PR #13 — RE-006E audit/docs:** open draft; documentation-only stacked PR. [PR #13](https://github.com/Brozantium/5e-sheet-demo/pull/13)
+- **PR #14 — RE-006E1:** open, not merged; run 41787492057 passed install, typecheck, and 288 tests on its checked head. No review submitted. [PR #14](https://github.com/Brozantium/5e-sheet-demo/pull/14)
+- **PR #15 — RE-006E2:** open, not merged; run 41788311442 passed install, typecheck, and 302 tests on its checked head. No review submitted. [PR #15](https://github.com/Brozantium/5e-sheet-demo/pull/15)
+- **PR #16 — RE-006E3:** open, not merged; run 41788839586 passed install, typecheck, and 323 tests on the pre-documentation-update head. No review submitted. Verify CI again on the latest documentation commit. [PR #16](https://github.com/Brozantium/5e-sheet-demo/pull/16)
 
 The PRs are stacked in dependency order: #13 → #14 → #15 → #16, with #13 based on the D4 branch. Keep that order when reviewing/merging. No PR in this stack should be claimed as merged until GitHub confirms it.
 
