@@ -20,4 +20,9 @@ export * from "./engines/hit-point-engine";
 export * from "./engines/long-rest-engine";
 
 export * from "./engines/death-save-engine";
+export * from "./engines/condition-engine";
+export * from "./engines/condition-lifecycle-engine";
+export * from "./engines/exhaustion-engine";
+export * from "./engines/movement-engine";
+export * from "./engines/defense-engine";
 
