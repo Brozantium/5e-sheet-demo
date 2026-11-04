@@ -246,10 +246,24 @@ Status: implemented and CI verified in [PR #16](https://github.com/Brozantium/5e
 
 ### RE-006F — Movement & Derived Defenses
 
-- Walking, climbing, swimming, flying, and other movement modes.
-- Speed bonuses/penalties and condition interactions.
-- Derived combat values that depend on movement or character state.
-- Do not fold mount or vehicle stat blocks into the character's base Speed.
+**Audit status:** complete; implementation not started. See [movement-defenses-audit.md](./REVERSE_ENGINEERING/findings/movement-defenses-audit.md) for existing contracts, official rules references, source boundaries, and acceptance tests.
+
+#### RE-006F1 — Movement Profiles & Speed Resolver
+
+- Model walking, climbing, swimming, flying, and burrowing as distinct movement modes with independent base values and source provenance.
+- Compose structured flat/percentage bonuses and penalties with armor Strength-requirement Speed penalty, E1 condition constraints, and E2 Exhaustion.
+- Apply applicable general Speed changes to special speeds; preserve the 2014/2024 policy differences.
+- Resolve crawl/climb/swim/difficult-terrain movement costs, stand-up cost, Grappled drag, and flight fall/hover safety as derived facts.
+- Return final effective speeds and per-mode availability/costs. Do not execute turns, move tokens, or calculate movement remaining.
+
+#### RE-006F2 — Derived Defense Profile
+
+- Aggregate source-aware damage resistance, vulnerability, damage immunity, and condition immunity from structured content/effects and E1 condition output.
+- Deduplicate resistance/vulnerability of the same damage type; retain provenance and explicit resolution order.
+- Keep damage and condition immunity distinct.
+- Keep Armor Class in B1, armor training in C1/C2, and actual damage execution in RE-008.
+
+**Boundaries:** never merge mount/vehicle stat blocks or speeds into the character's movement profile; those remain in RE-010. No UI/Owlbear integration before RE-009.
 
 ### RE-006 completion gate
 
