@@ -121,7 +121,7 @@ export function validateWeaponHandOccupancy(
   const bothWeaponsAreLight = heldWeapons.every((weapon) =>
     (weapon.definition.properties ?? []).includes("light"),
   );
-  const lightWeaponExtraAttackEligible =
+  const lightWeaponPairEligible =
     issues.length === 0 &&
     hasTwoWeaponsInSeparateHands &&
     bothWeaponsAreLight &&
@@ -131,7 +131,7 @@ export function validateWeaponHandOccupancy(
   return {
     valid: issues.length === 0,
     occupiedHands,
-    lightWeaponExtraAttackEligible,
+    lightWeaponPairEligible,
     issues,
   };
 }
