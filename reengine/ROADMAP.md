@@ -148,7 +148,7 @@ Acceptance: official 2014 and 2024 weapon lists can be represented without encod
 - 2024: untrained Light/Medium/Heavy armor imposes Disadvantage on STR/DEX D20 Tests and prevents spellcasting; an untrained Shield only loses its AC benefit.
 - Return deduplicated derived flags for downstream attack/check/save/spellcasting engines without mutating rolls or character state.
 
-Status: implementation complete on `feat/re-006c-armor-training-consequences`. Frozen install and typecheck passed; all 177 unit tests passed. Pending review/merge after the B4 dependency.
+Status: implementation complete on `feat/re-006c-armor-training-consequences`; PR #6 is merged and this slice now targets `main`. The earlier exact-head run passed frozen install, typecheck, and all 177 unit tests; re-verification is triggered by this update.
 
 #### RE-006C2 — Training Grant Resolution (remaining)
 
