@@ -14,7 +14,7 @@ Current first-pass modules:
 - armor-class-engine: calculates unarmored, armor, and shield AC from canonical item profiles and character training.
 - armor-training-grant-engine: unions explicit armor and shield training grants from owned feature sources, filters edition-incompatible content, and retains provenance for diagnostics.
 - armor-training-consequence-engine: resolves ruleset-aware consequences of untrained worn armor and shields, separately from the AC total.
-- hit-point-engine: calculates multiclass maximum HP from per-level Hit Dice and Constitution, and applies damage, healing, and non-stacking Temporary HP with immutable state snapshots. When Temporary HP already exists, callers must pass the player's choice to keep the current amount or take the new grant; the engine never selects the larger amount automatically.
+- hit-point-engine: calculates multiclass maximum HP, builds class-specific Hit Dice pools, resolves one Short Rest Hit Die spend at a time with edition-specific recovery floors/start eligibility, and applies damage, healing, and player-chosen non-stacking Temporary HP with immutable state snapshots.
 - weapon-attack-engine: resolves player-selectable Finesse ability, category/item proficiency, attack bonus, damage modifier, Versatile damage dice, ruleset-specific Heavy disadvantage, attack modes (melee/ranged/thrown), melee reach, normal/long range bands, and the 2014 Lance close-target rule. Its effective-reach helper is shared with Opportunity Attack validation.
 - weapon-hand-occupancy-engine: validates main/off-hand occupancy, two-handed requirements, mounted Lance exceptions, and shields; separately reports ruleset-specific Light weapon-pair eligibility; the Attack-action trigger is not evaluated here.
 - weapon-attack-cycle-engine: validates Ammunition availability/consumption, the free-hand requirement for loading one-handed weapons, and the one-shot Loading limit per Action/Bonus Action/Reaction; reports when a ranged weapon used for a melee attack must be handled as an improvised weapon.
@@ -28,6 +28,6 @@ Planned modules / extensions:
 - action-engine
 - trigger-engine
 - equipment inventory state, equip/unequip persistence, and weapon equip validation
-- Hit Dice pools, death saves, rest, and condition/exhaustion policies (RE-006D2–D4 and RE-006E)
+- Hit Dice spending is present as an incremental Short Rest resolver; Short Rest duration/interruption orchestration, Long Rest recovery, death saves, and condition/exhaustion policies remain
 - 2014 Special weapon effects (including Net target eligibility, Restrained effect, escape, and per-action attack limit), the eight 2024 Weapon Mastery effects, and stateful execution/commit of Light/Nick/Ammunition/Loading interactions (RE-008)
 - spellcasting-engine

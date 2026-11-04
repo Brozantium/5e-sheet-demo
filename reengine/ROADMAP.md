@@ -166,13 +166,18 @@ Status: complete. Merged via PR #8 (`d2210d3c961240e4e65cca7423bd7a74dc29374d`).
 - Apply damage with Temporary HP absorbed first and healing up to maximum HP. Temporary HP never stacks; when a grant arrives while Temporary HP already exists, preserve the player's choice to keep the current amount or take the new amount, even when the new amount is lower.
 - Return immutable snapshots and explicit applied/overflow amounts; death-state transitions remain D3.
 
-Status: implementation complete on `feat/re-006d1-hit-point-calculation`. Previous-base CI passed frozen install, typecheck, and 199 unit tests; exact-head verification is rerun after syncing with PR #8.
+Status: complete. Merged via PR #9 (`9a46657a65a3cc8c852f8cbaec578defa6290d8c`). CI run `41836522582` passed frozen install, typecheck, and 199 unit tests on the exact head.
 
 #### RE-006D2 — Hit Dice Pools & Short Rest
 
-- Build per-class Hit Die pools for multiclass characters.
-- Spend Hit Dice during Short Rest, applying roll plus Constitution modifier with minimum 1 HP per die.
-- Track remaining Hit Dice separately by class/size and validate spending limits.
+- Build immutable per-class Hit Die pools from the validated per-level HP snapshot, preserving each class's Hit Die size and remaining/spent counts.
+- Resolve one class-specific Hit Die spend per explicit player decision; pass the returned HP/pool snapshots back only if the player chooses to spend another die.
+- 2014 Short Rest: regain HP per die equal to the roll plus Constitution modifier, with a minimum of 0 HP; there is no 2024-style positive-HP start restriction.
+- 2024 Short Rest: the character must have at least 1 HP when the rest begins; regain HP per die equal to the roll plus Constitution modifier, with a minimum of 1 HP.
+- Cap actual recovery at maximum HP, preserve Temporary HP, and never spend from another class pool or beyond its remaining count.
+- The rest coordinator owns duration/interruption/completion; this pure resolver accepts a completed Short Rest and the HP snapshot from when the rest began.
+
+Status: implementation complete. Exact-`main` verification in PR #10 passed frozen-lockfile install, `pnpm typecheck:reengine`, and all 212 unit tests.
 
 #### RE-006D3 — Death Saves & Stabilization
 
@@ -182,9 +187,10 @@ Status: implementation complete on `feat/re-006d1-hit-point-calculation`. Previo
 
 #### RE-006D4 — Rest & Recovery
 
-- Implement 2014 and 2024 Long Rest Hit Dice recovery differences.
-- Restore HP, Temporary HP, class features, spell/resource pools, and time-expiring effects using explicit rest events.
-- Coordinate resource-engine recovery semantics without duplicating recovery state.
+- Implement edition-specific Long Rest Hit Dice recovery: 2014 restores up to half the character's total Hit Dice (minimum 1); 2024 restores all expended Hit Dice.
+- Apply edition-specific Long Rest eligibility, duration, interruption, and HP recovery rules as explicit rest events.
+- Restore HP, Temporary HP, class features, spell/resource pools, and time-expiring effects without duplicating recovery state.
+- Keep Short Rest Hit Die spending (D2) separate from Long Rest pool recovery (D4).
 
 ### RE-006E — Conditions & Exhaustion
 
