@@ -18,6 +18,7 @@ This directory is the clean-room workspace for the new 5e content model, builder
 - SESSION_HANDOFF.md — required continuation checkpoint for new chats/sessions; read this first, then verify live GitHub status.
 - REVERSE_ENGINEERING/ — verified observations from the legacy app.
   - `REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md` — RE-006E legacy condition/exhaustion call-path audit and acceptance criteria.
+  - `REVERSE_ENGINEERING/findings/movement-defenses-audit.md` — RE-006F movement modes, Speed composition, and derived-defense audit.
 - SCHEMAS/ — JSON contracts for canonical content and character state.
 - content/ — the only canonical content location for the new builder.
 - src/domain/ — domain types with no UI dependencies.
