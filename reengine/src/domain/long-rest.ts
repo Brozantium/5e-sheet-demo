@@ -1,4 +1,4 @@
-import type { Recovery } from "./types";
+import type { Ability, Recovery } from "./types";
 
 export type LongRestInterruption =
   | { kind: "initiative"; minuteFromStart: number }
@@ -44,6 +44,10 @@ export interface LongRestInput {
   }[];
   resources: readonly LongRestResourceState[];
   exhaustionLevel: number;
+  /** Normal values are optional until temporary ability-score/HP-maximum reductions are modeled by the character state layer. */
+  abilityScores?: Record<Ability, number>;
+  restorableAbilityScores?: Partial<Record<Ability, number>>;
+  restorableMaximumHitPoints?: number;
   startedAtMinute: number;
   completedAtMinute: number;
   lastLongRestCompletedAtMinute?: number;
@@ -71,6 +75,9 @@ export interface LongRestResult {
   }[];
   resources: LongRestResourceState[];
   exhaustionLevel: number;
+  abilityScores?: Record<Ability, number>;
+  restoresReducedAbilityScores: boolean;
+  restoresReducedHitPointMaximum: boolean;
   hitDiceRecovered: number;
   hitDiceRecoveryLimit: number;
   hitDiceRecoveryChoices: HitDiceRecoveryChoice[];
