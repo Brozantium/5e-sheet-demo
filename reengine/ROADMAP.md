@@ -161,10 +161,31 @@ Status: implementation complete on `feat/re-006c2-armor-training-grants`. Frozen
 
 ### RE-006D — Hit Points, Hit Dice & Recovery
 
-- Maximum/current/temporary HP and damage/healing application.
-- Hit Dice pools and spending.
-- Death saves and stabilization.
-- Short Rest, Long Rest, and other recovery boundaries, including resource restoration.
+#### RE-006D1 — Maximum HP & HP State
+
+- Calculate maximum HP per character level, respecting each multiclass level's Hit Die, first-level maximum, later fixed average or supplied roll, Constitution modifier, and explicit flat bonuses.
+- Apply damage with Temporary HP absorbed first; apply healing up to maximum HP; Temporary HP never stacks.
+- Return immutable snapshots and explicit applied/overflow amounts; death-state transitions remain D3.
+
+Status: implementation in progress on `feat/re-006d1-hit-point-calculation`; frozen install, typecheck, and unit-test verification pending.
+
+#### RE-006D2 — Hit Dice Pools & Short Rest
+
+- Build per-class Hit Die pools for multiclass characters.
+- Spend Hit Dice during Short Rest, applying roll plus Constitution modifier with minimum 1 HP per die.
+- Track remaining Hit Dice separately by class/size and validate spending limits.
+
+#### RE-006D3 — Death Saves & Stabilization
+
+- Track successes/failures, natural 1/20 outcomes, stabilization, and death at three failures.
+- Resolve damage while at 0 HP, massive damage, and healing reset behavior.
+- Keep edition-specific edge cases explicit.
+
+#### RE-006D4 — Rest & Recovery
+
+- Implement 2014 and 2024 Long Rest Hit Dice recovery differences.
+- Restore HP, Temporary HP, class features, spell/resource pools, and time-expiring effects using explicit rest events.
+- Coordinate resource-engine recovery semantics without duplicating recovery state.
 
 ### RE-006E — Conditions & Exhaustion
 
