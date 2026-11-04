@@ -187,7 +187,9 @@ export function completeLongRest(input: LongRestInput): LongRestResult {
   }
 
   if (input.lastLongRestCompletedAtMinute !== undefined) {
-    const timeSinceLastFinish = input.startedAtMinute - input.lastLongRestCompletedAtMinute;
+    const timeSinceLastFinish = input.ruleset === "2014"
+      ? input.completedAtMinute - input.lastLongRestCompletedAtMinute
+      : input.startedAtMinute - input.lastLongRestCompletedAtMinute;
     const cooldown = input.ruleset === "2014" ? 1440 : 960;
     if (timeSinceLastFinish < cooldown) {
       return emptyResult(input, {
