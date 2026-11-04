@@ -104,7 +104,10 @@ Status: implementation and tests complete for this bounded slice; pending PR rev
 Split this into small, independently testable slices:
 
 - **B3A — Canonical property model and range contracts:** ruleset-aware 2014/2024 property definitions; normal and long range; distinct thrown range; ammunition type; Versatile damage metadata; structured Special rules; schema and registry validation.
-- **B3B — Property calculations:** Reach and Opportunity Attack reach; Thrown attack mode and ability selection; range-band validation and long-range Disadvantage; Two-Handed constraints including the 2024 mounted Lance exception; 2014 Lance and Net Special rules.
+
+  Status: implementation complete on `feat/re-006b3a-weapon-property-model`. Frozen install and typecheck passed; all 113 unit tests passed. Pending review/merge after the B2 dependency.
+
+- **B3B — Property calculations (next):** Reach and Opportunity Attack reach; Thrown attack mode and ability selection; range-band validation and long-range Disadvantage; Two-Handed constraints including the 2024 mounted Lance exception; 2014 Lance and Net Special rules.
 - **B3C — Attack-cycle restrictions:** Ammunition requirements and consumption/recovery contracts; Loading limits per Action, Bonus Action, or Reaction; Light extra-attack trigger and damage rules. Coordinate action-state ownership with RE-008 rather than duplicating action economy.
 - Keep editor compatibility/normalization (RE-003) separate from the actual rules mechanics. Do not make Heavy automatically mean Two-Handed in the combat domain.
 

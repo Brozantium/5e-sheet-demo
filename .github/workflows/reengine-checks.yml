@@ -1,14 +1,12 @@
 name: Reengine checks
 
 on:
-  # Run on every main-branch push so every deployment has a matching gate,
-  # including application-only changes outside the Reengine folder.
+  # Run on main and feature branches so isolated stacked reengineering slices
+  # receive the same frozen-install, typecheck, and unit-test gate.
   push:
-    branches: [main]
-  # Keep this check present on every PR targeting main so it can be required
-  # by branch protection without being skipped by path filters.
+    branches: [main, "feat/**"]
+  # Run on every PR, including stacked phase PRs whose base is another feature branch.
   pull_request:
-    branches: [main]
   workflow_dispatch:
 
 permissions:

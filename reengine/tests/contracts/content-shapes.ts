@@ -113,3 +113,60 @@ export const fighterCharacter2014 = {
     "item-instance-1": ["weapon", "martial"],
   },
 } satisfies CharacterMechanicsState;
+
+export const dagger2014 = {
+  id: "weapon:dagger",
+  name: "Dagger",
+  ruleset: "2014",
+  category: "weapon",
+  properties: ["finesse", "light", "thrown"],
+  weaponProfile: {
+    weaponCategory: "simple",
+    weaponType: "melee",
+    damage: [{ formula: "1d4", damageType: "piercing" }],
+    thrownRange: { normal: 20, long: 60 },
+  },
+} satisfies ItemDefinition;
+
+export const net2014 = {
+  id: "weapon:net",
+  name: "Net",
+  ruleset: "2014",
+  category: "weapon",
+  properties: ["special", "thrown"],
+  weaponProfile: {
+    weaponCategory: "martial",
+    weaponType: "ranged",
+    damage: [],
+    thrownRange: { normal: 5, long: 15 },
+    specialRules: ["net-2014"],
+  },
+} satisfies ItemDefinition;
+
+export const lance2014 = {
+  id: "weapon:lance",
+  name: "Lance",
+  ruleset: "2014",
+  category: "weapon",
+  properties: ["reach", "special"],
+  weaponProfile: {
+    weaponCategory: "martial",
+    weaponType: "melee",
+    damage: [{ formula: "1d12", damageType: "piercing" }],
+    specialRules: ["lance-2014"],
+  },
+} satisfies ItemDefinition;
+
+export const lance2024 = {
+  id: "weapon:lance-2024",
+  name: "Lance",
+  ruleset: "2024",
+  category: "weapon",
+  properties: ["heavy", "reach", "two-handed"],
+  weaponProfile: {
+    weaponCategory: "martial",
+    weaponType: "melee",
+    damage: [{ formula: "1d10", damageType: "piercing" }],
+    twoHandedRule: { unlessMounted: true },
+  },
+} satisfies ItemDefinition;
