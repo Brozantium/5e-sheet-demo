@@ -284,4 +284,4 @@ A completed Long Rest removes one level. There is no 2014-style level 4 maximum-
 
 The condition model itself is not absent. The legacy app has per-instance records, persistence normalization, a visible condition panel, and some mechanical integration. The central defect is the narrow aggregate resolver and the mismatch between per-instance duration semantics and duplicate-prevention/application behavior. Exhaustion is implemented as a 2014-only ladder in the legacy sheet; the clean-room D4 Long Rest engine already handles the rest-based recovery difference. 
 
-**Audit status: complete for the inspected legacy sheet path. RE-006E1 and RE-006E2 are implemented and CI verified on stacked PRs #14 and #15; neither is merged at this checkpoint. RE-006E3 lifecycle implementation remains the next slice.**
+**Audit status: complete for the inspected legacy sheet path. RE-006E1, RE-006E2, and RE-006E3 are implemented and CI verified on stacked PRs #14, #15, and #16; review/merge remains pending.**
