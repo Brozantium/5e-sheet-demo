@@ -106,6 +106,7 @@ export type ConditionRollPredicate =
   | { kind: "affected-creature-unseen" }
   | { kind: "target-is-source" }
   | { kind: "target-is-not-source" }
+  | { kind: "target-is-not-any-source"; creatureIds: readonly string[] }
   | { kind: "within-distance"; feet: number }
   | { kind: "beyond-distance"; feet: number }
   | { kind: "social-interaction" };
@@ -185,6 +186,7 @@ export interface ConditionDerivedEffects {
   cannotBeTargetedBySightRequiredEffectsUnlessVisible: boolean;
   physicalProperties: {
     transformedToInanimateSubstance: boolean;
+    nonmagicalWornAndCarriedEquipmentTransforms: boolean;
     weightMultiplier: number;
     ceasesAging: boolean;
   };
