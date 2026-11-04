@@ -12,3 +12,4 @@ export * from "./engines/armor-class-engine";
 export * from "./engines/weapon-attack-engine";
 export * from "./engines/weapon-hand-occupancy-engine";
 export * from "./engines/weapon-attack-cycle-engine";
+export * from "./engines/light-weapon-extra-attack-engine";

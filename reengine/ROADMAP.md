@@ -114,7 +114,9 @@ Split this into small, independently testable slices:
 
   Status: implementation complete on `feat/re-006b3c1-ammunition-loading`. Frozen install and typecheck passed; all 133 unit tests passed. Pending review/merge after the B3B dependency.
 
-- **B3C2 — Light extra-attack trigger contract (next):** 2014 two-weapon requirements versus 2024 Light trigger; damage modifier mode; Nick's action placement. Execution of turn/action state remains coordinated with RE-008 rather than duplicated here.
+- **B3C2 — Light extra-attack trigger contract:** 2014 two-weapon requirements versus 2024 Light trigger; negative-only ability modifier damage; Nick's action placement when the extra weapon's mastery is already unlocked and selected.
+
+  Status: implementation in progress on `feat/re-006b3c2-light-nick-trigger`; frozen install, typecheck, and unit-test verification pending. Stateful execution and action consumption remain coordinated with RE-008.
 - Keep editor compatibility/normalization (RE-003) separate from the actual rules mechanics. Do not make Heavy automatically mean Two-Handed in the combat domain.
 
 Acceptance: official 2014 and 2024 weapon lists can be represented without encoding mechanical parameters in display strings; every implemented rule has ruleset-specific regression tests.
