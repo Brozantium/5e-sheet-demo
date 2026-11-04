@@ -5,6 +5,8 @@ import type {
   WeaponAttackIssue,
   WeaponAttackResult,
   WeaponProficiency,
+  WeaponAttackDisadvantageReason,
+  CreatureSize,
 } from "../domain/combat";
 import { calculateAbilityModifier } from "./character-calculation-engine";
 
@@ -82,9 +84,10 @@ function displayFormula(formula: string, modifier: number): string {
 }
 
 /**
- * Resolves a weapon attack snapshot. Melee weapons use Strength by default;
- * Finesse melee weapons use the better Strength/Dexterity modifier; ranged
- * weapons use Dexterity. A Thrown melee weapon retains the melee ability rule.
+ * Resolves a weapon attack snapshot. Melee weapons use Strength by default
+ * and ranged weapons use Dexterity. Finesse permits an explicit Strength or
+ * Dexterity choice on either weapon type; absent a choice, the higher modifier
+ * is selected. A Thrown melee weapon retains the melee ability rule.
  *
  * Proficiency is added only when a category or exact/base-item grant matches.
  * The damage modifier is applied once to the first (primary) damage component.
@@ -115,6 +118,12 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
   if (!profile) {
     throw new TypeError("Item definition does not contain a weapon profile.");
   }
+  if (profile.weaponCategory !== "simple" && profile.weaponCategory !== "martial") {
+    throw new RangeError("Unknown weapon category.");
+  }
+  if (profile.weaponType !== "melee" && profile.weaponType !== "ranged") {
+    throw new RangeError("Unknown weapon type.");
+  }
   if (!Array.isArray(profile.damage) || profile.damage.length === 0) {
     throw new TypeError("Weapon profile requires at least one damage component.");
   }
@@ -124,6 +133,12 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
     }
     if (typeof component.damageType !== "string" || !component.damageType.trim()) {
       throw new TypeError("Weapon damage types must be non-empty strings.");
+    }
+    if (
+      component.versatileFormula !== undefined &&
+      (typeof component.versatileFormula !== "string" || !component.versatileFormula.trim())
+    ) {
+      throw new TypeError("Versatile damage formulas must be non-empty strings.");
     }
   });
 
@@ -148,22 +163,39 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
   const proficiencies = input.weaponProficiencies ?? [];
   validateWeaponProficiencies(proficiencies);
 
+  if (
+    definition.properties !== undefined &&
+    (!Array.isArray(definition.properties) ||
+      definition.properties.some((property) => typeof property !== "string"))
+  ) {
+    throw new TypeError("Weapon properties must be an array of strings.");
+  }
   const properties = new Set(definition.properties ?? []);
   const strengthModifier = calculateAbilityModifier(input.abilityScores.str);
   const dexterityModifier = calculateAbilityModifier(input.abilityScores.dex);
+  const hasFinesse = properties.has("finesse");
+
+  if (input.abilityChoice !== undefined && input.abilityChoice !== "str" && input.abilityChoice !== "dex") {
+    throw new RangeError("Finesse ability choice must be Strength or Dexterity.");
+  }
+  if (input.abilityChoice !== undefined && !hasFinesse) {
+    throw new RangeError("An explicit ability choice is only valid for a Finesse weapon.");
+  }
+
   let ability: Ability;
-  if (profile.weaponType === "ranged") {
-    ability = "dex";
-  } else if (properties.has("finesse") && dexterityModifier > strengthModifier) {
-    ability = "dex";
+  if (hasFinesse) {
+    ability =
+      input.abilityChoice ??
+      (dexterityModifier > strengthModifier ? "dex" : "str");
   } else {
-    ability = "str";
+    ability = profile.weaponType === "ranged" ? "dex" : "str";
   }
   const abilityModifier = calculateAbilityModifier(input.abilityScores[ability]);
 
   const proficient = hasWeaponProficiency(definition, profile, proficiencies);
   const proficiencyContribution = proficient ? proficiencyBonus : 0;
   const issues: WeaponAttackIssue[] = [];
+  const disadvantageReasons: WeaponAttackDisadvantageReason[] = [];
   let canAttack = true;
 
   if (!input.weapon.equipped) {
@@ -182,12 +214,38 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
         " content and is not usable by a " + input.ruleset + " character.",
     });
   }
-  if ((properties.has("heavy") || properties.has("two-handed")) && grip !== "two-handed") {
+  if (properties.has("two-handed") && grip !== "two-handed") {
     canAttack = false;
     issues.push({
       code: "weapon-requires-two-hands",
       message: definition.name + " requires a two-handed grip.",
     });
+  }
+
+  // Heavy is distinct from Two-Handed. Its attack penalty changed between editions.
+  if (properties.has("heavy")) {
+    if (input.ruleset === "2014") {
+      const validSizes: readonly CreatureSize[] = [
+        "tiny", "small", "medium", "large", "huge", "gargantuan",
+      ];
+      if (input.creatureSize === undefined) {
+        throw new TypeError("Creature size is required to resolve the 2014 Heavy weapon rule.");
+      }
+      if (!validSizes.includes(input.creatureSize)) {
+        throw new RangeError("Unknown creature size.");
+      }
+      if (input.creatureSize === "tiny" || input.creatureSize === "small") {
+        disadvantageReasons.push("heavy-weapon-size");
+      }
+    } else {
+      const requiredAbilityScore =
+        profile.weaponType === "melee"
+          ? input.abilityScores.str
+          : input.abilityScores.dex;
+      if (requiredAbilityScore < 13) {
+        disadvantageReasons.push("heavy-weapon-ability-score");
+      }
+    }
   }
   if (!proficient) {
     issues.push({
@@ -230,6 +288,8 @@ export function calculateWeaponAttack(input: WeaponAttackInput): WeaponAttackRes
     proficiencyContribution,
     attackBonus: abilityModifier + proficiencyContribution + attackBonusAdjustment,
     damageModifier,
+    hasDisadvantage: disadvantageReasons.length > 0,
+    disadvantageReasons,
     grip,
     damage,
     issues,
