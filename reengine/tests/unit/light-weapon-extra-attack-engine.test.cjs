@@ -193,3 +193,29 @@ test("malformed state flags and attack modes are rejected", () => {
   assert.throws(() => valid({ extraWeaponHeldInOtherHand: "no" }), /Other-hand state must be boolean/);
   assert.throws(() => valid({ extraAttackMode: "spell" }), /Unknown Light extra-attack mode/);
 });
+
+test("the primary weapon must have been available for its triggering attack", () => {
+  const primaryUnavailable = {
+    ...weapon({ id: "dagger-primary" }),
+    equipped: false,
+  };
+  const result = valid({ primaryWeapon: primaryUnavailable });
+  assert.equal(result.canMakeExtraAttack, false);
+  assert.ok(result.issues.some((issue) => issue.code === "primary-weapon-unavailable"));
+});
+
+test("caller-resolved availability permits drawing the extra weapon for the attack", () => {
+  const extraWeapon = {
+    ...weapon({ id: "dagger-drawn" }),
+    equipped: false,
+  };
+  const result = valid({
+    ruleset: "2024",
+    primaryWeapon: weapon({ id: "scimitar", ruleset: "2024" }),
+    extraWeapon,
+    extraWeaponHeldInOtherHand: undefined,
+    extraWeaponAvailable: true,
+  });
+  assert.equal(result.canMakeExtraAttack, true);
+  assert.equal(result.timing, "bonus-action");
+});

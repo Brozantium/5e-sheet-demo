@@ -7,6 +7,7 @@ export type LightExtraAttackTiming = "bonus-action" | "attack-action";
 
 export type LightExtraAttackIssueCode =
   | "attack-action-not-taken"
+  | "primary-weapon-unavailable"
   | "primary-weapon-not-light"
   | "extra-weapon-not-light"
   | "same-weapon-instance"
@@ -164,8 +165,8 @@ export function validateLightWeaponExtraAttack(
   if (!input.primaryWeapon.equipped) {
     canMakeExtraAttack = false;
     issues.push({
-      code: "primary-weapon-not-light",
-      message: primaryDefinition.name + " was not equipped for the triggering attack.",
+      code: "primary-weapon-unavailable",
+      message: primaryDefinition.name + " was not available for the triggering attack.",
     });
   }
   if (!isRulesetCompatible(primaryDefinition.ruleset, input.ruleset)) {
@@ -210,7 +211,7 @@ export function validateLightWeaponExtraAttack(
       message: "The Light extra attack must use a different weapon instance.",
     });
   }
-  if (!input.extraWeaponAvailable || !input.extraWeapon.equipped) {
+  if (!input.extraWeaponAvailable) {
     canMakeExtraAttack = false;
     issues.push({
       code: "extra-weapon-unavailable",
