@@ -171,9 +171,14 @@ Status: implementation complete on `feat/re-006d1-hit-point-calculation`. Frozen
 
 #### RE-006D2 — Hit Dice Pools & Short Rest
 
-- Build per-class Hit Die pools for multiclass characters.
-- Spend Hit Dice during Short Rest, applying roll plus Constitution modifier with minimum 1 HP per die.
-- Track remaining Hit Dice separately by class/size and validate spending limits.
+- Build per-class Hit Die pools for multiclass characters; preserve each class's Hit Die size and remaining/spent counts.
+- Resolve each Hit Die spend as a separate immutable decision so the player can choose whether to spend another die after seeing the previous result.
+- 2014 Short Rest: regain HP per die equal to the roll plus Constitution modifier, with a minimum of 0 HP per die; no 2024-style positive-HP start restriction.
+- 2024 Short Rest: a character must have at least 1 HP to start; regain HP per die equal to the roll plus Constitution modifier, with a minimum of 1 HP per die.
+- Cap actual HP recovery at maximum HP, preserve Temporary HP, and never spend a die from a different class pool or beyond the remaining count.
+- The rest coordinator owns duration/interruption/completion; this pure resolver accepts a completed Short Rest snapshot and does not mutate character persistence.
+
+Status: implementation in progress on `feat/re-006d2-hit-dice-short-rest`.
 
 #### RE-006D3 — Death Saves & Stabilization
 
@@ -183,9 +188,10 @@ Status: implementation complete on `feat/re-006d1-hit-point-calculation`. Frozen
 
 #### RE-006D4 — Rest & Recovery
 
-- Implement 2014 and 2024 Long Rest Hit Dice recovery differences.
-- Restore HP, Temporary HP, class features, spell/resource pools, and time-expiring effects using explicit rest events.
-- Coordinate resource-engine recovery semantics without duplicating recovery state.
+- Implement edition-specific Long Rest Hit Dice recovery: 2014 restores up to half the character's total Hit Dice (minimum 1); 2024 restores all expended Hit Dice.
+- Apply edition-specific Long Rest eligibility, duration, interruption, and HP recovery rules as explicit rest events.
+- Restore HP, Temporary HP, class features, spell/resource pools, and time-expiring effects without duplicating recovery state.
+- Keep short-rest Hit Die spending (D2) separate from long-rest pool recovery (D4).
 
 ### RE-006E — Conditions & Exhaustion
 
