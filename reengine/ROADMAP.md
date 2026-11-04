@@ -178,7 +178,7 @@ Status: implementation complete on `feat/re-006d1-hit-point-calculation`. Frozen
 - Cap actual HP recovery at maximum HP, preserve Temporary HP, and never spend a die from a different class pool or beyond the remaining count.
 - The rest coordinator owns duration/interruption/completion; this pure resolver accepts a completed Short Rest snapshot and does not mutate character persistence.
 
-Status: implementation in progress on `feat/re-006d2-hit-dice-short-rest`.
+Status: implementation complete on `feat/re-006d2-hit-dice-short-rest`. Frozen-lockfile install and `pnpm typecheck:reengine` passed; all 212 unit tests passed. PR #10 is open as a draft stacked on D1.
 
 #### RE-006D3 — Death Saves & Stabilization
 
