@@ -15,8 +15,6 @@ import type {
   RollMode,
 } from "../domain/conditions";
 
-const ABILITIES: readonly Ability[] = ["str", "dex", "con", "int", "wis", "cha"];
-
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }
@@ -40,6 +38,7 @@ export function combineConditionRollModes(...modes: RollMode[]): RollMode {
 function emptyEffects(): ConditionDerivedEffects {
   return {
     activeTypes: [],
+    impliedConditions: [],
     rollModifiers: [],
     automaticSavingThrowFailures: [],
     automaticAbilityCheckFailures: [],
@@ -179,6 +178,11 @@ export function resolveConditionEffects(
     "unconscious",
   ].some((type) => activeTypes.has(type as (typeof CONDITION_TYPES)[number]));
   const prone = activeTypes.has("prone") || activeTypes.has("unconscious");
+
+  if (["paralyzed", "petrified", "stunned", "unconscious"].some((type) => activeTypes.has(type as (typeof CONDITION_TYPES)[number]))) {
+    effects.impliedConditions.push("incapacitated");
+  }
+  if (activeTypes.has("unconscious")) effects.impliedConditions.push("prone");
 
   effects.actions.canTakeAction = !incapacitated;
   effects.actions.canTakeBonusAction = !incapacitated;
