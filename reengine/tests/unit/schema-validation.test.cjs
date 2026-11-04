@@ -150,3 +150,14 @@ test("weapon range schema requires positive normal and long distances", () => {
   value.weaponProfile.thrownRange = { normal: 20 };
   assertInvalid(validators.item, value, "thrown range missing long distance");
 });
+
+test("weapon schema supports 2024 mastery assignments and rejects unknown mastery IDs", () => {
+  const longsword = fixture("valid-weapon.json");
+  longsword.id = "weapon:longsword-2024";
+  longsword.name = "Longsword";
+  longsword.ruleset = "2024";
+  longsword.weaponProfile.mastery = "sap";
+  assertValid(validators.item, longsword, "2024 Longsword with Sap");
+  longsword.weaponProfile.mastery = "backstab";
+  assertInvalid(validators.item, longsword, "unknown mastery ID");
+});

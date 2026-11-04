@@ -129,6 +129,18 @@
             ]
           },
           "uniqueItems": true
+        },
+        "mastery": {
+          "enum": [
+            "cleave",
+            "graze",
+            "nick",
+            "push",
+            "sap",
+            "slow",
+            "topple",
+            "vex"
+          ]
         }
       },
       "additionalProperties": false

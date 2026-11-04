@@ -375,6 +375,7 @@ const makeWeapon = ({
   ammunitionType,
   twoHandedRule,
   specialRules,
+  mastery,
 } = {}) => ({
   id,
   name,
@@ -390,6 +391,7 @@ const makeWeapon = ({
     ...(ammunitionType ? { ammunitionType } : {}),
     ...(twoHandedRule ? { twoHandedRule } : {}),
     ...(specialRules ? { specialRules } : {}),
+    ...(mastery ? { mastery } : {}),
   },
 });
 
@@ -515,4 +517,33 @@ test("2014 Special profiles are structured and permit the non-damaging Net excep
     id: "weapon:unmodeled-special",
     properties: ["special"],
   })), /requires structured specialRules/);
+});
+
+test("weapon registry accepts 2024 Weapon Mastery assignments", () => {
+  const registry = new ContentRegistry();
+  registry.registerItem(makeWeapon({
+    id: "weapon:greatsword",
+    ruleset: "2024",
+    mastery: "graze",
+  }));
+  assert.equal(registry.getItem("weapon:greatsword").weaponProfile.mastery, "graze");
+});
+
+test("weapon registry rejects mastery assignments in 2014/shared content and unknown mastery IDs", () => {
+  const registry = new ContentRegistry();
+  assert.throws(() => registry.registerItem(makeWeapon({
+    id: "weapon:old-greatsword",
+    ruleset: "2014",
+    mastery: "graze",
+  })), /only available on 2024/);
+  assert.throws(() => registry.registerItem(makeWeapon({
+    id: "weapon:shared-greatsword",
+    ruleset: "shared",
+    mastery: "graze",
+  })), /only available on 2024/);
+  assert.throws(() => registry.registerItem(makeWeapon({
+    id: "weapon:unknown-mastery",
+    ruleset: "2024",
+    mastery: "backstab",
+  })), /unknown Weapon Mastery/);
 });
