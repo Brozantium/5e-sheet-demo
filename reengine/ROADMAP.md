@@ -206,7 +206,7 @@ Status: implementation complete on `feat/re-006d4-long-rest-recovery`. Frozen-lo
 
 ### RE-006E — Conditions & Exhaustion
 
-**Audit status:** complete for the inspected legacy sheet path. **Implementation status:** not started. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md) for source evidence, ruleset comparison, gaps, and acceptance tests.
+**Audit status:** complete for the inspected legacy sheet path. **E1 and E2 status:** implemented and CI verified on stacked PRs #14 and #15; awaiting review/merge. **E3 status:** not started. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md) for source evidence, ruleset comparison, gaps, and acceptance tests.
 
 #### RE-006E1 — Condition Instances & Derived Resolver
 
@@ -216,6 +216,8 @@ Status: implementation complete on `feat/re-006d4-long-rest-recovery`. Frozen-lo
 - Model context-dependent requirements (source/target identity, line of sight, distance) as structured inputs/results rather than reminder-only strings.
 - Do not execute attacks, actions, reactions, movement, or triggers; those remain downstream engine responsibilities.
 
+Status: implemented and CI verified in [PR #14](https://github.com/Brozantium/5e-sheet-demo/pull/14). Run 41787492057 passed install, typecheck, and 288 tests (0 failures).
+
 #### RE-006E2 — Ruleset-aware Exhaustion Resolver
 
 - 2014: cumulative Disadvantage ladder, Speed halving/zero, maximum HP halving, and death at level 6.
@@ -223,6 +225,8 @@ Status: implementation complete on `feat/re-006d4-long-rest-recovery`. Frozen-lo
 - Keep a dedicated numeric Exhaustion level and explicit ruleset policy; do not translate 2024 numeric penalties into Disadvantage.
 - Reuse RE-006D4 for Long Rest Exhaustion recovery. Do not duplicate D4's 2014 food/drink gate or 2024 unconditional one-level recovery.
 - Return an explicit death outcome at level 6 compatible with D3; do not synthesize failed Death Saves.
+
+Status: implemented and CI verified in [PR #15](https://github.com/Brozantium/5e-sheet-demo/pull/15). Run 41788054920 passed install, typecheck, and 302 tests (0 failures).
 
 #### RE-006E3 — Condition Lifecycle
 
