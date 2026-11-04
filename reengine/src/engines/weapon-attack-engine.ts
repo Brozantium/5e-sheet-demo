@@ -112,9 +112,9 @@ function requiresTwoHands(
   specialRules: readonly WeaponSpecialRuleId[],
   isMounted: boolean,
 ): boolean {
-  const 2024MountedException = isMounted && profile.twoHandedRule?.unlessMounted === true;
+  const has2024MountedTwoHandedException = isMounted && profile.twoHandedRule?.unlessMounted === true;
   const has2014LanceRule = specialRules.includes("lance-2014");
-  return (properties.has("two-handed") && !2024MountedException) ||
+  return (properties.has("two-handed") && !has2024MountedTwoHandedException) ||
     (has2014LanceRule && !isMounted);
 }
 
