@@ -278,6 +278,21 @@ test("Versatile uses the alternate primary damage formula only with a two-handed
   assert.equal(twoHands.damage[0].displayFormula, "1d10 + 2");
 });
 
+test("Versatile is rejected for ranged weapon profiles", () => {
+  const rangedVersatile = rapier({
+    properties: ["versatile"],
+    weaponProfile: {
+      weaponCategory: "martial",
+      weaponType: "ranged",
+      damage: [{ formula: "1d8", versatileFormula: "1d10", damageType: "piercing" }],
+    },
+  });
+  assert.throws(() => attack({
+    weapon: { instanceId: "ranged-versatile", definition: rangedVersatile, equipped: true },
+    grip: "two-handed",
+  }), /Versatile property requires a melee weapon/);
+});
+
 test("missing versatile formula is surfaced without silently increasing damage", () => {
   const result = attack({
     weapon: { instanceId: "longsword", definition: rapier({ properties: ["versatile"] }), equipped: true },
@@ -309,13 +324,27 @@ test("additional attack and damage bonuses are explicit and damage modifier is a
   assert.deepEqual(result.damage.map((part) => part.displayFormula), ["1d8 + 4", "1d4"]);
 });
 
-test("damage can explicitly omit ability modifier while retaining a flat bonus", () => {
-  const result = attack({
-    includeAbilityModifierInDamage: false,
+test("damage modifier modes support normal, omitted, and negative-only ability modifiers", () => {
+  const omitted = attack({
+    abilityModifierDamageMode: "none",
     damageBonus: 1,
   });
-  assert.equal(result.damageModifier, 1);
-  assert.equal(result.damage[0].displayFormula, "1d8 + 1");
+  const negativeOnly = attack({
+    abilityScores: scores({ str: 8, dex: 12 }),
+    abilityChoice: "str",
+    abilityModifierDamageMode: "negative-only",
+  });
+  const positiveOnly = attack({
+    abilityScores: scores({ str: 16, dex: 12 }),
+    abilityModifierDamageMode: "negative-only",
+  });
+
+  assert.equal(omitted.damageModifier, 1);
+  assert.equal(omitted.damage[0].displayFormula, "1d8 + 1");
+  assert.equal(negativeOnly.damageModifier, -1);
+  assert.equal(negativeOnly.damage[0].displayFormula, "1d8 - 1");
+  assert.equal(positiveOnly.damageModifier, 0);
+  assert.equal(positiveOnly.damage[0].displayFormula, "1d8");
 });
 
 test("invalid scores, bonuses, grip, finesse choices, and proficiency records are rejected", () => {
@@ -325,5 +354,6 @@ test("invalid scores, bonuses, grip, finesse choices, and proficiency records ar
   assert.throws(() => attack({ grip: "three-hands" }), /Weapon grip/);
   assert.throws(() => attack({ abilityChoice: "con" }), /Finesse ability choice/);
   assert.throws(() => attack({ abilityChoice: "dex", weapon: { instanceId: "club", definition: rapier({ properties: [] }), equipped: true } }), /only valid for a Finesse/);
+  assert.throws(() => attack({ abilityModifierDamageMode: "sometimes" }), /damage mode/);
   assert.throws(() => attack({ weaponProficiencies: [{ kind: "category", category: "exotic" }] }), /category/);
 });
