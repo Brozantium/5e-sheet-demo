@@ -257,3 +257,53 @@ test("Weapon Mastery does not activate for 2014 or items without a mastery", () 
   assert.equal(unmastered.available, false);
   assert.equal(unmastered.reason, "weapon-has-no-mastery");
 });
+
+test("magic weapon may inherit mastery from a validated canonical base weapon", () => {
+  const magicLongsword = {
+    id: "magic-item:flame-tongue",
+    name: "Flame Tongue",
+    ruleset: "2024",
+    category: "magic-item",
+    baseItemId: "weapon:longsword",
+    weaponProfile: {
+      weaponCategory: "martial",
+      weaponType: "melee",
+      damage: [{ formula: "1d8", damageType: "slashing" }],
+    },
+  };
+  const baseWeapon = weapons.find((entry) => entry.id === "weapon:longsword");
+  const result = resolveWeaponMasteryAvailability({
+    ruleset: "2024",
+    weapon: magicLongsword,
+    baseWeapon,
+    ownsWeaponMasteryFeature: true,
+    selectedWeaponIds: ["weapon:longsword"],
+  });
+  assert.equal(result.available, true);
+  assert.equal(result.mastery, "sap");
+});
+
+test("magic weapon does not inherit mastery from an unrelated base weapon", () => {
+  const magicLongsword = {
+    id: "magic-item:flame-tongue",
+    name: "Flame Tongue",
+    ruleset: "2024",
+    category: "magic-item",
+    baseItemId: "weapon:longsword",
+    weaponProfile: {
+      weaponCategory: "martial",
+      weaponType: "melee",
+      damage: [{ formula: "1d8", damageType: "slashing" }],
+    },
+  };
+  const unrelatedBase = weapons.find((entry) => entry.id === "weapon:dagger");
+  const result = resolveWeaponMasteryAvailability({
+    ruleset: "2024",
+    weapon: magicLongsword,
+    baseWeapon: unrelatedBase,
+    ownsWeaponMasteryFeature: true,
+    selectedWeaponIds: ["weapon:longsword"],
+  });
+  assert.equal(result.available, false);
+  assert.equal(result.reason, "weapon-has-no-mastery");
+});

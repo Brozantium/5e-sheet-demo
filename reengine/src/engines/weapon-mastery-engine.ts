@@ -72,7 +72,7 @@ export function createWeaponMasterySelectionMechanic(input: {
 }
 
 function isRulesetCompatible(itemRuleset: ContentRuleset): boolean {
-  return itemRuleset === "shared" || itemRuleset === "2024";
+  return itemRuleset === "2024";
 }
 
 function hasWeaponProficiency(
@@ -212,6 +212,8 @@ export interface WeaponMasteryAvailabilityResult {
 export function resolveWeaponMasteryAvailability(input: {
   ruleset: "2014" | "2024";
   weapon: ItemDefinition;
+  /** Canonical weapon definition linked by baseItemId, when weapon is a magic-item instance. */
+  baseWeapon?: ItemDefinition;
   ownsWeaponMasteryFeature: boolean;
   selectedWeaponIds: readonly string[];
 }): WeaponMasteryAvailabilityResult {
@@ -231,11 +233,18 @@ export function resolveWeaponMasteryAvailability(input: {
   const profile = input.weapon.category === "weapon" || input.weapon.category === "magic-item"
     ? input.weapon.weaponProfile
     : undefined;
-  const mastery = profile?.mastery ?? null;
+  const baseProfile =
+    input.baseWeapon?.category === "weapon" &&
+    input.weapon.baseItemId === input.baseWeapon.id &&
+    input.baseWeapon.ruleset === "2024"
+      ? input.baseWeapon.weaponProfile
+      : undefined;
+  const mastery = profile?.mastery ?? baseProfile?.mastery ?? null;
   if (!mastery) return { available: false, mastery: null, reason: "weapon-has-no-mastery" };
   const selected = input.selectedWeaponIds.some((id) =>
     id === input.weapon.id ||
-    (input.weapon.baseItemId !== undefined && id === input.weapon.baseItemId),
+    (input.weapon.baseItemId !== undefined && id === input.weapon.baseItemId) ||
+    (input.baseWeapon !== undefined && id === input.baseWeapon.id),
   );
   if (!selected) return { available: false, mastery, reason: "weapon-not-selected" };
   return { available: true, mastery };
