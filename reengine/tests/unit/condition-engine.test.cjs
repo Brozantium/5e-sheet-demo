@@ -89,7 +89,7 @@ test("multiple instances preserve independent IDs and expiry while their effects
 
   assert.equal(result.valid, true);
   assert.deepEqual(result.effects.activeTypes, ["poisoned"]);
-  assert.equal(result.effects.rollModifiers.length, 2);
+  assert.equal(result.effects.rollModifiers.length, 4, "each instance retains attack and ability-check source records");
   assert.equal(
     mode(result, selfContext("attack")),
     "disadvantage",
