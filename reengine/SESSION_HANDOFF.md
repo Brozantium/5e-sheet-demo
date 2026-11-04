@@ -155,6 +155,7 @@ The roadmap branch records a stacked implementation sequence. These PR links are
 | #14 | RE-006E1 condition instances/resolver | [PR #14](https://github.com/Brozantium/5e-sheet-demo/pull/14) | 288 |
 | #15 | RE-006E2 Exhaustion resolver | [PR #15](https://github.com/Brozantium/5e-sheet-demo/pull/15) | 302 |
 | #16 | RE-006E3 condition lifecycle | [PR #16](https://github.com/Brozantium/5e-sheet-demo/pull/16) | 323 |
+| #17 | RE-006F0 movement/defense audit (documentation only) | [PR #17](https://github.com/Brozantium/5e-sheet-demo/pull/17) | documentation only |
 
 Live PR metadata was checked on 2026-11-04 before this documentation update: PR #12 and #13 were open drafts; PR #14, #15, and #16 were open and not drafts. No submitted reviews were returned for PRs #12–#16. CI runs associated with the then-current implementation heads passed: PR #14 run 41787492057 (288 tests), PR #15 run 41788311442 (302 tests), and PR #16 run 41788839586 (323 tests). PR #12 records run 41779301323 (257 tests). This documentation update is being committed onto PR #16's head branch, so verify the latest head SHA and rerun/resulting CI before treating PR #16 as currently verified.
 
@@ -179,7 +180,7 @@ The PRs are stacked in dependency order: #13 → #14 → #15 → #16, with #13 b
 - Missing application clock/counter data is reported; the resolver preserves state rather than guessing.
 - The resolver is immutable and caller-driven; it does not own clocks, timers, turn order, persistence, UI, or action execution.
 
-**Current checkpoint:** RE-006E1–E3 are implemented and CI verified on stacked PRs #14–#16; review/merge is pending. RE-006F0 bounded source audit and initial contract boundaries are documented on `feat/re-006f0-movement-audit`. No movement or defense engine code has been added yet.
+**Current checkpoint:** RE-006E1–E3 are implemented and CI verified on stacked PRs #14–#16; review/merge is pending. RE-006F0 bounded source audit and initial contract boundaries are documented on `feat/re-006f0-movement-audit`. No movement or defense engine code has been added yet. PR #17 is the open draft documentation-only review for F0, stacked on PR #16; it does not contain engine changes or test changes.
 
 **Immediate next task:** begin **RE-006F1 — Movement Profiles** from branch `feat/re-006f0-movement-audit`. Define typed movement mode IDs and normalized per-character/creature base Speed profiles. Keep missing movement modes distinct from explicit zero Speed. Preserve source/provenance and keep base profiles separate from temporary modifiers. Follow [REENGINE_INDEX.md](./REENGINE_INDEX.md) and the F0 audit before reading additional source.
 
