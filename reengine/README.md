@@ -50,7 +50,8 @@ The unit suite uses Node's built-in test runner. JSON Schema validation uses Ajv
 - RE-005: schema/content validation complete for the current canonical model. Shared schemas, option-set/item contracts, ID/ruleset metadata enforcement, reference checks, Ajv fixtures, and TypeScript contract fixtures pass CI (47/47 tests).
 - RE-006A–D4: core character calculations, weapon and armor rules, HP, Hit Dice, Death Saves, and Long Rest pure-engine slices have implementation/test records in the roadmap and handoff.
 - RE-006E: legacy Conditions & Exhaustion audit is complete; E1 condition resolution, E2 ruleset-aware Exhaustion, and E3 condition lifecycle are implemented and CI verified on stacked PRs #14–#16, awaiting review/merge.
-- RE-006F0: Movement & Derived Defenses source audit and initial contract boundaries documented. F1 movement profiles, F2 effective movement resolver, and F3 defense aggregation remain planned.
+- RE-006F0: Movement & Derived Defenses source audit and initial contract boundaries documented.
+- RE-006F1–F3: movement profiles, effective movement composition, and defense aggregation implemented with 14 new regression cases on a stacked branch; CI/typecheck pending.
 - RE-007: spellcasting engine.
 - RE-008: action, trigger, and effect engine.
 - RE-009+: migration, canonical content pilot, Owlbear adapter, Builder, Sheet, and final integration.
