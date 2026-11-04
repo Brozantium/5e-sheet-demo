@@ -334,3 +334,86 @@ test("Long Rest rejects malformed times, resource snapshots, and Hit Dice pools"
     ],
   })), /Spent Hit Dice/);
 });
+
+
+test("2024 Long Rest restores a reduced HP maximum when its normal maximum is supplied", () => {
+  const result = completeLongRest(input({
+    ruleset: "2024",
+    hitPoints: {
+      currentHitPoints: 15,
+      maximumHitPoints: 20,
+      temporaryHitPoints: 2,
+    },
+    restorableMaximumHitPoints: 25,
+  }));
+
+  assert.equal(result.restoresReducedHitPointMaximum, true);
+  assert.equal(result.hitPoints.maximumHitPoints, 25);
+  assert.equal(result.hitPoints.currentHitPoints, 25);
+  assert.equal(result.hitPoints.temporaryHitPoints, 2);
+});
+
+test("2014 Long Rest does not apply the 2024 maximum HP restoration rule", () => {
+  const result = completeLongRest(input({
+    ruleset: "2014",
+    startedAtMinute: 3000,
+    completedAtMinute: 3480,
+    lastLongRestCompletedAtMinute: 2040,
+    hitPoints: {
+      currentHitPoints: 15,
+      maximumHitPoints: 20,
+      temporaryHitPoints: 2,
+    },
+    restorableMaximumHitPoints: 25,
+    hitDiceRecoveryChoices: [],
+  }));
+
+  assert.equal(result.restoresReducedHitPointMaximum, false);
+  assert.equal(result.hitPoints.maximumHitPoints, 20);
+  assert.equal(result.hitPoints.currentHitPoints, 20);
+});
+
+test("2024 Long Rest restores supplied reduced ability scores to their normal values", () => {
+  const scores = { str: 10, dex: 12, con: 14, int: 8, wis: 9, cha: 16 };
+  const result = completeLongRest(input({
+    abilityScores: scores,
+    restorableAbilityScores: { int: 12, wis: 12 },
+  }));
+
+  assert.equal(result.restoresReducedAbilityScores, true);
+  assert.deepEqual(result.abilityScores, {
+    str: 10, dex: 12, con: 14, int: 12, wis: 12, cha: 16,
+  });
+});
+
+test("2014 Long Rest does not apply the 2024 ability score restoration rule", () => {
+  const scores = { str: 10, dex: 12, con: 14, int: 8, wis: 9, cha: 16 };
+  const result = completeLongRest(input({
+    ruleset: "2014",
+    startedAtMinute: 3000,
+    completedAtMinute: 3480,
+    lastLongRestCompletedAtMinute: 2040,
+    abilityScores: scores,
+    restorableAbilityScores: { int: 12, wis: 12 },
+    hitDiceRecoveryChoices: [],
+  }));
+
+  assert.equal(result.restoresReducedAbilityScores, false);
+  assert.deepEqual(result.abilityScores, scores);
+});
+
+test("Long Rest rejects invalid normal HP maxima and ability restoration values", () => {
+  assert.throws(() => completeLongRest(input({
+    restorableMaximumHitPoints: 19,
+  })), /no lower than the current maximum/);
+
+  assert.throws(() => completeLongRest(input({
+    abilityScores: { str: 10, dex: 12, con: 14, int: 8, wis: 9, cha: 16 },
+    restorableAbilityScores: { wis: 7 },
+  })), /cannot be lower than its current score/);
+
+  assert.throws(() => completeLongRest(input({
+    abilityScores: { str: 10, dex: 12, con: 14, int: 8, wis: 9, cha: 16 },
+    restorableAbilityScores: { luck: 12 },
+  })), /ability IDs/);
+});
