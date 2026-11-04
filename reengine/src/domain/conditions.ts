@@ -173,8 +173,21 @@ export interface ConditionDerivedEffects {
   rollModifiers: ConditionRollModifier[];
   automaticSavingThrowFailures: Ability[];
   automaticAbilityCheckFailures: ConditionAbilityCheckSense[];
-  /** A Charmed creature cannot harm/target these source creatures. */
+  /** Charmed target restrictions differ in scope between the two rulesets. */
   prohibitedHarmfulTargetCreatureIds: string[];
+  prohibitedDamagingTargetCreatureIds: string[];
+  /** Critical hits are automatic for a hit within this distance; null means none. */
+  automaticCriticalHitWithinFeet: number | null;
+  canSee: boolean;
+  canHear: boolean;
+  awareOfSurroundings: boolean;
+  invisible: boolean;
+  cannotBeTargetedBySightRequiredEffectsUnlessVisible: boolean;
+  physicalProperties: {
+    transformedToInanimateSubstance: boolean;
+    weightMultiplier: number;
+    ceasesAging: boolean;
+  };
   actions: ConditionActionAvailability;
   movement: ConditionMovementRules;
   mustDropHeldItems: boolean;
