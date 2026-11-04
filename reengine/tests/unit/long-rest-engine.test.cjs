@@ -139,8 +139,8 @@ test("2014 cannot benefit from another Long Rest until 24 hours after the previo
   const tooSoonByFinish = completeLongRest(input({
     ruleset: "2014",
     startedAtMinute: 3000,
-    completedAtMinute: 3420,
-    lastLongRestCompletedAtMinute: 2000,
+    completedAtMinute: 3480,
+    lastLongRestCompletedAtMinute: 2041,
     hitDiceRecoveryChoices: [],
   }));
   assert.equal(tooSoonByFinish.completed, false);
@@ -267,19 +267,23 @@ test("Long Rest requires at least six hours of sleep and no more than two hours 
   assert.equal(notEnoughSleep.completed, false);
   assert.equal(notEnoughSleep.issue.code, "insufficient-sleep");
 
-  const tooMuchLight = completeLongRest(input({ lightActivityMinutes: 121 }));
+  const tooMuchLight = completeLongRest(input({
+    completedAtMinute: 10540,
+    lightActivityMinutes: 121,
+  }));
   assert.equal(tooMuchLight.completed, false);
   assert.equal(tooMuchLight.issue.code, "too-much-light-activity");
 });
 
-test("2014 Hit Dice recovery requires an explicit valid class-pool choice", () => {
-  const tooMany = completeLongRest(input({
+test("2014 Hit Dice recovery enforces the total and per-class pool limits", () => {
+  assert.throws(() => completeLongRest(input({
     ruleset: "2014",
-    startedAtMinute: 3000,
-    completedAtMinute: 3480,
-    lastLongRestCompletedAtMinute: 2040,
-    hitDiceRecoveryChoices: [{ classId: "fighter", count: 3 }],
-  }));
+    hitDiceRecoveryChoices: [
+      { classId: "fighter", count: 2 },
+      { classId: "rogue", count: 1 },
+    ],
+  })), /cannot exceed 2/);
+
   assert.throws(() => completeLongRest(input({
     ruleset: "2014",
     hitDiceRecoveryChoices: [
@@ -287,12 +291,18 @@ test("2014 Hit Dice recovery requires an explicit valid class-pool choice", () =
       { classId: "fighter", count: 1 },
     ],
   })), /Duplicate Hit Dice recovery choice/);
+
   assert.throws(() => completeLongRest(input({
     ruleset: "2014",
     hitDiceRecoveryChoices: [{ classId: "fighter", count: 3 }],
   })), /Cannot recover more spent Hit Dice/);
-  assert.equal(tooMany.completed, true);
-  assert.equal(tooMany.hitDiceRecovered, 0);
+
+  const noChoice = completeLongRest(input({
+    ruleset: "2014",
+    hitDiceRecoveryChoices: [],
+  }));
+  assert.equal(noChoice.completed, true);
+  assert.equal(noChoice.hitDiceRecovered, 0);
 });
 
 test("2024 Long Rest rejects manually selected Hit Dice recovery", () => {
