@@ -265,10 +265,12 @@ test("2024 Grappled with multiple grapplers exempts attacks against any active g
   assert.equal(result.effects.movement.grappleDragRules.length, 2);
 });
 
-test("Grappled 2024 without grappler identity reports an issue", () => {
-  const result = resolve([condition({ type: "grappled" })], "2024");
-  assert.equal(result.valid, false);
-  assert.ok(result.issues.some((issue) => issue.code === "missing-source-creature"));
+test("Grappled requires source identity for lifecycle resolution in both rulesets", () => {
+  for (const ruleset of ["2014", "2024"]) {
+    const result = resolve([condition({ type: "grappled" })], ruleset);
+    assert.equal(result.valid, false);
+    assert.ok(result.issues.some((issue) => issue.code === "missing-source-creature"));
+  }
 });
 
 test("Incapacitated blocks actions and reactions and breaks Concentration in both rulesets", () => {
@@ -311,6 +313,7 @@ test("Invisible modifies attack rolls only while the relevant observer cannot se
     mode(result, incomingContext("attack", { visibleCreatureIds: [AFFECTED] })),
     "normal",
   );
+  assert.equal(result.effects.invisibleEquipmentConcealed, true);
 });
 
 test("Invisible grants Initiative Advantage only under the 2024 ruleset", () => {
@@ -326,6 +329,7 @@ test("Paralyzed imposes automatic STR/DEX save failure, incoming Advantage, and 
   assert.equal(result.effects.movement.speedIsZero, true);
   assert.equal(result.effects.automaticCriticalHitWithinFeet, 5);
   assert.equal(result.effects.actions.speech, "none");
+  assert.equal(result.effects.automaticCriticalHitWithinFeet, 5);
 });
 
 test("Petrified 2014 grants all-damage resistance, poison and disease immunity", () => {
