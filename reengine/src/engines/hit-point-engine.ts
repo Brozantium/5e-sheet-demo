@@ -129,15 +129,31 @@ export function applyHitPointHealing(state: HitPointState, amount: number): HitP
   return { state: { ...state, currentHitPoints: state.currentHitPoints + hitPointsRestored }, hitPointsRestored };
 }
 
-/** Temporary HP never stacks; keep the larger existing/new value. */
-export function grantTemporaryHitPoints(state: HitPointState, amount: number): TemporaryHitPointResult {
+/**
+ * Temporary HP never stacks. When a creature already has Temporary HP,
+ * the rules let it choose whether to keep the current amount or take the new
+ * grant; the new amount is not automatically compared or optimized.
+ */
+export function grantTemporaryHitPoints(
+  state: HitPointState,
+  amount: number,
+  choice?: "keep-current" | "take-new",
+): TemporaryHitPointResult {
   assertHitPointState(state);
   assertNonNegativeInteger(amount, "Temporary Hit Points");
-  const replace = amount > state.temporaryHitPoints;
+  if (choice !== undefined && choice !== "keep-current" && choice !== "take-new") {
+    throw new RangeError("Unknown Temporary Hit Point choice.");
+  }
+  if (state.temporaryHitPoints > 0 && amount > 0 && choice === undefined) {
+    throw new TypeError("Choose whether to keep or replace existing Temporary Hit Points.");
+  }
+  const replace =
+    amount > 0 &&
+    (state.temporaryHitPoints === 0 || choice === "take-new");
   const next = replace ? amount : state.temporaryHitPoints;
   return {
     state: { ...state, temporaryHitPoints: next },
-    temporaryHitPointsGained: next - state.temporaryHitPoints,
+    temporaryHitPointsGained: Math.max(0, next - state.temporaryHitPoints),
     replacedExistingTemporaryHitPoints: replace && state.temporaryHitPoints > 0,
   };
 }
