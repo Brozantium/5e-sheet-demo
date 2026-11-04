@@ -486,6 +486,7 @@ test("weapon registry validates property semantics and Versatile damage metadata
   assert.throws(() => registry.registerItem(makeWeapon({
     properties: ["reach"],
     weaponType: "ranged",
+    range: { normal: 20, long: 60 },
   })), /Reach property requires a melee weapon/);
 
   assert.throws(() => registry.registerItem(makeWeapon({
