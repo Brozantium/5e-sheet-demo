@@ -50,6 +50,7 @@ function emptyEffects(): ConditionDerivedEffects {
     awareOfSurroundings: true,
     invisible: false,
     cannotBeTargetedBySightRequiredEffectsUnlessVisible: false,
+    invisibleEquipmentConcealed: false,
     physicalProperties: {
       transformedToInanimateSubstance: false,
       nonmagicalWornAndCarriedEquipmentTransforms: false,
@@ -242,6 +243,7 @@ export function resolveConditionEffects(
   if (activeTypes.has("invisible")) {
     effects.invisible = true;
     effects.cannotBeTargetedBySightRequiredEffectsUnlessVisible = true;
+    effects.invisibleEquipmentConcealed = true;
   }
 
   if (activeTypes.has("petrified")) {
@@ -312,21 +314,19 @@ export function resolveConditionEffects(
       case "grappled":
         effects.movement.speedIsZero = true;
         effects.movement.speedCannotIncrease = true;
-        if (input.ruleset === "2024") {
-          if (sourceCreatureId) {
-            effects.movement.grappleDragRules.push({
-              grapplerCreatureId: sourceCreatureId,
-              extraFeetPerFootMoved: 1,
-              exemptWhenTargetIsTiny: true,
-              exemptWhenTargetIsAtLeastTwoSizesSmaller: true,
-            });
-          } else {
-            issues.push({
-              code: "missing-source-creature",
-              conditionId: instance.id,
-              message: "2024 Grappled requires the grappler's creature ID for attack and drag rules.",
-            });
-          }
+        if (!sourceCreatureId) {
+          issues.push({
+            code: "missing-source-creature",
+            conditionId: instance.id,
+            message: "Grappled requires the grappler's creature ID for its lifecycle and source-dependent rules.",
+          });
+        } else if (input.ruleset === "2024") {
+          effects.movement.grappleDragRules.push({
+            grapplerCreatureId: sourceCreatureId,
+            extraFeetPerFootMoved: 1,
+            exemptWhenTargetIsTiny: true,
+            exemptWhenTargetIsAtLeastTwoSizesSmaller: true,
+          });
         }
         break;
       case "incapacitated":
