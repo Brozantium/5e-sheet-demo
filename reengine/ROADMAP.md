@@ -233,6 +233,7 @@ RE-006 is complete only when all slices above have explicit acceptance tests, cl
 - Explicit event payloads and effect application contracts.
 - Implement weapon mastery effects (Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex), Light/Loading/Ammunition action-cycle interactions, and their turn/Reaction/expiration semantics.
 - Execute 2014 Special weapon rules, including Net target eligibility, Restrained effect, escape, and the one-attack-per-Action/Bonus Action/Reaction limit. Keep 2024 mastery effects and 2014 Special behavior ruleset-scoped.
+- Resolve ruleset-specific melee knockout choices: 2014 can leave a target at 0 HP and Stable; 2024 leaves it at 1 HP with Unconscious and starts a Short Rest, with the documented end conditions.
 - Resolve cross-feature interactions without duplicating the rules already calculated by RE-006.
 
 ## RE-009 — Migration, Content, UI & Integration
