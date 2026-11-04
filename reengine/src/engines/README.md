@@ -20,6 +20,7 @@ Current first-pass modules:
 - weapon-attack-cycle-engine: validates Ammunition availability/consumption, the free-hand requirement for loading one-handed weapons, and the one-shot Loading limit per Action/Bonus Action/Reaction; reports when a ranged weapon used for a melee attack must be handled as an improvised weapon.
 - light-weapon-extra-attack-engine: validates the 2014 Two-Weapon Fighting Light trigger and the 2024 Light extra-attack trigger; resolves Bonus Action versus Attack-action placement when the extra weapon's Nick mastery is available.
 - weapon-mastery-engine: exposes the eight 2024 mastery definitions, class-specific weapon-choice eligibility, Long Rest replacement selection mechanics, and the resolver that checks feature ownership plus selected weapon type before making a weapon's mastery available.
+- death-save-engine: applies damage consequences at 0 HP, resolves Death Saving Throws and natural 1/20 outcomes, stabilizes with ruleset-specific Action/Help/Utilize methods, and handles the Stable 1d4-hour recovery event.
 
 Weapon calculations consume normalized character ability scores, proficiency grants, and item definitions. They do not read class, feat, or legacy data directly; builder/content layers resolve those grants before calling the engines.
 
@@ -28,6 +29,6 @@ Planned modules / extensions:
 - action-engine
 - trigger-engine
 - equipment inventory state, equip/unequip persistence, and weapon equip validation
-- Hit Dice spending is present as an incremental Short Rest resolver; Short Rest duration/interruption orchestration, Long Rest recovery, death saves, and condition/exhaustion policies remain
+- Hit Dice spending and death-save/stabilization resolution are present as pure state engines; rest duration/interruption orchestration, Long Rest recovery, and condition/exhaustion policies remain
 - 2014 Special weapon effects (including Net target eligibility, Restrained effect, escape, and per-action attack limit), the eight 2024 Weapon Mastery effects, and stateful execution/commit of Light/Nick/Ammunition/Loading interactions (RE-008)
 - spellcasting-engine
