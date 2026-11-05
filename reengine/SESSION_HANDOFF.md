@@ -21,7 +21,7 @@
 
 ### Copy/paste prompt for a new chat
 
-> Continue the 5e Sheet Reengine project in repository `Brozantium/5e-sheet-demo`. First read `reengine/SESSION_HANDOFF.md`, `reengine/REENGINE_INDEX.md`, and `reengine/ROADMAP.md`. Verify the live GitHub branch, PR stack, exact head SHAs, reviews, and CI. Follow the index's incremental-reading protocol: compare the last verified commit, inspect changed files first, then only relevant direct dependencies and tests; do not reread unchanged repository files without a reason. Preserve all architecture and ruleset boundaries. The current checkpoint is RE-006E implemented through E3 and awaiting review/merge. RE-006F0 movement/defense audit is documented; the next implementation slice is RE-006F1 — Movement Profiles. Do not wire the clean-room engine into `src/App.tsx` or legacy runtime before the approved RE-009 integration phase.
+> Continue the 5e Sheet Reengine project in repository `Brozantium/5e-sheet-demo`. First read `reengine/SESSION_HANDOFF.md`, `reengine/REENGINE_INDEX.md`, and `reengine/ROADMAP.md`. Verify the live GitHub branch, PR stack, exact head SHAs, reviews, and CI. Follow the index's incremental-reading protocol: compare the last verified commit, inspect changed files first, then only relevant direct dependencies and tests; do not reread unchanged repository files without a reason. Preserve all architecture and ruleset boundaries. The current checkpoint is RE-006D4 merged, RE-006E1–E3 implemented on open stacked PRs #14–#16, and RE-006F1–F3 implemented on open PR #18. PR #13–#18 still require dependency-aware review/merge reconciliation; do not start RE-007 until the RE-006 completion gate is reconciled. Do not wire the clean-room engine into `src/App.tsx` or legacy runtime before the approved RE-009 integration phase.
 
 ## Project purpose
 
@@ -85,7 +85,7 @@ This is a compact history of the decisions and slices already recorded in the re
 | RE-006D3 | Death Saves, damage at 0 HP, stabilization | Pure state resolution; turn/timer/action orchestration remains caller-owned. |
 | RE-006D4 | Ruleset-aware Long Rest and recovery | Completed before RE-006E; see PR #12 and its verification record below. |
 | RE-006E | Conditions & Exhaustion | Legacy audit complete. E1 Condition Resolver, E2 Exhaustion Resolver, and E3 Condition Lifecycle are implemented and CI verified on open stacked PRs #14/#15/#16; review/merge is pending. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md). |
-| RE-006F | Movement & derived defenses | F0 legacy audit and contract boundaries documented; F1–F3 remain. See [movement-defenses-audit.md](./REVERSE_ENGINEERING/findings/movement-defenses-audit.md). |
+| RE-006F | Movement & derived defenses | F0 legacy audit and F1–F3 implementation are documented; typed profiles, pure resolver, and derived-defense aggregation are implemented and CI-verified on PR #18. Review/merge remains pending. See [movement-defenses-audit.md](./REVERSE_ENGINEERING/findings/movement-defenses-audit.md). |
 | RE-007 | Spellcasting engine | Planned. |
 | RE-008 | Action, trigger, and effect engine | Planned; owns action execution, event triggers, reactions, mastery effects, and condition/action timing. |
 | RE-009 | Migration, content, UI, Owlbear integration | Planned integration phase. |
@@ -162,15 +162,17 @@ Live PR metadata was checked on 2026-11-04 before this documentation update: PR 
 
 ## Current checkpoint and next action
 
-**Checkpoint (2026-11-04):** RE-006E1, RE-006E2, and RE-006E3 are implemented and CI verified on clean-room `reengine/` branches. No legacy `src/App.tsx` or `src/combat-rules.ts` source was changed.
+**Checkpoint (2026-11-05):** RE-006D4 is merged into `main` via PR #12. RE-006E1–E3 and RE-006F0–F3 are implemented on clean-room `reengine/` branches, but RE-006 is not administratively complete because its stacked PRs still require review/merge reconciliation. No legacy `src/App.tsx` or `src/combat-rules.ts` source was changed, and there is still no Owlbear/UI integration.
 
-- **PR #12 — RE-006D4:** open draft; run 41779301323 passed install, typecheck, and 257 tests on its recorded head. [PR #12](https://github.com/Brozantium/5e-sheet-demo/pull/12)
-- **PR #13 — RE-006E audit/docs:** open draft; documentation-only stacked PR. [PR #13](https://github.com/Brozantium/5e-sheet-demo/pull/13)
-- **PR #14 — RE-006E1:** open, not merged; run 41787492057 passed install, typecheck, and 288 tests on its checked head. No review submitted. [PR #14](https://github.com/Brozantium/5e-sheet-demo/pull/14)
-- **PR #15 — RE-006E2:** open, not merged; run 41788311442 passed install, typecheck, and 302 tests on its checked head. No review submitted. [PR #15](https://github.com/Brozantium/5e-sheet-demo/pull/15)
-- **PR #16 — RE-006E3:** open, not merged; run 41788839586 passed install, typecheck, and 323 tests on the pre-documentation-update head. No review submitted. Verify CI again on the latest documentation commit. [PR #16](https://github.com/Brozantium/5e-sheet-demo/pull/16)
+- **PR #12 — RE-006D4:** merged into `main` on 2026-11-04. [PR #12](https://github.com/Brozantium/5e-sheet-demo/pull/12)
+- **PR #13 — RE-006E audit/docs:** open draft; documentation-only, based on `feat/re-006d4-long-rest-recovery`. GitHub currently reports `mergeable=false`; inspect and resolve the conflict/base issue before merging. [PR #13](https://github.com/Brozantium/5e-sheet-demo/pull/13)
+- **PR #14 — RE-006E1:** open, not merged; exact head `1b9bd4783ea14bc631b1506473108e038a1fe98a`; CI run 41787492057 succeeded. [PR #14](https://github.com/Brozantium/5e-sheet-demo/pull/14)
+- **PR #15 — RE-006E2:** open, not merged; exact head `b84975a3cafa3fad23829828bb403412030dee67`; CI run 41788311442 succeeded. [PR #15](https://github.com/Brozantium/5e-sheet-demo/pull/15)
+- **PR #16 — RE-006E3:** open, not merged; exact head `d2baa198fa4d45ad9060d83916bed3aa5762629b`; CI run 41798828275 succeeded. [PR #16](https://github.com/Brozantium/5e-sheet-demo/pull/16)
+- **PR #17 — RE-006F0:** open draft, documentation/audit branch; base for PR #18. [PR #17](https://github.com/Brozantium/5e-sheet-demo/pull/17)
+- **PR #18 — RE-006F1–F3:** open draft, mergeable, head branch `feat/re-006f-movement-defenses`. A focused COMMENT review at the prior head `7c07e581758caea28bf6d89f309cb340e0f52eae` found no merge-blocking movement/defense correctness defect. The notes clarify that caller order is not 5e stacking policy, source attribution remains available via retained inputs, and E1 `diseaseImmunity` remains a separate field. The audit-status contradiction was fixed in commit `7842feb6aa757e223543813aef2dfad61de0ec2d`; CI run 41953175540 was in progress when this handoff was updated. [PR #18](https://github.com/Brotzantium/5e-sheet-demo/pull/18)
 
-The PRs are stacked in dependency order: #13 → #14 → #15 → #16, with #13 based on the D4 branch. Keep that order when reviewing/merging. No PR in this stack should be claimed as merged until GitHub confirms it.
+The open PRs form a dependency chain: #13 → #14 → #15 → #16 → #17 → #18. PR #13 is still based on the D4 branch that PR #12 merged; do not assume it can merge cleanly into the current target. Verify every base/head and exact-head CI status before merging. No PR should be claimed as merged until GitHub confirms it.
 
 **E3 contract now implemented:**
 
@@ -181,9 +183,9 @@ The PRs are stacked in dependency order: #13 → #14 → #15 → #16, with #13 b
 - Missing application clock/counter data is reported; the resolver preserves state rather than guessing.
 - The resolver is immutable and caller-driven; it does not own clocks, timers, turn order, persistence, UI, or action execution.
 
-**Current checkpoint:** RE-006E1–E3 are implemented and CI verified on stacked PRs #14–#16; review/merge is pending. RE-006F0 audit is documented in PR #17. F1–F3 movement and defense source/tests are implemented on `feat/re-006f-movement-defenses`, stacked on PR #17. PR #18 run 41806337613 passed frozen install, typecheck, and 337 tests (0 failures) on head `acbb26b9245905a9f758cc4d923f9c949600e024`. Review/merge remains pending. No UI/Owlbear integration has been performed.
+**Current implementation checkpoint:** F1 typed profiles, F2 movement composition, and F3 defense aggregation are implemented and CI-verified on PR #18's earlier code head. The audit document now records all four review follow-ups and the remaining consumer boundaries. Movement source records are retained in normalized inputs; the current result reports applied/blocked modifier IDs rather than a full contribution ledger. F3 projects E1 damage resistance, damage immunity, and condition immunity, while E1 `diseaseImmunity` remains separately available.
 
-**Immediate next task:** review PR #18's contract decisions and merge readiness, especially the caller-ordered Speed modifier contract, then complete the pending PR review/merge sequence for RE-006E/F. Do not begin RE-007 until the RE-006 completion gate and PR stack are reconciled. Define typed movement mode IDs and normalized per-character/creature base Speed profiles. Keep missing movement modes distinct from explicit zero Speed. Preserve source/provenance and keep base profiles separate from temporary modifiers. Follow [REENGINE_INDEX.md](./REENGINE_INDEX.md) and the F0 audit before reading additional source.
+**Immediate next task:** verify CI for PR #18's updated documentation head; inspect why PR #13 currently reports `mergeable=false`; then reconcile the #13–#18 dependency chain and complete the RE-006 review/merge gate in order. Do not start RE-007 until this gate is resolved. Follow [REENGINE_INDEX.md](./REENGINE_INDEX.md) and the movement/defense audit before expanding the source read set.
 
 **RE-006F boundaries to preserve:**
 
@@ -195,12 +197,12 @@ The PRs are stacked in dependency order: #13 → #14 → #15 → #16, with #13 b
 
 **Recommended next sequence:**
 
-1. Verify PR #14–#17 heads, reviews, and CI on resume.
-2. Implement F1 typed movement profiles and domain tests.
-3. Finalize ruleset-specific modifier stacking/precedence before F2 implementation; verify official rule text instead of assuming all bonuses stack.
-4. Implement F2 effective movement composition using E1 and E2 outputs, with movement costs and target restrictions kept separate from Speed.
-5. Implement F3 pure derived-defense aggregation without duplicating E1 defenses or AC ownership.
-6. Update the roadmap, repository index, and handoff only when module ownership, contracts, status, or checkpoint changes.
+1. Verify PR #18 CI for the latest exact head, including the documentation reconciliation commit.
+2. Inspect PR #13's `mergeable=false` state and compare its base/head against the merged D4 branch and `main` before changing targets.
+3. Review and merge the stacked RE-006 PRs in dependency order (#13 → #14 → #15 → #16 → #17 → #18), after each exact-head CI/review gate is satisfied.
+4. Keep the movement modifier ordering explicitly caller-defined until a concrete consumer requires ruleset-specific stacking policies and acceptance tests.
+5. Keep disease immunity visible as E1's separate result unless a reviewed downstream contract adopts it; retain normalized inputs wherever full movement provenance is needed.
+6. Begin RE-007 only after the RE-006 completion gate and PR stack are reconciled.
 
 ## How to maintain this safeguard
 
