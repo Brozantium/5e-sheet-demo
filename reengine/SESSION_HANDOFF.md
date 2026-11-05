@@ -162,8 +162,9 @@ The roadmap branch records a stacked implementation sequence. These PR links are
 | #20 | RE-006E1 condition instances/resolver | [PR #20](https://github.com/Brozantium/5e-sheet-demo/pull/20) | 289; workflow 41957036163 passed |
 | #21 | RE-006E2 Exhaustion resolver | [PR #21](https://github.com/Brozantium/5e-sheet-demo/pull/21) | 303; workflow 41957070754 passed |
 | #22 | RE-006E3 condition lifecycle | [PR #22](https://github.com/Brozantium/5e-sheet-demo/pull/22) | 324; workflow 41957082301 passed |
-| #23 | RE-006F0 movement/defense audit | [PR #23](https://github.com/Brozantium/5e-sheet-demo/pull/23) | documentation only |
-| #24 | RE-006F1–F3 movement/defense engines | [PR #24](https://github.com/Brozantium/5e-sheet-demo/pull/24) | 338; latest recorded code workflow 41957137088 passed |
+| #23 | RE-006F0 movement/defense audit (superseded) | [PR #23](https://github.com/Brozantium/5e-sheet-demo/pull/23) | replaced by #25 |
+| #24 | RE-006F1–F3 movement/defense engines (superseded) | [PR #24](https://github.com/Brozantium/5e-sheet-demo/pull/24) | replaced by #25; 338 tests passed on prior branch |
+| #25 | RE-006F0–F3 consolidated movement/defense audit and engines | [PR #25](https://github.com/Brozantium/5e-sheet-demo/pull/25) | exact-head CI 41969537457; 338 tests passed |
 
 The live PR statuses and exact-head CI listed above were rechecked on 2026-11-05. The older #13–#18 branches are closed as superseded; clean PRs #19–#24 form the current review/merge stack.
 
