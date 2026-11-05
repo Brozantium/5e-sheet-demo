@@ -215,7 +215,7 @@ Status: implementation complete and exact-`main` CI verified on PR #12 head `fe1
 - Model context-dependent requirements (source/target identity, line of sight, distance) as structured inputs/results rather than reminder-only strings.
 - Do not execute attacks, actions, reactions, movement, or triggers; those remain downstream engine responsibilities.
 
-Status: implemented and CI verified on clean [PR #20](https://github.com/Brozantium/5e-sheet-demo/pull/20). Exact head `74b91177cb7456c98dc22b7266e6f30a597d0cec`; workflow 41957036163 succeeded (289 tests, 0 failures).
+Status: implemented and CI verified on clean [PR #20](https://github.com/Brozantium/5e-sheet-demo/pull/20). Corrected roll-mode cancellation and explicit Charmed attack-target restrictions; exact head `74b91177cb7456c98dc22b7266e6f30a597d0cec`; workflow 41957036163 succeeded (289 tests, 0 failures).
 
 #### RE-006E2 — Ruleset-aware Exhaustion Resolver
 
@@ -233,7 +233,7 @@ Status: implemented and CI verified on clean [PR #21](https://github.com/Brozant
 - Expire/remove only the matching instance(s); preserve other instances of the same condition type.
 - Keep lifecycle operations pure and caller-driven. No internal timers, clocks, event scheduler, or persistence.
 
-Status: implemented and CI verified on clean [PR #22](https://github.com/Brozantium/5e-sheet-demo/pull/22). Exact head `75fd2a9515917721c5a2785331d42b7538272d54`; workflow 41957082301 succeeded (324 tests, 0 failures).
+Status: implemented and CI verified on clean [PR #22](https://github.com/Brozantium/5e-sheet-demo/pull/22). E1's ConditionApplicationTime now declares the optional caller sequence consumed by lifecycle stale-event checks. Exact head `75fd2a9515917721c5a2785331d42b7538272d54`; workflow 41957082301 succeeded (324 tests, 0 failures).
 
 **Audit findings that affect implementation:**
 
@@ -266,7 +266,7 @@ Status: implemented and CI verified on clean [PR #24](https://github.com/Brozant
 - Apply E1 hard Speed-zero / cannot-increase constraints last; preserve crawl/stand, source-approach, and Grappled drag metadata without executing movement.
 - Keep movement costs and target restrictions separate from Speed values.
 
-Status: implemented and CI verified on [PR #18](https://github.com/Brozantium/5e-sheet-demo/pull/18).
+Status: implemented and CI verified on clean [PR #24](https://github.com/Brozantium/5e-sheet-demo/pull/24).
 
 #### RE-006F3 — Derived Defense Aggregation
 
@@ -274,9 +274,9 @@ Status: implemented and CI verified on [PR #18](https://github.com/Brozantium/5e
 - Coalesce duplicate labels while preserving unique source provenance.
 - Preserve AC bonus source records without owning AC arithmetic; leave damage conflict resolution downstream.
 
-Status: implemented and CI verified on [PR #18](https://github.com/Brozantium/5e-sheet-demo/pull/18).
+Status: implemented and CI verified on clean [PR #24](https://github.com/Brozantium/5e-sheet-demo/pull/24).
 
-PR #24 clean implementation head `f4a26f7f912a56e69419b4d71499b71ab2e3fd8c` passed workflow 41957445119: frozen-lockfile install, `pnpm typecheck:reengine`, and 338 tests (0 failures). Review/merge remains pending.
+PR #24 carries the F1–F3 implementation on clean stacked history. Exact-head workflow 41968757492 passed frozen-lockfile install, `pnpm typecheck:reengine`, and `pnpm test:reengine` (338 tests, 0 failures). Review/merge remains pending.
 
 **Movement/defense consumer boundaries:**
 
@@ -288,7 +288,7 @@ PR #24 clean implementation head `f4a26f7f912a56e69419b4d71499b71ab2e3fd8c` pass
 
 ### RE-006 completion gate
 
-RE-006 implementation is present across the documented slices and the relevant exact-head CI checks have passed. It is **not yet administratively complete**: PRs #19–#24 still require dependency-aware review/merge reconciliation. Do not begin RE-007 until all RE-006 slices are merged and the final mainline typecheck/unit suite passes. UI integration and legacy migration remain later work.
+RE-006 implementation is present across the documented slices. E1–E3 and F1–F3 are implemented and CI verified on the current clean PR stack #20–#24. It is **not yet administratively complete**: PRs #19–#24 still require dependency-aware review/merge reconciliation. Do not begin RE-007 until all RE-006 slices are merged and the final mainline typecheck/unit suite passes. UI integration and legacy migration remain later work.
 
 ## RE-007 — Spellcasting Engine
 
