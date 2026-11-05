@@ -21,7 +21,7 @@
 
 ### Copy/paste prompt for a new chat
 
-> Continue the 5e Sheet Reengine project in repository `Brozantium/5e-sheet-demo`. First read `reengine/SESSION_HANDOFF.md`, `reengine/REENGINE_INDEX.md`, and `reengine/ROADMAP.md`. Verify the live GitHub branch, PR stack, exact head SHAs, reviews, and CI. Follow the index's incremental-reading protocol: compare the last verified commit, inspect changed files first, then only relevant direct dependencies and tests; do not reread unchanged repository files without a reason. Preserve all architecture and ruleset boundaries. The current checkpoint is RE-006D4 merged; RE-006E1–E3 are implemented and exact-head CI verified on clean stacked PRs #20–#22; RE-006F0 audit is documented on PR #23; F1–F3 are implemented and exact-head CI verified on clean PR #24. PRs #13–#18 are closed as superseded. PRs #19–#24 remain open for review/merge. Do not start RE-007 until the RE-006 completion gate is reconciled. Do not wire the clean-room engine into `src/App.tsx` or legacy runtime before the approved RE-009 integration phase.
+> Continue the 5e Sheet Reengine project in repository `Brozantium/5e-sheet-demo`. First read `reengine/SESSION_HANDOFF.md`, `reengine/REENGINE_INDEX.md`, and `reengine/ROADMAP.md`. Verify the live GitHub branch, PR stack, exact head SHAs, reviews, and CI. Follow the index's incremental-reading protocol: compare the last verified commit, inspect changed files first, then only relevant direct dependencies and tests; do not reread unchanged repository files without a reason. Preserve all architecture and ruleset boundaries. The current checkpoint is RE-006D4 merged; RE-006E1–E3 are implemented and CI verified on clean stacked PRs #20–#22 (289 / 303 / 324 tests); RE-006F0 audit is documented on PR #23; F1–F3 are implemented and CI verified on clean PR #24 (338 tests). E1 was corrected for Advantage/Disadvantage cancellation and Charmed attack-target restrictions; ConditionApplicationTime now exposes the optional application sequence consumed by E3. PRs #13–#18 are closed as superseded. PRs #19–#24 remain open for review/merge. Do not start RE-007 until the RE-006 completion gate is reconciled. Do not wire the clean-room engine into `src/App.tsx` or legacy runtime before the approved RE-009 integration phase.
 
 ## Project purpose
 
@@ -85,7 +85,7 @@ This is a compact history of the decisions and slices already recorded in the re
 | RE-006D3 | Death Saves, damage at 0 HP, stabilization | Pure state resolution; turn/timer/action orchestration remains caller-owned. |
 | RE-006D4 | Ruleset-aware Long Rest and recovery | Completed before RE-006E; see PR #12 and its verification record below. |
 | RE-006E | Conditions & Exhaustion | Legacy audit complete. E1, E2, and E3 are implemented and CI verified on clean stacked PRs #20–#22; review/merge is pending. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md). |
-| RE-006F | Movement & derived defenses | F0 audit is documented on clean PR #23; F1–F3 movement/defense engines are implemented and CI verified on clean PR #24 (337 tests, 0 failures). Review/merge remains pending. See [movement-defenses-audit.md](./REVERSE_ENGINEERING/findings/movement-defenses-audit.md). |
+| RE-006F | Movement & derived defenses | F0 audit is documented on clean PR #23; F1–F3 movement/defense engines are implemented and CI verified on clean PR #24 (338 tests, 0 failures). Review/merge remains pending. See [movement-defenses-audit.md](./REVERSE_ENGINEERING/findings/movement-defenses-audit.md). |
 | RE-007 | Spellcasting engine | Planned. |
 | RE-008 | Action, trigger, and effect engine | Planned; owns action execution, event triggers, reactions, mastery effects, and condition/action timing. |
 | RE-009 | Migration, content, UI, Owlbear integration | Planned integration phase. |
@@ -110,9 +110,9 @@ The audit has now followed the inspected path through `src/App.tsx`: character s
 
 ### RE-006E implementation status and remaining slice
 
-- **E1 — Condition Instances & Derived Resolver:** implemented and CI verified on [PR #14](https://github.com/Brozantium/5e-sheet-demo/pull/14), run 41787492057, 288 tests passed.
-- **E2 — Ruleset-aware Exhaustion Resolver:** implemented and CI verified on [PR #15](https://github.com/Brozantium/5e-sheet-demo/pull/15), run 41788054920, 302 tests passed. 2014 and 2024 policies remain separate; D4 owns Long Rest recovery; level 6 is an explicit death outcome and does not create Death Save failures.
-- **E3 — Condition Lifecycle:** implemented and CI verified on [PR #16](https://github.com/Brozantium/5e-sheet-demo/pull/16), run 41788696223, 323 tests passed.
+- **E1 — Condition Instances & Derived Resolver:** implemented and CI verified on clean [PR #20](https://github.com/Brozantium/5e-sheet-demo/pull/20), latest head `74b91177cb7456c98dc22b7266e6f30a597d0cec`, run 41957036163, 289 tests passed. Corrected roll-mode cancellation and Charmed attack-target restrictions.
+- **E2 — Ruleset-aware Exhaustion Resolver:** implemented and CI verified on clean [PR #21](https://github.com/Brozantium/5e-sheet-demo/pull/21), latest head `49869b7bc58c7018b522380c752ce88407317ad0`, run 41957070754, 303 tests passed. 2014 and 2024 policies remain separate; D4 owns Long Rest recovery; level 6 is an explicit death outcome and does not create Death Save failures.
+- **E3 — Condition Lifecycle:** implemented and CI verified on clean [PR #22](https://github.com/Brozantium/5e-sheet-demo/pull/22), latest head `75fd2a9515917721c5a2785331d42b7538272d54`, run 41957082301, 324 tests passed.
 
 The E3 lifecycle contracts and acceptance criteria implemented in this slice are:
 
@@ -159,26 +159,26 @@ The roadmap branch records a stacked implementation sequence. These PR links are
 | #17 | RE-006F0 audit (superseded old branch) | [PR #17](https://github.com/Brozantium/5e-sheet-demo/pull/17) | closed; replaced by #23 |
 | #18 | RE-006F1–F3 engines (superseded old branch) | [PR #18](https://github.com/Brozantium/5e-sheet-demo/pull/18) | closed; replaced by #24 |
 | #19 | RE-006E audit/docs mainline replacement | [PR #19](https://github.com/Brozantium/5e-sheet-demo/pull/19) | documentation only |
-| #20 | RE-006E1 condition instances/resolver | [PR #20](https://github.com/Brozantium/5e-sheet-demo/pull/20) | 288; workflow 41954534476 passed |
-| #21 | RE-006E2 Exhaustion resolver | [PR #21](https://github.com/Brozantium/5e-sheet-demo/pull/21) | 302; workflow 41954646760 passed |
-| #22 | RE-006E3 condition lifecycle | [PR #22](https://github.com/Brozantium/5e-sheet-demo/pull/22) | 323; workflow 41954858726 passed |
+| #20 | RE-006E1 condition instances/resolver | [PR #20](https://github.com/Brozantium/5e-sheet-demo/pull/20) | 289; workflow 41957036163 passed |
+| #21 | RE-006E2 Exhaustion resolver | [PR #21](https://github.com/Brozantium/5e-sheet-demo/pull/21) | 303; workflow 41957070754 passed |
+| #22 | RE-006E3 condition lifecycle | [PR #22](https://github.com/Brozantium/5e-sheet-demo/pull/22) | 324; workflow 41957082301 passed |
 | #23 | RE-006F0 movement/defense audit | [PR #23](https://github.com/Brozantium/5e-sheet-demo/pull/23) | documentation only |
-| #24 | RE-006F1–F3 movement/defense engines | [PR #24](https://github.com/Brozantium/5e-sheet-demo/pull/24) | 337; workflow 41955241176 passed |
+| #24 | RE-006F1–F3 movement/defense engines | [PR #24](https://github.com/Brozantium/5e-sheet-demo/pull/24) | 338; latest recorded code workflow 41957137088 passed |
 
 The live PR statuses and exact-head CI listed above were rechecked on 2026-11-05. The older #13–#18 branches are closed as superseded; clean PRs #19–#24 form the current review/merge stack.
 
 ## Current checkpoint and next action
 
-**Checkpoint (2026-11-05):** RE-006D4 is merged into `main` via PR #12. RE-006E1–E3 and RE-006F1–F3 are implemented and exact-head CI verified on clean stacked PRs #20–#22 and #24. RE-006F0 audit is documented on clean PR #23. RE-006 is not yet administratively complete because PRs #19–#24 remain open for review/merge. No legacy `src/App.tsx` or `src/combat-rules.ts` source was changed; there is still no Owlbear/UI integration.
+**Checkpoint (2026-11-05):** RE-006D4 is merged into `main` via PR #12. RE-006E1–E3 and RE-006F1–F3 are implemented and CI verified on clean stacked PRs #20–#22 and #24 (E1 289, E2 303, E3 324, F1–F3 338 tests passed). RE-006F0 audit is documented on clean PR #23. RE-006 is not yet administratively complete because PRs #19–#24 remain open for review/merge. No legacy `src/App.tsx` or `src/combat-rules.ts` source was changed; there is still no Owlbear/UI integration.
 
 - **PR #12 — RE-006D4:** merged into `main` on 2026-11-04. [PR #12](https://github.com/Brozantium/5e-sheet-demo/pull/12)
 - **PRs #13–#18 — old stack:** closed as superseded. Their content was transferred to clean PRs #19–#24.
 - **PR #19 — RE-006E audit/docs mainline replacement:** open, non-draft, targets `main`, mergeable. Contains the RE-006E audit, README, roadmap, handoff, and repository index. [PR #19](https://github.com/Brozantium/5e-sheet-demo/pull/19)
-- **PR #20 — RE-006E1:** open clean mainline-based PR; exact head `f61f7d6e7d3d09f65df2e617b7324986db87705d`; workflow 41954534476 succeeded (288 tests, 0 failures). [PR #20](https://github.com/Brozantium/5e-sheet-demo/pull/20)
-- **PR #21 — RE-006E2:** open clean stacked PR on #20; exact head `1c946d20ff7d3560f495169627286e9852282e2e`; workflow 41954646760 succeeded (302 tests, 0 failures). [PR #21](https://github.com/Brozantium/5e-sheet-demo/pull/21)
-- **PR #22 — RE-006E3:** open clean stacked PR on #21; exact head `1afeb278c8a1142b2df7ffa8384609e13f375491`; workflow 41954858726 succeeded (323 tests, 0 failures). [PR #22](https://github.com/Brozantium/5e-sheet-demo/pull/22)
+- **PR #20 — RE-006E1:** open clean mainline-based PR; exact head `74b91177cb7456c98dc22b7266e6f30a597d0cec`; workflow 41957036163 succeeded (289 tests, 0 failures). [PR #20](https://github.com/Brozantium/5e-sheet-demo/pull/20)
+- **PR #21 — RE-006E2:** open clean stacked PR on #20; exact head `49869b7bc58c7018b522380c752ce88407317ad0`; workflow 41957070754 succeeded (303 tests, 0 failures). [PR #21](https://github.com/Brozantium/5e-sheet-demo/pull/21)
+- **PR #22 — RE-006E3:** open clean stacked PR on #21; exact head `75fd2a9515917721c5a2785331d42b7538272d54`; workflow 41957082301 succeeded (324 tests, 0 failures). [PR #22](https://github.com/Brozantium/5e-sheet-demo/pull/22)
 - **PR #23 — RE-006F0:** open, non-draft, mergeable, based on the clean E3 branch. Documentation-only diff: movement/defense audit plus updated session handoff. [PR #23](https://github.com/Brozantium/5e-sheet-demo/pull/23)
-- **PR #24 — RE-006F1–F3:** open, non-draft, mergeable, based on the clean F0 audit branch. Exact head `a63146038d9a28352d2625a9e68a1856307e3059`; workflow 41955241176 succeeded (337 tests, 0 failures). Diff contains the two domain contracts, two engines, engine/domain barrels, engine index, and two test files. [PR #24](https://github.com/Brozantium/5e-sheet-demo/pull/24)
+- **PR #24 — RE-006F1–F3:** open, non-draft, mergeable, based on the clean F0 audit branch. The latest recorded code workflow 41957137088 succeeded (338 tests, 0 failures). Diff contains the two domain contracts, two engines, engine/domain barrels, engine index, and two test files. [PR #24](https://github.com/Brozantium/5e-sheet-demo/pull/24)
 
 The clean implementation stack is #19 → #20 → #21 → #22 → #23 → #24. The older #13–#18 branches are closed as superseded. Each clean code PR contains only the files for its slice and passed CI on its exact head. No PR should be claimed as merged until GitHub confirms it.
 
