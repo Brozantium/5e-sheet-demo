@@ -4,21 +4,24 @@
 >
 > **Last reviewed:** 2026-11-05 (Asia/Jakarta)  
 > **Repository:** [Brozantium/5e-sheet-demo](https://github.com/Brozantium/5e-sheet-demo)  
-> **Working branch at checkpoint:** `feat/re-006d4-long-rest-recovery`  
+> **Working branch at checkpoint:** `docs/re-006e-audit-mainline`  
+> **Repository index:** [reengine/REENGINE_INDEX.md](./REENGINE_INDEX.md)  
 > **Current roadmap:** [reengine/ROADMAP.md](./ROADMAP.md)
 
 ## Start here when a chat is full
 
-1. Read this file first.
-2. Read [ROADMAP.md](./ROADMAP.md) for the current slice order and implementation status.
-3. Read [ARCHITECTURE.md](./ARCHITECTURE.md) before changing boundaries or data flow.
-4. Check the actual GitHub branch, PR stack, latest commits, review state, and CI. This document is a checkpoint, not a substitute for live repository state.
-5. Inspect the relevant source and tests before accepting any historical audit statement as current truth.
-6. Continue from **Current checkpoint** below. Do not restart earlier completed work unless a regression or new evidence requires it.
+1. Read this file first for durable decisions and the latest checkpoint.
+2. Read [REENGINE_INDEX.md](./REENGINE_INDEX.md) for the repository map and incremental-reading protocol.
+3. Read [ROADMAP.md](./ROADMAP.md) to confirm slice order, status, and completion gates.
+4. Read [ARCHITECTURE.md](./ARCHITECTURE.md) when a task changes boundaries, data flow, or runtime ownership.
+5. Verify the live branch, PR stack, review state, latest commit SHAs, and CI; this handoff is not a substitute for live GitHub state.
+6. Compare the last verified commit with the current branch/PR head. Inspect changed files first, then only their direct imports/callers/contracts/tests that are relevant.
+7. Avoid blanket repository reads. Do not reread unchanged files unless the task or changed dependencies require them.
+8. Continue from **Current checkpoint** below.
 
 ### Copy/paste prompt for a new chat
 
-> Continue the 5e Sheet Reengine project in repository `Brozantium/5e-sheet-demo`. First read `reengine/SESSION_HANDOFF.md`, `reengine/ROADMAP.md`, and `reengine/ARCHITECTURE.md`. Verify the live GitHub branch/PR/CI state and inspect the relevant source/tests before changing anything. Preserve all recorded architecture boundaries and ruleset distinctions. The current checkpoint is RE-006E: complete the evidence-based Conditions & Exhaustion audit, document findings, then implement in small tested slices. Do not wire the clean-room engine into `src/App.tsx` or legacy runtime unless the roadmap explicitly reaches RE-009 and that integration is approved.
+> Continue the 5e Sheet Reengine project in repository `Brozantium/5e-sheet-demo`. First read `reengine/SESSION_HANDOFF.md`, `reengine/REENGINE_INDEX.md`, and `reengine/ROADMAP.md`. Verify the live GitHub branch, PR stack, exact head SHAs, reviews, and CI. Follow the index's incremental-reading protocol: compare the last verified commit, inspect changed files first, then only relevant direct dependencies and tests; do not reread unchanged repository files without a reason. Preserve all architecture and ruleset boundaries. The current checkpoint is RE-006D4 merged, RE-006E1–E3 implemented on open PRs #14–#16, and RE-006F1–F3 implemented on open PR #18. The old documentation PR #13 is superseded because its branch is stale and unmergeable; the RE-006E audit has been copied to a new documentation branch based on main. Reconcile PR #14–#18 against that baseline before merging; do not start RE-007 until the RE-006 completion gate is reconciled. Do not wire the clean-room engine into `src/App.tsx` or legacy runtime before the approved RE-009 integration phase.
 
 ## Project purpose
 
@@ -80,9 +83,9 @@ This is a compact history of the decisions and slices already recorded in the re
 | RE-006D1 | Maximum HP and HP state | Damage/healing/Temporary HP operations. |
 | RE-006D2 | Hit Dice pools and Short Rest | Per-class multiclass pools and ruleset-aware healing. |
 | RE-006D3 | Death Saves, damage at 0 HP, stabilization | Pure state resolution; turn/timer/action orchestration remains caller-owned. |
-| RE-006D4 | Ruleset-aware Long Rest and recovery | Latest documented implementation checkpoint; see PR #12 and its verification record below. |
-| RE-006E | Conditions & Exhaustion | **Next work. Audit only so far; no RE-006E implementation is recorded at this checkpoint.** |
-| RE-006F | Movement & derived defenses | Planned after RE-006E. |
+| RE-006D4 | Ruleset-aware Long Rest and recovery | Completed before RE-006E; see PR #12 and its verification record below. |
+| RE-006E | Conditions & Exhaustion | Legacy audit complete. E1 Condition Resolver, E2 Exhaustion Resolver, and E3 Condition Lifecycle are implemented and CI verified on open stacked PRs #14/#15/#16; review/merge is pending. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md). |
+| RE-006F | Movement & derived defenses | F0 legacy audit and F1–F3 implementation are documented; typed profiles, pure resolver, and derived-defense aggregation are implemented and CI-verified on PR #18. Review/merge remains pending. See [movement-defenses-audit.md](./REVERSE_ENGINEERING/findings/movement-defenses-audit.md). |
 | RE-007 | Spellcasting engine | Planned. |
 | RE-008 | Action, trigger, and effect engine | Planned; owns action execution, event triggers, reactions, mastery effects, and condition/action timing. |
 | RE-009 | Migration, content, UI, Owlbear integration | Planned integration phase. |
@@ -103,11 +106,15 @@ Important correction to an earlier preliminary chat note:
 - The helper embeds the 2014-style Exhaustion ladder: level 1 ability-check Disadvantage; level 2 half Speed; level 3 attack-roll and saving-throw Disadvantage; level 4 half maximum HP; level 5 Speed 0; level 6 marks the character dead via reminders and action/reaction flags. It does not expose a 2024 Exhaustion policy.
 - `ActiveCondition.expiration` currently allows `manual | short | long | dawn`, and each instance has `duration` / `appliedAt`; this file does not itself implement a lifecycle/expiry resolver.
 
-These findings are scoped to this file. **Before finalizing RE-006E design**, inspect all call sites, persistence/serialization, condition application/removal UI, rest handlers, and any other condition/exhaustion code. Search the repository rather than inferring the entire legacy application from one helper.
+The audit has now followed the inspected path through `src/App.tsx`: character state, saved-state normalization, condition UI, feature-action condition application, roll-mode consumers, speed/HP derivation, action/reaction gating, Petrified defense handling, and Short Rest/Long Rest/Dawn expiration filtering. See the dedicated findings document for exact source ranges, condition-by-condition gaps, ruleset differences, and acceptance tests. The findings remain scoped to the inspected current-app path; future newly discovered callers must be added to the audit.
 
-### RE-006E proposed implementation slices
+### RE-006E implementation status and remaining slice
 
-These are the working plan, subject to the evidence-based audit and explicit acceptance tests:
+- **E1 — Condition Instances & Derived Resolver:** implemented and CI verified on [PR #14](https://github.com/Brozantium/5e-sheet-demo/pull/14), run 41787492057, 288 tests passed.
+- **E2 — Ruleset-aware Exhaustion Resolver:** implemented and CI verified on [PR #15](https://github.com/Brozantium/5e-sheet-demo/pull/15), run 41788054920, 302 tests passed. 2014 and 2024 policies remain separate; D4 owns Long Rest recovery; level 6 is an explicit death outcome and does not create Death Save failures.
+- **E3 — Condition Lifecycle:** implemented and CI verified on [PR #16](https://github.com/Brozantium/5e-sheet-demo/pull/16), run 41788696223, 323 tests passed.
+
+The E3 lifecycle contracts and acceptance criteria implemented in this slice are:
 
 1. **E1 — Condition model and resolver:** structured derived effects for outgoing/incoming attacks, ability checks, saves, movement restrictions, action/reaction availability, and other required condition consequences. Preserve condition instances/provenance; define which effects are aggregate and which depend on source/target/context.
 2. **E2 — Exhaustion engine:** separate 2014 and 2024 resolvers, levels 0–6, with explicit D20 Test, Speed, maximum HP, and death consequences as applicable. Coordinate Long Rest recovery with D4 without duplicating rest lifecycle.
@@ -142,23 +149,61 @@ The roadmap branch records a stacked implementation sequence. These PR links are
 | #8 | RE-006C2 armor/shield training grants | [PR #8](https://github.com/Brozantium/5e-sheet-demo/pull/8) | 184 |
 | #9 | RE-006D1 HP calculation/state | [PR #9](https://github.com/Brozantium/5e-sheet-demo/pull/9) | 199 |
 | #10 | RE-006D2 Hit Dice/Short Rest | [PR #10](https://github.com/Brozantium/5e-sheet-demo/pull/10) | 212 |
-| #11 | RE-006D3 Death Saves/stabilization | [PR #11](https://github.com/Brozantium/5e-sheet-demo/pull/11) | 236 |
-| #12 | RE-006D4 Long Rest/recovery | [PR #12](https://github.com/Brozantium/5e-sheet-demo/pull/12) | 258 |
+| #11 | RE-006D3 Death Saves/stabilization | [PR #11](https://github.com/Brozantium/5e-sheet-demo/pull/11) | 235 |
+| #12 | RE-006D4 Long Rest/recovery | [PR #12](https://github.com/Brozantium/5e-sheet-demo/pull/12) | 257 |
+| #13 | RE-006E audit and documentation | [PR #13](https://github.com/Brozantium/5e-sheet-demo/pull/13) | documentation only |
+| #14 | RE-006E1 condition instances/resolver | [PR #14](https://github.com/Brozantium/5e-sheet-demo/pull/14) | 288 |
+| #15 | RE-006E2 Exhaustion resolver | [PR #15](https://github.com/Brozantium/5e-sheet-demo/pull/15) | 302 |
+| #16 | RE-006E3 condition lifecycle | [PR #16](https://github.com/Brozantium/5e-sheet-demo/pull/16) | 323 |
+| #17 | RE-006F0 movement/defense audit (documentation only) | [PR #17](https://github.com/Brozantium/5e-sheet-demo/pull/17) | documentation only |
+| #18 | RE-006F1–F3 movement profiles/resolver/defenses | [PR #18](https://github.com/Brozantium/5e-sheet-demo/pull/18) | CI run 41806337613; 337 passed, 0 failed |
 
-At checkpoint update (2026-11-05), PR #12 targets `main` from `feat/re-006d4-long-rest-recovery`; the branch is 19 commits ahead and 0 behind. Exact-main head `fe1e6e403106d116118019d649b497138f4371dd` passed frozen-lockfile install, `pnpm typecheck:reengine`, and all 258 unit tests in [workflow run 41890063977](https://github.com/Brozantium/5e-sheet-demo/actions/runs/41890063977). Final review/merge status must still be checked live.
+Live PR metadata was checked on 2026-11-04 before this documentation update: PR #12 and #13 were open drafts; PR #14, #15, and #16 were open and not drafts. No submitted reviews were returned for PRs #12–#16. CI runs associated with the then-current implementation heads passed: PR #14 run 41787492057 (288 tests), PR #15 run 41788311442 (302 tests), and PR #16 run 41788839586 (323 tests). PR #12 records run 41779301323 (257 tests). This documentation update is being committed onto PR #16's head branch, so verify the latest head SHA and rerun/resulting CI before treating PR #16 as currently verified.
 
 ## Current checkpoint and next action
 
-**Checkpoint:** RE-006D1–D3 are merged; RE-006D4 is implemented and exact-main CI verified in PR #12, with final review/merge pending at this checkpoint. RE-006E has not been implemented. Once D4 is merged, the immediate next task is the Conditions & Exhaustion evidence audit, not RE-007/RE-008 and not UI integration.
+**Checkpoint (2026-11-05):** RE-006D4 is merged into `main` via PR #12. RE-006E1–E3 and RE-006F0–F3 are implemented on clean-room `reengine/` branches, but RE-006 is not administratively complete because its stacked PRs still require review/merge reconciliation. No legacy `src/App.tsx` or `src/combat-rules.ts` source was changed, and there is still no Owlbear/UI integration.
+
+- **PR #12 — RE-006D4:** merged into `main` on 2026-11-04. [PR #12](https://github.com/Brozantium/5e-sheet-demo/pull/12)
+- **PR #13 — RE-006E audit/docs:** stale open draft, superseded by the new mainline documentation branch. Its old head is 30 commits behind its target lineage and GitHub reports `mergeable=false`; do not merge it. Close it after the replacement documentation PR is open. [PR #13](https://github.com/Brozantium/5e-sheet-demo/pull/13)
+- **Replacement audit branch:** `docs/re-006e-audit-mainline`, created from current `main`; the RE-006E audit and README navigation are copied, and the roadmap is reconciled with current E/F implementation status. A replacement documentation PR will be opened against `main`.
+- **PR #14 — RE-006E1:** open, not merged; exact head `1b9bd4783ea14bc631b1506473108e038a1fe98a`; CI run 41787492057 succeeded. [PR #14](https://github.com/Brozantium/5e-sheet-demo/pull/14)
+- **PR #15 — RE-006E2:** open, not merged; exact head `b84975a3cafa3fad23829828bb403412030dee67`; CI run 41788311442 succeeded. [PR #15](https://github.com/Brozantium/5e-sheet-demo/pull/15)
+- **PR #16 — RE-006E3:** open, not merged; exact head `d2baa198fa4d45ad9060d83916bed3aa5762629b`; CI run 41798828275 succeeded. [PR #16](https://github.com/Brozantium/5e-sheet-demo/pull/16)
+- **PR #17 — RE-006F0:** open draft, documentation/audit branch; base for PR #18. [PR #17](https://github.com/Brozantium/5e-sheet-demo/pull/17)
+- **PR #18 — RE-006F1–F3:** open draft, mergeable, head branch `feat/re-006f-movement-defenses`. A focused COMMENT review at the prior head `7c07e581758caea28bf6d89f309cb340e0f52eae` found no merge-blocking movement/defense correctness defect. The notes clarify that caller order is not 5e stacking policy, source attribution remains available via retained inputs, and E1 `diseaseImmunity` remains a separate field. The audit-status contradiction was fixed in commit `7842feb6aa757e223543813aef2dfad61de0ec2d` on the feature branch; the documentation-only follow-up and handoff update are on head `ee4d1c98c646974570c776341f0317e1bef7ad98`; exact-head workflow 41953260760 succeeded (337 tests, 0 failures). [PR #18](https://github.com/Brotzantium/5e-sheet-demo/pull/18)
+
+The implementation branches were originally stacked as #13 → #14 → #15 → #16 → #17 → #18. PR #13 is now superseded because its source branch diverged from main; the replacement audit branch provides a clean mainline documentation baseline. Retarget/reconcile #14–#18 one at a time and verify each exact head, changed-file diff, review, and CI before merging. No PR should be claimed as merged until GitHub confirms it.
+
+**E3 contract now implemented:**
+
+- Manual remove targets one instance ID regardless of its automatic expiry setting.
+- A `short` rest expiry ends on Short Rest or Long Rest; a `long` expiry ends only on Long Rest; Dawn is explicit.
+- Turn, round, elapsed-time, save-to-end, and arbitrary source/target trigger events are structured.
+- Event IDs and monotonic sequences prevent duplicate processing; stale/out-of-order events are diagnosed and ignored.
+- Missing application clock/counter data is reported; the resolver preserves state rather than guessing.
+- The resolver is immutable and caller-driven; it does not own clocks, timers, turn order, persistence, UI, or action execution.
+
+**Current implementation checkpoint:** F1 typed profiles, F2 movement composition, and F3 defense aggregation are implemented and CI-verified on PR #18's earlier code head. The audit document now records all four review follow-ups and the remaining consumer boundaries. Movement source records are retained in normalized inputs; the current result reports applied/blocked modifier IDs rather than a full contribution ledger. F3 projects E1 damage resistance, damage immunity, and condition immunity, while E1 `diseaseImmunity` remains separately available.
+
+**Immediate next task:** open the replacement audit/documentation PR from `docs/re-006e-audit-mainline` into `main`; then supersede/close stale PR #13 and reconcile PRs #14–#18 against the new base one at a time. Do not start RE-007 until all RE-006 slices are merged and the mainline suite passes. Follow [REENGINE_INDEX.md](./REENGINE_INDEX.md) and the movement/defense audit before expanding the source read set.
+
+**RE-006F boundaries to preserve:**
+
+1. Character movement modes (walking, climbing, swimming, flying, etc.) and their base values remain separate from temporary modifiers.
+2. Compose condition constraints (Speed 0, Prone/crawl/stand, Frightened approach restrictions, Grappled drag) with Exhaustion and other Speed modifiers in a documented order.
+3. Do not fold mount/vehicle stat blocks into the character's base Speed. Mount effective movement belongs to RE-010; preserve native movement for dismount.
+4. Vehicle speed comes from its own stat block and never overwrites/adds to character walking Speed.
+5. Keep the engine pure; no Owlbear token movement or UI integration before RE-009/RE-010.
 
 **Recommended next sequence:**
 
-1. Re-check GitHub branch/PR status and current CI.
-2. Search the whole repository for `ActiveCondition`, `conditionSummary`, `CONDITION_TYPES`, `exhaustionLevel`, and all condition application/removal/expiry handlers.
-3. Trace state persistence and UI flows: creation, editing, removal, save prompts, short/long rest and dawn recovery.
-4. Compare 2014/2024 rules against authoritative rule references and record each rule's source/ruleset.
-5. Write a dedicated RE-006E findings/audit document with legacy evidence, mismatches, unknowns, and acceptance tests.
-6. Implement E1, E2, E3 as small pure-engine slices with tests, updating this handoff and the roadmap after each completed slice.
+1. Open the replacement documentation PR from `docs/re-006e-audit-mainline` into `main` and verify its diff/mergeability.
+2. Close stale PR #13 as superseded once the replacement PR is open.
+3. Reconcile #14–#18 against the clean mainline documentation base; retarget one PR at a time and inspect each changed-file diff before continuing to the next.
+4. Keep movement modifier order caller-defined until concrete consumers require ruleset-specific stacking policies and acceptance tests.
+5. Keep disease immunity as E1's separate result unless a reviewed downstream contract adopts it; retain normalized inputs wherever full movement provenance is needed.
+6. Merge the RE-006 stack in dependency order and run the exact-main suite before beginning RE-007.
 
 ## How to maintain this safeguard
 
