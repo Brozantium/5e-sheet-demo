@@ -173,12 +173,12 @@ The live PR statuses and exact-head CI listed above were rechecked on 2026-11-05
 
 - **PR #12 — RE-006D4:** merged into `main` on 2026-11-04. [PR #12](https://github.com/Brozantium/5e-sheet-demo/pull/12)
 - **PRs #13–#18 — old stack:** closed as superseded. Their content was transferred to clean PRs #19–#24.
-- **PR #19 — RE-006E audit/docs mainline replacement:** open, non-draft, targets `main`, mergeable. Contains the RE-006E audit, README, roadmap, handoff, and repository index. [PR #19](https://github.com/Brozantium/5e-sheet-demo/pull/19)
+- **PR #19 — RE-006E audit/docs mainline replacement:** open, non-draft, targets `main`, mergeable; exact head `dcc8344ef2a6ae5a8ce321972c35a1c52dd4ca43`. Workflow 41954232551 was rerun and its `reengine` job succeeded, but GitHub still rejects the merge because the required `reengine` status check is reported as `cancelled`. Do not bypass branch protection; investigate/refresh the required check before merging. Contains the RE-006E audit, README, roadmap, handoff, and repository index. [PR #19](https://github.com/Brozantium/5e-sheet-demo/pull/19)
 - **PR #20 — RE-006E1:** open clean mainline-based PR; exact head `74b91177cb7456c98dc22b7266e6f30a597d0cec`; workflow 41957036163 succeeded (289 tests, 0 failures). [PR #20](https://github.com/Brozantium/5e-sheet-demo/pull/20)
 - **PR #21 — RE-006E2:** open clean stacked PR on #20; exact head `49869b7bc58c7018b522380c752ce88407317ad0`; workflow 41957070754 succeeded (303 tests, 0 failures). [PR #21](https://github.com/Brozantium/5e-sheet-demo/pull/21)
 - **PR #22 — RE-006E3:** open clean stacked PR on #21; exact head `75fd2a9515917721c5a2785331d42b7538272d54`; workflow 41957082301 succeeded (324 tests, 0 failures). [PR #22](https://github.com/Brozantium/5e-sheet-demo/pull/22)
 - **PR #23 — RE-006F0:** open, non-draft, mergeable, based on the clean E3 branch. Documentation-only diff: movement/defense audit plus updated session handoff. [PR #23](https://github.com/Brozantium/5e-sheet-demo/pull/23)
-- **PR #24 — RE-006F1–F3:** open, non-draft, mergeable, based on the clean F0 audit branch. The latest recorded code workflow 41957137088 succeeded (338 tests, 0 failures). Diff contains the two domain contracts, two engines, engine/domain barrels, engine index, and two test files. [PR #24](https://github.com/Brozantium/5e-sheet-demo/pull/24)
+- **PR #24 — RE-006F1–F3:** open, non-draft, mergeable, based on the clean F0 audit branch; current head `fcaa942c3078be985f6207be90fcb161eaf3e889`. Exact-head workflow 41968757492 succeeded: frozen-lockfile install, `pnpm typecheck:reengine`, and 338 tests (0 failures). A documentation-only follow-up reconciles the E/F roadmap statuses and marks the completed E1–E3 audit implementation accurately. [PR #24](https://github.com/Brozantium/5e-sheet-demo/pull/24)
 
 The clean implementation stack is #19 → #20 → #21 → #22 → #23 → #24. The older #13–#18 branches are closed as superseded. Each clean code PR contains only the files for its slice and passed CI on its exact head. No PR should be claimed as merged until GitHub confirms it.
 
@@ -199,7 +199,7 @@ The clean implementation stack is #19 → #20 → #21 → #22 → #23 → #24. T
 - AC bonus arithmetic remains owned by the AC engine; resistance/immunity conflict resolution remains downstream.
 - No mount, familiar, summoned creature, or vehicle entity model (RE-010); no turn/action/pathfinding/movement consumption (RE-008); no Owlbear/UI/persistence integration (RE-009).
 
-**Immediate next task:** review and merge the clean #19–#24 stack in dependency order, confirming the base/head and exact-main CI after each merge. Do not start RE-007 until all RE-006 E/F slices are merged and the final mainline typecheck/unit suite passes.
+**Immediate next task:** resolve the required-check inconsistency blocking PR #19: its exact-head `reengine` job is successful after rerun, but GitHub's merge endpoint still reports the required check as cancelled. Do not bypass branch protection. Once #19 can merge, retarget #20 to `main` and continue the #20 → #21 → #22 → #23 → #24 stack one PR at a time, checking each new base/head and exact-head CI. Do not start RE-007 until all RE-006 E/F slices are merged and the final mainline typecheck/unit suite passes.
 
 **Recommended next sequence:**
 
