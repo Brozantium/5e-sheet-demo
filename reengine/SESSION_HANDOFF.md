@@ -21,7 +21,7 @@
 
 ### Copy/paste prompt for a new chat
 
-> Continue the 5e Sheet Reengine project in repository `Brozantium/5e-sheet-demo`. First read `reengine/SESSION_HANDOFF.md`, `reengine/REENGINE_INDEX.md`, and `reengine/ROADMAP.md`. Verify the live GitHub branch, PR state, exact head SHAs, reviews, and CI. Follow the index's incremental-reading protocol and preserve all architecture/ruleset boundaries. RE-006D4 and E1–E3 are merged into `main`; F0–F3 are merged via PR #25 and exact-head CI passed 338 tests. The final mainline verification is being recorded on checkpoint PR #26. Do not begin RE-007 until its required CI passes. Do not wire the clean-room engine into `src/App.tsx` or legacy runtime before the approved RE-009 integration phase.
+> Continue the 5e Sheet Reengine project in repository `Brozantium/5e-sheet-demo`. First read `reengine/SESSION_HANDOFF.md`, `reengine/REENGINE_INDEX.md`, and `reengine/ROADMAP.md`. Verify the live GitHub branch, PR state, exact head SHAs, reviews, and CI. Follow the index's incremental-reading protocol and preserve all architecture/ruleset boundaries. RE-006D4 and E1–E3 are merged into `main`; F0–F3 are merged via PR #25 and exact-head CI passed 338 tests. Final mainline-based workflow 41970251639 on checkpoint PR #26 passed frozen-lockfile install, typecheck, and 338 tests (0 failures). RE-006 is administratively complete; RE-007 may begin. Do not wire the clean-room engine into `src/App.tsx` or legacy runtime before the approved RE-009 integration phase.
 
 ## Project purpose
 
@@ -170,15 +170,15 @@ The live PR statuses and exact-head CI listed above were rechecked on 2026-11-05
 
 ## Current checkpoint and next action
 
-**Checkpoint (2026-11-05):** RE-006A–F3 implementation is merged into `main`. RE-006E1–E3 exact-head CI passed 289 / 303 / 324 tests; RE-006F0–F3 exact-head workflow 41969905962 passed frozen-lockfile install, typecheck, and 338 tests (0 failures). PRs #19–#22 and #25 are merged; old branches #13–#18 and superseded movement PRs #23–#24 are closed. The final mainline verification is being recorded on documentation checkpoint PR #26. No legacy `src/App.tsx` or `src/combat-rules.ts` source was changed; there is still no Owlbear/UI integration.
+**Checkpoint (2026-11-05):** RE-006A–F3 implementation is merged into `main`. E1–E3 exact-head CI passed 289 / 303 / 324 tests; F0–F3 exact-head workflow 41969905962 passed frozen-lockfile install, typecheck, and 338 tests (0 failures). Final mainline-based workflow 41970251639 on checkpoint PR #26 also passed frozen-lockfile install, typecheck, and the complete 338-test unit suite (0 failures). RE-006 is administratively complete. PRs #19–#22, #25, and #26 are merged; old branches #13–#18 and superseded movement PRs #23–#24 are closed. No legacy `src/App.tsx` or `src/combat-rules.ts` source was changed; there is still no Owlbear/UI integration.
 
 - **PR #12 — RE-006D4:** merged into `main`. [PR #12](https://github.com/Brozantium/5e-sheet-demo/pull/12)
 - **PRs #19–#22 — RE-006 audit/docs, conditions, Exhaustion, lifecycle:** merged into `main`. PR #19 workflow 41968985049 passed; PR #20 workflow 41957036163 passed 289 tests; PR #21 workflow 41957070754 passed 303 tests; PR #22 workflow 41957082301 passed 324 tests.
-- **PR #25 — RE-006F0–F3:** merged into `main`. Exact-head workflow 41969905962 passed frozen-lockfile install, `pnpm typecheck:reengine`, and 338 tests (0 failures). [PR #25](https://github.com/Brozantium/5e-sheet-demo/pull/25)
+- **PR #25 — RE-006F0–F3:** merged into `main`. Exact-head workflow 41969905962 passed frozen-lockfile install, typecheck, and 338 tests (0 failures). [PR #25](https://github.com/Brozantium/5e-sheet-demo/pull/25)
+- **PR #26 — final RE-006 completion checkpoint:** merged into `main`; workflow 41970251639 passed frozen-lockfile install, typecheck, and 338 tests (0 failures). [PR #26](https://github.com/Brozantium/5e-sheet-demo/pull/26)
 - **PRs #13–#18, #23–#24:** closed as superseded. Their work is represented by the merged clean PRs #19–#22 and #25.
-- **PR #26 — final RE-006 completion checkpoint:** documentation-only verification PR based on current `main`; its required CI is the final mainline typecheck/unit-suite gate. [PR #26](https://github.com/Brozantium/5e-sheet-demo/pull/26)
 
-**Immediate next task:** verify that PR #26's exact-head workflow passes frozen-lockfile install, `pnpm typecheck:reengine`, and the complete unit suite. Once green and merged, RE-006 is administratively complete and RE-007 may begin. Do not integrate the clean-room engine into the legacy app before RE-009.
+**Next phase:** RE-006 completion gate is satisfied. RE-007 — Spellcasting Engine — may begin. Keep action execution in RE-008 and UI/Owlbear/persistence integration in RE-009. Do not integrate the clean-room engine into the legacy app before the approved RE-009 phase.
 
 **E3 contract now implemented:**
 
