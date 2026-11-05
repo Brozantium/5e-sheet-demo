@@ -249,7 +249,7 @@ See [movement-defenses-audit.md](./REVERSE_ENGINEERING/findings/movement-defense
 
 #### RE-006F0 — Movement & Defense Audit / Contract Boundaries
 
-Status: audit complete and documented in the consolidated [PR #25](https://github.com/Brozantium/5e-sheet-demo/pull/25). The legacy single-Speed path, visible movement grants, E1/E2 outputs, and defense aggregation path were inspected.
+Status: audit complete and merged into `main` via [PR #25](https://github.com/Brozantium/5e-sheet-demo/pull/25). The legacy single-Speed path, visible movement grants, E1/E2 outputs, and defense aggregation path were inspected.
 
 #### RE-006F1 — Movement Profiles
 
@@ -257,7 +257,7 @@ Status: audit complete and documented in the consolidated [PR #25](https://githu
 - Preserve absent modes separately from explicit zero Speed.
 - Retain provenance and keep base profiles separate from temporary modifiers.
 
-Status: implemented and CI verified on consolidated [PR #25](https://github.com/Brozantium/5e-sheet-demo/pull/25).
+Status: merged into `main` via [PR #25](https://github.com/Brozantium/5e-sheet-demo/pull/25); exact-head workflow 41969905962 passed 338 tests (0 failures).
 
 #### RE-006F2 — Effective Movement Resolver
 
@@ -276,7 +276,7 @@ Status: implemented and CI verified on consolidated [PR #25](https://github.com/
 
 Status: implemented and CI verified on consolidated [PR #25](https://github.com/Brozantium/5e-sheet-demo/pull/25).
 
-PR #25 carries the F0–F3 audit and implementation on a clean branch based directly on `main`. Exact-head workflow 41969537457 passed frozen-lockfile install, `pnpm typecheck:reengine`, and `pnpm test:reengine` (338 tests, 0 failures). Review/merge remains pending.
+PR #25 merged the F0–F3 audit and implementation into `main`. Exact-head workflow 41969905962 passed frozen-lockfile install, `pnpm typecheck:reengine`, and `pnpm test:reengine` (338 tests, 0 failures).
 
 **Movement/defense consumer boundaries:**
 
@@ -288,7 +288,7 @@ PR #25 carries the F0–F3 audit and implementation on a clean branch based dire
 
 ### RE-006 completion gate
 
-RE-006A–E3 are merged into `main`. F0–F3 are implemented and CI verified on clean PR #25. RE-006 is **not yet administratively complete** until PR #25 is merged and the final mainline typecheck/unit suite passes. Do not begin RE-007 until all RE-006 slices are merged and the final mainline typecheck/unit suite passes. UI integration and legacy migration remain later work.
+All RE-006A–F3 implementation slices are merged into `main` via PRs #1–#12, #19–#22, and #25. The exact-head CI for the final F0–F3 implementation passed 338 tests. The final mainline verification is being recorded on checkpoint PR #26; do not begin RE-007 until its required CI passes. UI integration and legacy migration remain later work.
 
 ## RE-007 — Spellcasting Engine
 
