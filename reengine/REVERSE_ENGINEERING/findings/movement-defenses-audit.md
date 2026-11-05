@@ -3,15 +3,15 @@
 > **Audit date:** 2026-11-04 (Asia/Jakarta)  
 > **Legacy source:** `src/App.tsx` and `src/combat-rules.ts` on `feat/re-006e3-condition-lifecycle`  
 > **Clean-room source:** RE-006E domain and engines on the same branch  
-> **Status:** bounded source audit complete; F1 contract and rule-policy decisions remain to be finalized.
+> **Status:** bounded source audit complete; F1–F3 are implemented and CI-verified on PR #18. Review/merge is pending. Remaining notes below are consumer/integration boundaries, not unimplemented F1–F3 work.
 
 ## Executive summary
 
 The legacy sheet has a single numeric character Speed and a separate feature-grant display for movement modes. Its current sheet Speed calculation combines the character's base `s.speed`, a generic active-effect movement bonus, and the legacy condition/Exhaustion summary. Additional movement grants stored as feature `movement.mode` / `movement.distance` are presented in the UI but are not composed into that displayed Speed calculation.
 
-The clean-room engine now has richer movement inputs from RE-006E: condition-specific movement constraints and a ruleset-aware Exhaustion speed effect. However, no dedicated movement domain contract or movement resolver exists yet. F must compose those results without reimplementing E1/E2 rules.
+The clean-room engine now has dedicated movement profiles and a pure resolver. F1 defines typed walking, climbing, swimming, flying, and burrowing profiles; F2 composes those profiles with caller-ordered modifiers and the existing E1/E2 derived results; F3 aggregates defense facts while preserving source provenance. The resolver's order is an explicit extension contract supplied by the caller, **not** a universal 5e stacking policy. Actual feature/spell/item consumers must define and test each relevant 2014/2024 modifier family before assigning orders.
 
-The legacy app also has a structured defense aggregation path for feature defenses, temporary effects, and a Petrified special case. E1 now returns structured condition-derived damage defenses and immunities, but the legacy aggregation and the clean-room resolver are not yet connected. F should define a pure aggregation contract and keep application/UI integration for RE-009.
+The legacy app's structured defense path remains a reference only. F3 now provides a separate pure aggregation contract for grants and selected E1 condition-derived defenses. `diseaseImmunity` remains a separate E1 boolean and is intentionally not projected into F3; consumers must continue to read it from E1. Application/UI integration remains RE-009.
 
 ## Scope and evidence inspected
 
@@ -66,7 +66,7 @@ This is a targeted audit, not a full repository or full legacy-bundle audit. Ins
 - `cannotWillinglyApproachCreatureIds` for source-specific Frightened restrictions;
 - `grappleDragRules` for 2024 Grappled movement, including source creature ID and target-size exemptions.
 
-The E1 condition result also exposes `damageResistances`, `damageImmunities`, and `conditionImmunities`. F should consume these outputs rather than duplicate condition rules. The E1 resolver does not spend movement, perform a stand action, validate a path, or execute turn order.
+The E1 condition result also exposes `damageResistances`, `damageImmunities`, and `conditionImmunities`. F3 consumes these outputs rather than duplicating condition rules. `diseaseImmunity` is a separate boolean in the E1 result and is not part of the current F3 projection; do not lose it when adapting condition effects for downstream consumers. The E1 resolver does not spend movement, perform a stand action, validate a path, or execute turn order.
 
 ### E2 — Exhaustion Speed output
 
@@ -85,7 +85,7 @@ The initial mode catalogue should be evidence-based and extensible: walking, cli
 
 ### F2 — Effective movement resolver
 
-Compose base profiles with typed modifiers and E1/E2 outputs. Define and test precedence before implementation. The result should expose effective Speed per mode plus movement constraints/cost metadata; it should not execute movement or spend a turn.
+Compose base profiles with typed modifiers and E1/E2 outputs. The implemented resolver applies caller-supplied modifiers in explicit order, then E2 Exhaustion output, then E1 hard Speed-zero constraints. This is a deterministic extension contract only; define and test ruleset-specific stacking before any content consumer maps actual feature/spell/item modifiers to those orders. The result exposes effective Speed per mode plus movement constraints/cost metadata; it does not execute movement or spend a turn.
 
 Do not conflate:
 - Speed changes (flat or multiplicative);
@@ -127,13 +127,14 @@ Define a pure normalized defense input/output that can combine permanent feature
 - Condition-derived Petrified defenses are not applied twice when E1 output is present.
 - The defense resolver remains pure and independent from roll/damage execution.
 
-## Open questions before F1/F2 implementation
+## Follow-ups before content consumers and integration
 
-1. Which legacy movement grants should become normalized base profiles versus temporary modifiers? Inspect concrete traits/content before migrating individual grants.
-2. Which modifiers stack, replace, or apply in sequence under each ruleset? Verify official rule wording for each modifier family; do not infer from display descriptions.
-3. Should E2 expose a reusable per-mode Speed effect helper, or should F apply its typed `multiplier` / `reductionFeet` result to every mode? Preserve a single policy owner and avoid passing an already-modified Speed back through E2.
-4. Which equipment or condition sources contribute to derived defenses, and which values remain owned by the AC/damage engines?
-5. How should defense provenance and duplicate grants be represented in the clean-room output?
+1. Which individual legacy movement grants should become normalized base profiles versus temporary modifiers? Resolve this per canonical record; do not infer a universal policy from the editor's display shape.
+2. Which actual modifier families stack, replace, or apply in sequence under each ruleset? Verify official 2014/2024 rule wording and add focused acceptance tests before a content consumer assigns `order` values. The movement engine's caller-supplied order is not itself a 5e stacking rule.
+3. F applies the existing E2 `multiplier` / `reductionFeet` result to each supplied movement mode. Keep E2 as the sole policy owner and never feed an already-modified Speed back into E2.
+4. Keep equipment/armor AC contributions with the AC engine and damage conflict resolution with the downstream damage resolver; F3 only preserves normalized source facts and individual AC-bonus records.
+5. F3 currently projects E1 damage resistance, damage immunity, and condition immunity. Read E1's separate `diseaseImmunity` boolean independently unless a later reviewed contract explicitly adds it to the defense projection.
+6. Movement profile/modifier inputs retain their source records, while the current resolution result exposes applied/blocked modifier IDs rather than a full contribution ledger. Consumers that need diagnostics must retain the normalized inputs; add per-mode contribution output only when a concrete consumer requires it.
 
 ## Explicit non-goals
 
@@ -144,7 +145,7 @@ Define a pure normalized defense input/output that can combine permanent feature
 
 ## Audit conclusion
 
-The legacy implementation has a usable single-Speed summary and visible movement grants, but it does not provide a normalized multi-mode movement model or a general composable Speed resolver. RE-006E supplies the structured condition and Exhaustion outputs needed for a clean-room movement layer. The next correct step is F1's typed movement profiles, followed by an evidence-based modifier/precedence contract for F2 and a separate defense aggregation contract for F3.
+The inspected legacy path has a usable single-Speed summary and visible movement grants, but no normalized multi-mode movement model or general composable Speed resolver. RE-006F1–F3 now provide the clean-room movement profiles, deterministic composition, and derived-defense aggregation needed by future consumers. The engine reuses E1/E2 outputs rather than reimplementing them. Before a consumer assigns modifier order, validate the relevant 2014/2024 stacking rules per modifier family. F3 intentionally leaves disease immunity as a separate E1 result, AC arithmetic with the AC engine, and damage conflicts with the downstream damage resolver.
 
 ## F1–F3 implementation checkpoint
 
