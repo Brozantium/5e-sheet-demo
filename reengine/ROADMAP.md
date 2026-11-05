@@ -276,7 +276,7 @@ Status: implemented and CI verified on clean [PR #24](https://github.com/Brozant
 
 Status: implemented and CI verified on clean [PR #24](https://github.com/Brozantium/5e-sheet-demo/pull/24).
 
-PR #24 carries the F1–F3 implementation on clean stacked history. Exact-head workflow 41957445119 passed frozen-lockfile install, `pnpm typecheck:reengine`, and `pnpm test:reengine` (338 tests, 0 failures). Review/merge remains pending.
+PR #24 carries the F1–F3 implementation on clean stacked history. Exact-head workflow 41968757492 passed frozen-lockfile install, `pnpm typecheck:reengine`, and `pnpm test:reengine` (338 tests, 0 failures). Review/merge remains pending.
 
 **Movement/defense consumer boundaries:**
 
