@@ -205,7 +205,7 @@ Status: implementation complete and exact-`main` CI verified on PR #12 head `fe1
 
 ### RE-006E — Conditions & Exhaustion
 
-**Audit status:** complete for the inspected legacy sheet path. **Implementation status:** E1–E3 are implemented and CI verified on open stacked PRs #14–#16; review/merge remains pending. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md).
+**Audit status:** complete for the inspected legacy sheet path. **Implementation status:** E1–E3 are implemented and CI verified on clean stacked PRs #20–#22; review/merge remains pending. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md).
 
 #### RE-006E1 — Condition Instances & Derived Resolver
 
@@ -257,7 +257,7 @@ Status: audit complete. The legacy single-Speed path, visible movement grants, E
 - Preserve absent modes separately from explicit zero Speed.
 - Retain provenance and keep base profiles separate from temporary modifiers.
 
-Status: implemented and CI verified on [PR #18](https://github.com/Brozantium/5e-sheet-demo/pull/18).
+Status: implemented and CI verified on clean [PR #24](https://github.com/Brozantium/5e-sheet-demo/pull/24).
 
 #### RE-006F2 — Effective Movement Resolver
 
@@ -276,7 +276,7 @@ Status: implemented and CI verified on [PR #18](https://github.com/Brozantium/5e
 
 Status: implemented and CI verified on [PR #18](https://github.com/Brozantium/5e-sheet-demo/pull/18).
 
-PR #24 carries the F1–F3 implementation on clean stacked history. Latest recorded code workflow 41957137088 passed frozen-lockfile install, `pnpm typecheck:reengine`, and `pnpm test:reengine` (338 tests, 0 failures). Review/merge remains pending.
+PR #24 carries the F1–F3 implementation on clean stacked history. Exact-head workflow 41957445119 passed frozen-lockfile install, `pnpm typecheck:reengine`, and `pnpm test:reengine` (338 tests, 0 failures). Review/merge remains pending.
 
 **Movement/defense consumer boundaries:**
 
