@@ -4,8 +4,8 @@
 >
 > **Last inspected:** 2026-11-05 (Asia/Jakarta)  
 > **Repository:** [Brozantium/5e-sheet-demo](https://github.com/Brozantium/5e-sheet-demo)  
-> **Inspection branch:** `docs/re-006-completion-checkpoint`  
-> **Source snapshot inspected:** `2e658703feead059d414fef71e2a15684bb3d2fb` (main after PR #25 merged; RE-006F domain contracts and engines are present).
+> **Inspection branch:** `docs/re-006-final-status`  
+> **Source snapshot inspected:** `9346769d995f225cfeeb798448e7e00fb26fc70b` (main after PR #26 merged; RE-006 completion checkpoint is recorded).
 
 ## How to resume efficiently
 

@@ -288,7 +288,7 @@ PR #25 merged the F0–F3 audit and implementation into `main`. Exact-head workf
 
 ### RE-006 completion gate
 
-All RE-006A–F3 implementation slices are merged into `main` via PRs #1–#12, #19–#22, and #25. The exact-head CI for the final F0–F3 implementation passed 338 tests. The final mainline verification is being recorded on checkpoint PR #26; do not begin RE-007 until its required CI passes. UI integration and legacy migration remain later work.
+All RE-006A–F3 implementation slices are merged into `main` via PRs #1–#12, #19–#22, and #25. Final mainline-based workflow 41970251639 on checkpoint PR #26 passed frozen-lockfile install, typecheck, and 338 tests (0 failures). RE-006 is administratively complete. RE-007 may begin; UI integration and legacy migration remain later work.
 
 ## RE-007 — Spellcasting Engine
 
