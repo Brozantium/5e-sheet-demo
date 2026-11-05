@@ -65,6 +65,8 @@ export type ConditionExpiry =
 
 /** Caller-owned clock/turn snapshot recorded when the instance was applied. */
 export interface ConditionApplicationTime {
+  /** Caller-assigned event-stream sequence used to reject stale lifecycle events. */
+  sequence?: number;
   timestampMs?: number;
   round?: number;
   turn?: number;
