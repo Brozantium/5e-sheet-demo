@@ -4,8 +4,8 @@
 >
 > **Last inspected:** 2026-11-05 (Asia/Jakarta)  
 > **Repository:** [Brozantium/5e-sheet-demo](https://github.com/Brozantium/5e-sheet-demo)  
-> **Inspection branch:** `feat/re-006f-movement-defenses`  
-> **Source snapshot inspected:** `ee4d1c98c646974570c776341f0317e1bef7ad98` (feature branch; code PR #18 is still open and not merged)
+> **Inspection branch:** `feat/re-006f-complete-mainline`  
+> **Source snapshot inspected:** `d75eccd3eba905bcb0a031fa68e170fcda892d43` (clean PR #25 head, based on current `main`; exact-head CI passed).
 
 ## How to resume efficiently
 
@@ -160,9 +160,9 @@ The test command compiles test TypeScript and runs `node --test reengine/tests/u
 
 ## Known navigation caveats
 
-1. **Public barrel exports need deliberate review:** `src/domain/index.ts` re-exports the Conditions, Condition Lifecycle, and Exhaustion domain contracts. At the inspected feature-branch snapshot `ee4d1c9`, `src/index.ts` re-exports the condition, condition-lifecycle, Exhaustion, movement, and defense engines. These exports are on unmerged PR #18's branch lineage and must not be assumed present on `main` until the dependent PR stack is merged. Verify root-barrel exports again after merge.
+1. **Public barrel exports need deliberate review:** `src/domain/index.ts` re-exports the Conditions, Condition Lifecycle, and Exhaustion domain contracts. At the clean feature-branch snapshot `a6314603`, `src/index.ts` re-exports the condition, condition-lifecycle, Exhaustion, movement, and defense engines. The condition, lifecycle, and Exhaustion exports are merged on `main`; movement and defense exports are in PR #25 and must not be assumed present on `main` until that PR is merged. Verify root-barrel exports again after merge.
 2. **UI and persistence are not integrated:** the inspected UI subfolders and serialization area contain placeholders. The existence of domain engines does not mean the Owlbear sheet uses them.
-3. **Movement F1–F3 are implemented and CI verified:** PR #18 exact-head workflow 41953260760 passed typecheck and 337 tests on `ee4d1c9`. This does not imply Owlbear/UI integration.
+3. **Movement F1–F3 are implemented and CI verified:** clean PR #25 exact-head workflow 41969537457 passed typecheck and 338 tests with 0 failures. This does not imply Owlbear/UI integration.
 4. **Legacy sources remain separate:** `src/App.tsx`, `src/combat-rules.ts`, `assets/`, and `data/` are reference/legacy areas. Do not make them runtime dependencies of `reengine/`.
 
 ## Maintenance rule
