@@ -14,9 +14,12 @@ This directory is the clean-room workspace for the new 5e content model, builder
 ## Workspace map
 
 - ARCHITECTURE.md — target runtime and data flow.
+- REENGINE_INDEX.md — repository map and incremental-reading protocol.
 - ROADMAP.md — revised implementation order from audit through integration.
 - SESSION_HANDOFF.md — required continuation checkpoint for new chats/sessions; read this first, then verify live GitHub status.
 - REVERSE_ENGINEERING/ — verified observations from the legacy app.
+  - `REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md` — RE-006E legacy condition/exhaustion call-path audit and acceptance criteria.
+  - `REVERSE_ENGINEERING/findings/movement-defenses-audit.md` — RE-006F legacy movement/defense audit and engine contract boundaries.
 - SCHEMAS/ — JSON contracts for canonical content and character state.
 - content/ — the only canonical content location for the new builder.
 - src/domain/ — domain types with no UI dependencies.
@@ -45,7 +48,10 @@ The unit suite uses Node's built-in test runner. JSON Schema validation uses Ajv
 - RE-003: weapon property locking/normalization has exhaustive parity coverage for 2,048 kind/property combinations. Armor, shield, AC, equip, and inventory work remain.
 - RE-004: documented F1–F8 core engine correction slice completed with regression tests.
 - RE-005: schema/content validation complete for the current canonical model. Shared schemas, option-set/item contracts, ID/ruleset metadata enforcement, reference checks, Ajv fixtures, and TypeScript contract fixtures pass CI (47/47 tests).
-- RE-006: rules and character calculation.
+- RE-006D4: Long Rest and recovery implementation is merged into `main`.
+- RE-006E1–E3: condition, Exhaustion, and condition-lifecycle engines are implemented and CI verified on clean stacked PRs #20–#22 (289 / 303 / 324 tests passed respectively); review/merge pending.
+- RE-006F0: movement/defense audit is documented on clean PR #23. RE-006F1–F3: movement profiles, effective movement resolver, and derived-defense aggregation are implemented and CI verified on clean PR #24; exact-head workflow 41957445119 passed typecheck and 338 tests with 0 failures.
+- RE-006 as a whole is not yet merged/completion-gated. Do not begin RE-007 until the E/F PR stack is reconciled and merged.
 - RE-007: spellcasting engine.
 - RE-008: action, trigger, and effect engine.
 - RE-009+: migration, canonical content pilot, Owlbear adapter, Builder, Sheet, and final integration.

@@ -205,20 +205,90 @@ Status: implementation complete and exact-`main` CI verified on PR #12 head `fe1
 
 ### RE-006E — Conditions & Exhaustion
 
-- Condition state and derived attack/check/save/movement restrictions.
-- Separate 2014 and 2024 Exhaustion behavior.
-- Duration, expiration, stacking, and removal rules with tests.
+**Audit status:** complete for the inspected legacy sheet path. **Implementation status:** E1–E3 are implemented and CI verified on clean stacked PRs #20–#22; review/merge remains pending. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md).
+
+#### RE-006E1 — Condition Instances & Derived Resolver
+
+- Preserve condition instances with unique identity, source/provenance, affected character/target, and independent duration/expiration.
+- Allow multiple instances of the same non-stacking condition; aggregate its mechanical effect by condition type while preserving each instance's lifecycle.
+- Return structured outgoing/incoming attack, check/save, action/Bonus Action/reaction, movement, automatic-failure, Concentration, and defense/immunity consequences.
+- Model context-dependent requirements (source/target identity, line of sight, distance) as structured inputs/results rather than reminder-only strings.
+- Do not execute attacks, actions, reactions, movement, or triggers; those remain downstream engine responsibilities.
+
+Status: implemented and CI verified on clean [PR #20](https://github.com/Brozantium/5e-sheet-demo/pull/20). Exact head `74b91177cb7456c98dc22b7266e6f30a597d0cec`; workflow 41957036163 succeeded (289 tests, 0 failures).
+
+#### RE-006E2 — Ruleset-aware Exhaustion Resolver
+
+- 2014: cumulative Disadvantage ladder, Speed halving/zero, maximum-HP halving, and death at level 6.
+- 2024: cumulative -2 per level to D20 Tests, -5 feet per level to Speed, and death at level 6.
+- Keep a dedicated numeric Exhaustion level and explicit ruleset policy; do not translate 2024 numeric penalties into Disadvantage.
+- Reuse RE-006D4 for Long Rest Exhaustion recovery. Do not duplicate D4's 2014 food/drink gate or 2024 unconditional one-level recovery.
+- Return an explicit death outcome at level 6 compatible with D3; do not synthesize failed Death Saves.
+
+Status: implemented and CI verified on clean [PR #21](https://github.com/Brozantium/5e-sheet-demo/pull/21). Exact head `49869b7bc58c7018b522380c752ce88407317ad0`; workflow 41957070754 succeeded (303 tests, 0 failures).
+
+#### RE-006E3 — Condition Lifecycle
+
+- Resolve structured duration/expiration events: turn/round boundaries, source/target events, successful removal saves, Short Rest, Long Rest, Dawn, and manual removal.
+- Expire/remove only the matching instance(s); preserve other instances of the same condition type.
+- Keep lifecycle operations pure and caller-driven. No internal timers, clocks, event scheduler, or persistence.
+
+Status: implemented and CI verified on clean [PR #22](https://github.com/Brozantium/5e-sheet-demo/pull/22). Exact head `75fd2a9515917721c5a2785331d42b7538272d54`; workflow 41957082301 succeeded (324 tests, 0 failures).
+
+**Audit findings that affect implementation:**
+
+- Legacy `ActiveCondition` already stores per-instance IDs, source, duration, expiration, save text, notes, and applied timestamp. The missing piece is structured behavior and lifecycle enforcement, not the existence of per-instance data.
+- Legacy resolver aggregates condition types and returns only roll modes, a coarse speed state, action/reaction flags, and reminder text. Incoming-attack context, automatic save failures, target/source context, and several movement/defense rules are not mechanically represented.
+- Legacy UI/effect application paths reject a second instance of an already-active condition even though the rules preserve independent durations for multiple sources.
+- Legacy `duration` and `appliedAt` do not drive timed expiry. Only Short Rest, Long Rest, Dawn, and manual persistence are observed.
+- Legacy Exhaustion helper is 2014-only. The reengine D4 Long Rest resolver owns the ruleset-specific recovery decision.
 
 ### RE-006F — Movement & Derived Defenses
 
-- Walking, climbing, swimming, flying, and other movement modes.
-- Speed bonuses/penalties and condition interactions.
-- Derived combat values that depend on movement or character state.
-- Do not fold mount or vehicle stat blocks into the character's base Speed.
+See [movement-defenses-audit.md](./REVERSE_ENGINEERING/findings/movement-defenses-audit.md) for legacy evidence, contract decisions, tests, and scope boundaries.
+
+#### RE-006F0 — Movement & Defense Audit / Contract Boundaries
+
+Status: audit complete. The legacy single-Speed path, visible movement grants, E1/E2 outputs, and defense aggregation path were inspected.
+
+#### RE-006F1 — Movement Profiles
+
+- Define walking, climbing, swimming, flying, and burrowing profile IDs.
+- Preserve absent modes separately from explicit zero Speed.
+- Retain provenance and keep base profiles separate from temporary modifiers.
+
+Status: implemented and CI verified on clean [PR #24](https://github.com/Brozantium/5e-sheet-demo/pull/24).
+
+#### RE-006F2 — Effective Movement Resolver
+
+- Apply explicit caller-ordered modifiers to each mode.
+- Consume the existing E2 Exhaustion speed effect per mode.
+- Apply E1 hard Speed-zero / cannot-increase constraints last; preserve crawl/stand, source-approach, and Grappled drag metadata without executing movement.
+- Keep movement costs and target restrictions separate from Speed values.
+
+Status: implemented and CI verified on [PR #18](https://github.com/Brozantium/5e-sheet-demo/pull/18).
+
+#### RE-006F3 — Derived Defense Aggregation
+
+- Aggregate feature, temporary, equipment, and E1 condition-derived defense facts.
+- Coalesce duplicate labels while preserving unique source provenance.
+- Preserve AC bonus source records without owning AC arithmetic; leave damage conflict resolution downstream.
+
+Status: implemented and CI verified on [PR #18](https://github.com/Brozantium/5e-sheet-demo/pull/18).
+
+PR #24 clean implementation head `f4a26f7f912a56e69419b4d71499b71ab2e3fd8c` passed workflow 41957445119: frozen-lockfile install, `pnpm typecheck:reengine`, and 338 tests (0 failures). Review/merge remains pending.
+
+**Movement/defense consumer boundaries:**
+
+- Modifier order is a deterministic caller-defined extension contract, not a universal 2014/2024 D&D stacking policy. Content consumers must establish the relevant stacking policy and tests before assigning order values.
+- Movement profiles and modifiers preserve source records. The current resolution result exposes effective Speed and applied/blocked modifier IDs; retain normalized inputs when consumers need full provenance.
+- F3 projects E1 damage resistance, damage immunity, and condition immunity. E1 `diseaseImmunity` remains a separate result and must not be discarded by consumers.
+- AC bonus arithmetic remains owned by the AC engine; resistance/immunity conflict resolution remains downstream.
+- No mount, familiar, summoned creature, or vehicle entity model (RE-010); no turn/action/pathfinding/movement consumption (RE-008); no Owlbear/UI/persistence integration (RE-009).
 
 ### RE-006 completion gate
 
-RE-006 is complete only when all slices above have explicit acceptance tests, clean-room typecheck and unit tests pass, and the derived calculations are documented. UI integration and legacy migration remain later work.
+RE-006 implementation is present across the documented slices and the relevant exact-head CI checks have passed. It is **not yet administratively complete**: PRs #19–#24 still require dependency-aware review/merge reconciliation. Do not begin RE-007 until all RE-006 slices are merged and the final mainline typecheck/unit suite passes. UI integration and legacy migration remain later work.
 
 ## RE-007 — Spellcasting Engine
 
