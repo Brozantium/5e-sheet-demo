@@ -90,14 +90,14 @@ Status: complete. Armor-training consequences beyond AC remain in the later armo
 
 ### RE-006B2 — Weapon Attack, Damage & Hand Occupancy
 
-Implemented on branch `feat/re-006b2-weapon-attacks`; PR #1 is open for review.
+Implemented and merged via PR #1 (`443c3d700a8bdfd98c6eb9f70250bb64e984dd03`).
 
 - Default melee STR and ranged DEX, explicit Finesse STR/DEX choice.
 - Weapon/category proficiency, attack adjustments, damage adjustments, and Versatile damage formulas.
 - 2014 and 2024 Heavy disadvantage rules.
 - Hand occupancy and Light weapon-pair prerequisite validation.
 
-Status: implementation and tests complete for this bounded slice; pending PR review/merge. It does not complete Weapon Properties as a whole.
+Status: complete. PR #1 is merged to `main`. This slice does not complete Weapon Properties as a whole.
 
 ### RE-006B3 — Weapon Properties & Range (current priority)
 
@@ -105,27 +105,26 @@ Split this into small, independently testable slices:
 
 - **B3A — Canonical property model and range contracts:** ruleset-aware 2014/2024 property definitions; normal and long range; distinct thrown range; ammunition type; Versatile damage metadata; structured Special rules; schema and registry validation.
 
-  Status: implementation complete on `feat/re-006b3a-weapon-property-model`. Frozen install and typecheck passed; all 113 unit tests passed. Pending review/merge after the B2 dependency.
+  Status: complete. Merged via PR #2 (`a5e6b609d48009f7d73e0a96ec092475903fe9d6`); its CI passed frozen install, typecheck, and 113 unit tests.
 
 - **B3B — Property calculations:** Reach and Opportunity Attack reach; Thrown attack mode and ability selection; range-band validation and long-range Disadvantage; Two-Handed constraints including the 2024 mounted Lance exception; 2014 Lance close-range rule and Net non-damaging attack profile.
 
-  Status: implementation complete on `feat/re-006b3b-weapon-range-reach`. Frozen install and typecheck passed; all 123 unit tests passed. Pending review/merge after the B3A dependency.
+  Status: complete. Merged via PR #3 (`74993e5c28e81aa77928dae20fa6dbf9c16a3f14`); its CI passed frozen install, typecheck, and 123 unit tests.
 - **B3C1 — Ammunition & Loading:** ammunition availability and consumption per ranged attack; the free-hand requirement for loading one-handed weapons; Loading's one-shot limit per Action, Bonus Action, or Reaction; post-battle ammunition recovery; improvised-weapon handoff for ranged weapons used in melee.
 
-  Status: implementation complete on `feat/re-006b3c1-ammunition-loading`. Frozen install and typecheck passed; all 133 unit tests passed. Pending review/merge after the B3B dependency.
+  Status: complete. Merged via PR #4 (`317c3b1f24fed68d5190cc1b45628725a8444798`); its CI passed frozen install, typecheck, and 133 unit tests.
 
 - **B3C2 — Light extra-attack trigger contract:** 2014 two-weapon requirements versus 2024 Light trigger; negative-only ability modifier damage; Nick's action placement when the extra weapon's mastery is already unlocked and selected.
 
-  Status: implementation complete on `feat/re-006b3c2-light-nick-trigger`. Frozen install and typecheck passed; all 149 unit tests passed. Pending review/merge after the B3C1 dependency. Stateful execution and action consumption remain with RE-008.
+  Status: merged via PR #5 (`03dba0f509e3c702a548b4397aceea8e63b09f05`). CI passed on the merged head: frozen install, typecheck, and 149 unit tests. Stateful execution and action consumption remain with RE-008.
 
-Weapon Property/range/attack-cycle implementation (B3A–B3C2) is covered by independent stacked PRs. B4 completes mastery selection/eligibility; mastery effects and 2014/2024 Special effect execution remain in RE-008.
+Weapon Property/range/attack-cycle implementation (B3A–B3C2) is merged through PRs #2–#5. B4 mastery eligibility/selection is also merged; mastery effects and 2014/2024 Special effect execution remain in RE-008.
 
-Weapon Property/range/attack-cycle implementation (B3A–B3C2) is now covered by independent stacked PRs. Remaining weapon-specific RE-006 scope is B4 mastery eligibility/selection; mastery effects and 2014/2024 Special effect execution remain in RE-008.
 - Keep editor compatibility/normalization (RE-003) separate from the actual rules mechanics. Do not make Heavy automatically mean Two-Handed in the combat domain.
 
 Acceptance: official 2014 and 2024 weapon lists can be represented without encoding mechanical parameters in display strings; every implemented rule has ruleset-specific regression tests.
 
-### RE-006B4 — Weapon Mastery Eligibility & Selection (current)
+### RE-006B4 — Weapon Mastery Eligibility & Selection
 
 - Store the assigned 2024 mastery on each canonical weapon definition, separate from ordinary weapon properties.
 - Model the eight mastery IDs (Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex).
@@ -133,11 +132,11 @@ Acceptance: official 2014 and 2024 weapon lists can be represented without encod
   - Barbarian: Simple or Martial melee weapons; starts with 2 choices and scales by class progression.
   - Fighter: Simple or Martial weapons; starts with 3 choices and scales by class progression.
   - Paladin, Ranger, Rogue: 2 proficient weapon types.
-- Reuse the generic multiple SelectionMechanic with Long Rest replacement of one choice; resolve the actual number of choices from the class progression table for Barbarian/Fighter.
+- Reuse the generic multiple SelectionMechanic; Barbarian/Fighter replace one choice after a Long Rest, while Paladin/Ranger/Rogue can change their full two-weapon selection. Resolve Barbarian/Fighter capacity from class progression.
 - Validate selected weapon types and resolve whether the character owns the Weapon Mastery feature and selected the weapon before exposing that weapon's mastery to the combat/action layer.
 - Keep the eight mastery effects and their triggers in RE-008.
 
-  Status: implementation complete on `feat/re-006b4-weapon-mastery-selection`. Frozen install and typecheck passed; all 164 unit tests passed. Pending review/merge after the B3C2 dependency. Mastery effects and action triggers remain in RE-008.
+  Status: complete. Merged via PR #6 (`7938d4b6ee72cc2279b22f5b74b1efc719569203`); its CI passed frozen install, typecheck, and 164 unit tests. Mastery effects and action triggers remain in RE-008.
 
 ### RE-006C — Armor Training Consequences
 
@@ -148,7 +147,7 @@ Acceptance: official 2014 and 2024 weapon lists can be represented without encod
 - 2024: untrained Light/Medium/Heavy armor imposes Disadvantage on STR/DEX D20 Tests and prevents spellcasting; an untrained Shield only loses its AC benefit.
 - Return deduplicated derived flags for downstream attack/check/save/spellcasting engines without mutating rolls or character state.
 
-Status: implementation complete on `feat/re-006c-armor-training-consequences`. Frozen install and typecheck passed; all 177 unit tests passed. Pending review/merge after the B4 dependency.
+Status: complete. Merged via PR #7 (`4942339f56b4d51282e9225f1b32e81b12a77fb9`). CI run `41831774283` passed frozen install, typecheck, and 177 unit tests on the exact head.
 
 #### RE-006C2 — Training Grant Resolution
 
@@ -157,7 +156,7 @@ Status: implementation complete on `feat/re-006c-armor-training-consequences`. F
 - Handle multiclass grant unions, shared content, and ruleset-incompatible sources with diagnostics.
 - Retain grant provenance for builder diagnostics and auditability.
 
-Status: implementation complete on `feat/re-006c2-armor-training-grants`. Frozen install and typecheck passed; all 184 unit tests passed. Pending review/merge after the C1 dependency.
+Status: complete. Merged via PR #8 (`d2210d3c961240e4e65cca7423bd7a74dc29374d`). CI runs `41835792260` and `41835787859` passed frozen install, typecheck, and 184 unit tests on the exact head.
 
 ### RE-006D — Hit Points, Hit Dice & Recovery
 
@@ -167,30 +166,30 @@ Status: implementation complete on `feat/re-006c2-armor-training-grants`. Frozen
 - Apply damage with Temporary HP absorbed first and healing up to maximum HP. Temporary HP never stacks; when a grant arrives while Temporary HP already exists, preserve the player's choice to keep the current amount or take the new amount, even when the new amount is lower.
 - Return immutable snapshots and explicit applied/overflow amounts; death-state transitions remain D3.
 
-Status: implementation complete on `feat/re-006d1-hit-point-calculation`. Frozen-lockfile install and `pnpm typecheck:reengine` passed; all 199 unit tests passed. Temporary HP replacement preserves the player's explicit choice rather than automatically selecting the larger amount.
+Status: complete. Merged via PR #9 (`9a46657a65a3cc8c852f8cbaec578defa6290d8c`). CI run `41836522582` passed frozen install, typecheck, and 199 unit tests on the exact head.
 
 #### RE-006D2 — Hit Dice Pools & Short Rest
 
-- Build per-class Hit Die pools for multiclass characters; preserve each class's Hit Die size and remaining/spent counts.
-- Resolve each Hit Die spend as a separate immutable decision so the player can choose whether to spend another die after seeing the previous result.
-- 2014 Short Rest: regain HP per die equal to the roll plus Constitution modifier, with a minimum of 0 HP per die; no 2024-style positive-HP start restriction.
-- 2024 Short Rest: a character must have at least 1 HP to start; regain HP per die equal to the roll plus Constitution modifier, with a minimum of 1 HP per die.
-- Cap actual HP recovery at maximum HP, preserve Temporary HP, and never spend a die from a different class pool or beyond the remaining count.
-- The rest coordinator owns duration/interruption/completion; this pure resolver accepts a completed Short Rest snapshot and does not mutate character persistence.
+- Build immutable per-class Hit Die pools from the validated per-level HP snapshot, preserving each class's Hit Die size and remaining/spent counts.
+- Resolve one class-specific Hit Die spend per explicit player decision; pass the returned HP/pool snapshots back only if the player chooses to spend another die.
+- 2014 Short Rest: regain HP per die equal to the roll plus Constitution modifier, with a minimum of 0 HP; there is no 2024-style positive-HP start restriction.
+- 2024 Short Rest: the character must have at least 1 HP when the rest begins; regain HP per die equal to the roll plus Constitution modifier, with a minimum of 1 HP.
+- Cap actual recovery at maximum HP, preserve Temporary HP, and never spend from another class pool or beyond its remaining count.
+- The rest coordinator owns duration/interruption/completion; this pure resolver accepts a completed Short Rest and the HP snapshot from when the rest began.
 
-Status: implementation complete on `feat/re-006d2-hit-dice-short-rest`. Frozen-lockfile install and `pnpm typecheck:reengine` passed; all 212 unit tests passed. PR #10 is open as a draft stacked on D1.
+Status: implementation complete. Exact-`main` verification in PR #10 passed frozen-lockfile install, `pnpm typecheck:reengine`, and all 212 unit tests.
 
 #### RE-006D3 — Death Saves & Stabilization
 
 - Track non-consecutive Death Save successes/failures: DC 10, three successes become Stable, three failures cause death; a natural 1 adds two failures and a natural 20 restores 1 HP.
 - Reset both tallies when HP is regained or the character becomes Stable.
-- Resolve damage while at 0 HP: one failure for damage, two for a Critical Hit; apply instant death when the damage equals or exceeds maximum HP. Also resolve massive damage when dropping from positive HP to 0.
+- Resolve damage while at 0 HP: one failure for damage, two for a Critical Hit; apply instant death when damage equals or exceeds maximum HP. Also resolve massive damage when dropping from positive HP to 0.
 - 2014 stabilization: Action + DC 10 Wisdom (Medicine), or expend one Healer's Kit use as an Action without a check.
 - 2024 stabilization: Help action + DC 10 Wisdom (Medicine), or expend one Healer's Kit use as a Utilize action without a check.
 - A Stable character remains at 0 HP and unconscious; damage ends Stability. After the rules-defined 1d4 hours without healing, the character regains 1 HP.
-- Keep the shared death-save outcomes common while retaining edition-specific stabilization action costs. Melee knockout action semantics remain a combat/action integration concern.
+- Keep shared Death Save outcomes common while retaining edition-specific stabilization action costs. Melee knockout action semantics remain a combat/action integration concern.
 
-Status: implementation complete on `feat/re-006d3-death-saves-stabilization`. Frozen-lockfile install and `pnpm typecheck:reengine` passed; all 235 unit tests passed. Turn orchestration, condition application, and knockout action handling remain with RE-006E/RE-008.
+Status: implementation complete. Exact-`main` workflow `41888312987` passed frozen-lockfile install, `pnpm typecheck:reengine`, and all 236 unit tests. Turn orchestration, condition application, and knockout action handling remain with RE-006E/RE-008.
 
 #### RE-006D4 — Long Rest & Recovery
 
@@ -202,11 +201,11 @@ Status: implementation complete on `feat/re-006d3-death-saves-stabilization`. Fr
 - 2014 Hit Dice recovery is a player choice, limited to half total Hit Dice (minimum one); 2024 automatically restores all expended Hit Dice.
 - Keep the rest lifecycle and interruption event log explicit; do not duplicate D2 Hit Die spending or RE-006E Exhaustion effects.
 
-Status: implementation complete on `feat/re-006d4-long-rest-recovery`. Frozen-lockfile install and `pnpm typecheck:reengine` passed; all 257 unit tests passed. The caller supplies the resolved rest event log; persistence and UI orchestration remain later integration work.
+Status: implementation complete and exact-`main` CI verified on PR #12 head `fe1e6e403106d116118019d649b497138f4371dd`: frozen-lockfile install, `pnpm typecheck:reengine`, and all 258 unit tests passed. The caller supplies the resolved rest event log; persistence and UI orchestration remain later integration work.
 
 ### RE-006E — Conditions & Exhaustion
 
-**Audit status:** complete for the inspected legacy sheet path. **Implementation status:** not started. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md) for source evidence, ruleset comparison, gaps, and acceptance tests.
+**Audit status:** complete for the inspected legacy sheet path. **Implementation status:** E1–E3 are implemented and CI verified on open stacked PRs #14–#16; review/merge remains pending. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md).
 
 #### RE-006E1 — Condition Instances & Derived Resolver
 
@@ -216,13 +215,17 @@ Status: implementation complete on `feat/re-006d4-long-rest-recovery`. Frozen-lo
 - Model context-dependent requirements (source/target identity, line of sight, distance) as structured inputs/results rather than reminder-only strings.
 - Do not execute attacks, actions, reactions, movement, or triggers; those remain downstream engine responsibilities.
 
+Status: implemented and CI verified on [PR #14](https://github.com/Brozantium/5e-sheet-demo/pull/14). Exact head `1b9bd4783ea14bc631b1506473108e038a1fe98a`; workflow 41787492057 succeeded.
+
 #### RE-006E2 — Ruleset-aware Exhaustion Resolver
 
-- 2014: cumulative Disadvantage ladder, Speed halving/zero, maximum HP halving, and death at level 6.
+- 2014: cumulative Disadvantage ladder, Speed halving/zero, maximum-HP halving, and death at level 6.
 - 2024: cumulative -2 per level to D20 Tests, -5 feet per level to Speed, and death at level 6.
 - Keep a dedicated numeric Exhaustion level and explicit ruleset policy; do not translate 2024 numeric penalties into Disadvantage.
 - Reuse RE-006D4 for Long Rest Exhaustion recovery. Do not duplicate D4's 2014 food/drink gate or 2024 unconditional one-level recovery.
 - Return an explicit death outcome at level 6 compatible with D3; do not synthesize failed Death Saves.
+
+Status: implemented and CI verified on [PR #15](https://github.com/Brozantium/5e-sheet-demo/pull/15). Exact head `b84975a3cafa3fad23829828bb403412030dee67`; workflow 41788311442 succeeded.
 
 #### RE-006E3 — Condition Lifecycle
 
@@ -230,24 +233,62 @@ Status: implementation complete on `feat/re-006d4-long-rest-recovery`. Frozen-lo
 - Expire/remove only the matching instance(s); preserve other instances of the same condition type.
 - Keep lifecycle operations pure and caller-driven. No internal timers, clocks, event scheduler, or persistence.
 
+Status: implemented and CI verified on [PR #16](https://github.com/Brozantium/5e-sheet-demo/pull/16). Exact head `d2baa198fa4d45ad9060d83916bed3aa5762629b`; workflow 41798828275 succeeded.
+
 **Audit findings that affect implementation:**
 
 - Legacy `ActiveCondition` already stores per-instance IDs, source, duration, expiration, save text, notes, and applied timestamp. The missing piece is structured behavior and lifecycle enforcement, not the existence of per-instance data.
 - Legacy resolver aggregates condition types and returns only roll modes, a coarse speed state, action/reaction flags, and reminder text. Incoming-attack context, automatic save failures, target/source context, and several movement/defense rules are not mechanically represented.
 - Legacy UI/effect application paths reject a second instance of an already-active condition even though the rules preserve independent durations for multiple sources.
 - Legacy `duration` and `appliedAt` do not drive timed expiry. Only Short Rest, Long Rest, Dawn, and manual persistence are observed.
-- Legacy Exhaustion helper is 2014-only. The reengine D4 Long Rest resolver already owns the ruleset-specific recovery decision.
+- Legacy Exhaustion helper is 2014-only. The reengine D4 Long Rest resolver owns the ruleset-specific recovery decision.
 
 ### RE-006F — Movement & Derived Defenses
 
-- Walking, climbing, swimming, flying, and other movement modes.
-- Speed bonuses/penalties and condition interactions.
-- Derived combat values that depend on movement or character state.
-- Do not fold mount or vehicle stat blocks into the character's base Speed.
+See [movement-defenses-audit.md](./REVERSE_ENGINEERING/findings/movement-defenses-audit.md) for legacy evidence, contract decisions, tests, and scope boundaries.
+
+#### RE-006F0 — Movement & Defense Audit / Contract Boundaries
+
+Status: audit complete. The legacy single-Speed path, visible movement grants, E1/E2 outputs, and defense aggregation path were inspected.
+
+#### RE-006F1 — Movement Profiles
+
+- Define walking, climbing, swimming, flying, and burrowing profile IDs.
+- Preserve absent modes separately from explicit zero Speed.
+- Retain provenance and keep base profiles separate from temporary modifiers.
+
+Status: implemented and CI verified on [PR #18](https://github.com/Brozantium/5e-sheet-demo/pull/18).
+
+#### RE-006F2 — Effective Movement Resolver
+
+- Apply explicit caller-ordered modifiers to each mode.
+- Consume the existing E2 Exhaustion speed effect per mode.
+- Apply E1 hard Speed-zero / cannot-increase constraints last; preserve crawl/stand, source-approach, and Grappled drag metadata without executing movement.
+- Keep movement costs and target restrictions separate from Speed values.
+
+Status: implemented and CI verified on [PR #18](https://github.com/Brozantium/5e-sheet-demo/pull/18).
+
+#### RE-006F3 — Derived Defense Aggregation
+
+- Aggregate feature, temporary, equipment, and E1 condition-derived defense facts.
+- Coalesce duplicate labels while preserving unique source provenance.
+- Preserve AC bonus source records without owning AC arithmetic; leave damage conflict resolution downstream.
+
+Status: implemented and CI verified on [PR #18](https://github.com/Brozantium/5e-sheet-demo/pull/18).
+
+PR #18 current head `ee4d1c98c646974570c776341f0317e1bef7ad98` passed workflow 41953260760: frozen-lockfile install, `pnpm typecheck:reengine`, and 337 tests (0 failures). Review/merge remains pending.
+
+**Movement/defense consumer boundaries:**
+
+- Modifier order is a deterministic caller-defined extension contract, not a universal 2014/2024 D&D stacking policy. Content consumers must establish the relevant stacking policy and tests before assigning order values.
+- Movement profiles and modifiers preserve source records. The current resolution result exposes effective Speed and applied/blocked modifier IDs; retain normalized inputs when consumers need full provenance.
+- F3 projects E1 damage resistance, damage immunity, and condition immunity. E1 `diseaseImmunity` remains a separate result and must not be discarded by consumers.
+- AC bonus arithmetic remains owned by the AC engine; resistance/immunity conflict resolution remains downstream.
+- No mount, familiar, summoned creature, or vehicle entity model (RE-010); no turn/action/pathfinding/movement consumption (RE-008); no Owlbear/UI/persistence integration (RE-009).
 
 ### RE-006 completion gate
 
-RE-006 is complete only when all slices above have explicit acceptance tests, clean-room typecheck and unit tests pass, and the derived calculations are documented. UI integration and legacy migration remain later work.
+RE-006 implementation is present across the documented slices and the relevant exact-head CI checks have passed. It is **not yet administratively complete**: PRs #14–#18 still require dependency-aware review/merge reconciliation. Do not begin RE-007 until all RE-006 slices are merged and the final mainline typecheck/unit suite passes. UI integration and legacy migration remain later work.
 
 ## RE-007 — Spellcasting Engine
 
@@ -265,7 +306,6 @@ RE-006 is complete only when all slices above have explicit acceptance tests, cl
 - Passive and conditional effects.
 - Explicit event payloads and effect application contracts.
 - Implement weapon mastery effects (Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex), Light/Loading/Ammunition action-cycle interactions, and their turn/Reaction/expiration semantics.
-- Execute 2014 Special weapon rules, including Net target eligibility, Restrained effect, escape, and the one-attack-per-Action/Bonus Action/Reaction limit. Keep 2024 mastery effects and 2014 Special behavior ruleset-scoped.
 - Resolve ruleset-specific melee knockout choices: 2014 can leave a target at 0 HP and Stable; 2024 leaves it at 1 HP with Unconscious and starts a Short Rest, with the documented end conditions.
 - Resolve cross-feature interactions without duplicating the rules already calculated by RE-006.
 
