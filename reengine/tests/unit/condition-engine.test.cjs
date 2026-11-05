@@ -141,6 +141,7 @@ test("Blinded applies outgoing Disadvantage, incoming Advantage, and sight-check
 
 test("Charmed blocks harmful targeting of its charmer and grants the charmer social-check Advantage", () => {
   const result = resolve([sourceCondition("charmed")], "2024");
+  assert.deepEqual(result.effects.prohibitedAttackTargetCreatureIds, [SOURCE]);
   assert.deepEqual(result.effects.prohibitedHarmfulTargetCreatureIds, []);
   assert.deepEqual(result.effects.prohibitedDamagingTargetCreatureIds, [SOURCE]);
   assert.equal(
@@ -171,12 +172,14 @@ test("Charmed without a charmer creature ID returns a diagnostic rather than gue
   const result = resolve([condition({ type: "charmed" })]);
   assert.equal(result.valid, false);
   assert.ok(result.issues.some((issue) => issue.code === "missing-source-creature"));
+  assert.deepEqual(result.effects.prohibitedAttackTargetCreatureIds, []);
   assert.deepEqual(result.effects.prohibitedHarmfulTargetCreatureIds, []);
   assert.deepEqual(result.effects.prohibitedDamagingTargetCreatureIds, []);
 });
 
 test("2014 Charmed prevents harmful abilities and magical effects against the charmer", () => {
   const result = resolve([sourceCondition("charmed")], "2014");
+  assert.deepEqual(result.effects.prohibitedAttackTargetCreatureIds, [SOURCE]);
   assert.deepEqual(result.effects.prohibitedHarmfulTargetCreatureIds, [SOURCE]);
   assert.deepEqual(result.effects.prohibitedDamagingTargetCreatureIds, []);
 });
@@ -419,6 +422,16 @@ test("condition roll modifiers preserve normal Advantage/Disadvantage cancellati
   assert.equal(combineConditionRollModes("advantage", "advantage"), "advantage");
   assert.equal(combineConditionRollModes("disadvantage", "disadvantage"), "disadvantage");
   assert.equal(combineConditionRollModes("advantage", "disadvantage"), "normal");
+  assert.equal(
+    combineConditionRollModes("advantage", "disadvantage", "disadvantage"),
+    "normal",
+    "one Advantage cancels any number of Disadvantages",
+  );
+  assert.equal(
+    combineConditionRollModes("advantage", "advantage", "disadvantage"),
+    "normal",
+    "one Disadvantage cancels any number of Advantages",
+  );
   assert.equal(
     mode(resolve([condition({ type: "poisoned" })]), selfContext("attack"), ["advantage"]),
     "normal",
