@@ -50,7 +50,7 @@ The unit suite uses Node's built-in test runner. JSON Schema validation uses Ajv
 - RE-005: schema/content validation complete for the current canonical model. Shared schemas, option-set/item contracts, ID/ruleset metadata enforcement, reference checks, Ajv fixtures, and TypeScript contract fixtures pass CI (47/47 tests).
 - RE-006D4: Long Rest and recovery implementation is merged into `main`.
 - RE-006E1–E3: condition, Exhaustion, and condition-lifecycle engines are implemented and CI verified on clean stacked PRs #20–#22 (289 / 303 / 324 tests passed respectively); review/merge pending.
-- RE-006F0: movement/defense audit is documented on clean PR #23. RE-006F1–F3: movement profiles, effective movement resolver, and derived-defense aggregation are implemented and CI verified on clean PR #24; exact-head workflow 41957445119 passed typecheck and 338 tests with 0 failures.
+- RE-006F0: movement/defense audit is documented on clean PR #23. RE-006F1–F3: movement profiles, effective movement resolver, and derived-defense aggregation are implemented and CI verified on clean PR #24; latest exact-head workflow 41968757492 passed typecheck and 338 tests with 0 failures.
 - RE-006 as a whole is not yet merged/completion-gated. Do not begin RE-007 until the E/F PR stack is reconciled and merged.
 - RE-007: spellcasting engine.
 - RE-008: action, trigger, and effect engine.
