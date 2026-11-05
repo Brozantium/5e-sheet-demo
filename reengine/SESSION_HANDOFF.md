@@ -166,7 +166,7 @@ Live PR metadata was checked on 2026-11-04 before this documentation update: PR 
 
 - **PR #12 — RE-006D4:** merged into `main` on 2026-11-04. [PR #12](https://github.com/Brozantium/5e-sheet-demo/pull/12)
 - **PR #13 — RE-006E audit/docs:** stale open draft, superseded by the new mainline documentation branch. Its old head is 30 commits behind its target lineage and GitHub reports `mergeable=false`; do not merge it. Close it after the replacement documentation PR is open. [PR #13](https://github.com/Brozantium/5e-sheet-demo/pull/13)
-- **Replacement audit branch:** `docs/re-006e-audit-mainline`, created from current `main`; the RE-006E audit and README navigation are copied, and the roadmap is reconciled with current E/F implementation status. A replacement documentation PR will be opened against `main`.
+- **PR #19 — RE-006E audit/docs mainline replacement:** open, non-draft, targets `main`, mergeable. Head `3d8ac499cb662a6e0cba115c88abe35971ddd1b2`; workflow 41954182536 was running at checkpoint. It carries the audit, README, roadmap, handoff, and repository index. [PR #19](https://github.com/Brozantium/5e-sheet-demo/pull/19)
 - **PR #14 — RE-006E1:** open, not merged; exact head `1b9bd4783ea14bc631b1506473108e038a1fe98a`; CI run 41787492057 succeeded. [PR #14](https://github.com/Brozantium/5e-sheet-demo/pull/14)
 - **PR #15 — RE-006E2:** open, not merged; exact head `b84975a3cafa3fad23829828bb403412030dee67`; CI run 41788311442 succeeded. [PR #15](https://github.com/Brozantium/5e-sheet-demo/pull/15)
 - **PR #16 — RE-006E3:** open, not merged; exact head `d2baa198fa4d45ad9060d83916bed3aa5762629b`; CI run 41798828275 succeeded. [PR #16](https://github.com/Brozantium/5e-sheet-demo/pull/16)
@@ -186,7 +186,7 @@ The implementation branches were originally stacked as #13 → #14 → #15 → #
 
 **Current implementation checkpoint:** F1 typed profiles, F2 movement composition, and F3 defense aggregation are implemented and CI-verified on PR #18's earlier code head. The audit document now records all four review follow-ups and the remaining consumer boundaries. Movement source records are retained in normalized inputs; the current result reports applied/blocked modifier IDs rather than a full contribution ledger. F3 projects E1 damage resistance, damage immunity, and condition immunity, while E1 `diseaseImmunity` remains separately available.
 
-**Immediate next task:** open the replacement audit/documentation PR from `docs/re-006e-audit-mainline` into `main`; then supersede/close stale PR #13 and reconcile PRs #14–#18 against the new base one at a time. Do not start RE-007 until all RE-006 slices are merged and the mainline suite passes. Follow [REENGINE_INDEX.md](./REENGINE_INDEX.md) and the movement/defense audit before expanding the source read set.
+**Immediate next task:** verify exact-head CI for PR #19, then close stale PR #13 as superseded with a link to #19. Next, retarget/reconcile PR #14–#18 against the clean mainline documentation baseline one at a time; inspect every changed-file diff and rerun CI after changing a PR base. Do not start RE-007 until all RE-006 slices are merged and the mainline suite passes. Follow [REENGINE_INDEX.md](./REENGINE_INDEX.md) and the movement/defense audit before expanding the source read set.
 
 **RE-006F boundaries to preserve:**
 
@@ -198,8 +198,8 @@ The implementation branches were originally stacked as #13 → #14 → #15 → #
 
 **Recommended next sequence:**
 
-1. Open the replacement documentation PR from `docs/re-006e-audit-mainline` into `main` and verify its diff/mergeability.
-2. Close stale PR #13 as superseded once the replacement PR is open.
+1. Verify exact-head CI for [PR #19](https://github.com/Brozantium/5e-sheet-demo/pull/19) and confirm its documentation-only diff remains mergeable.
+2. Close stale PR #13 as superseded, with a comment linking to PR #19.
 3. Reconcile #14–#18 against the clean mainline documentation base; retarget one PR at a time and inspect each changed-file diff before continuing to the next.
 4. Keep movement modifier order caller-defined until concrete consumers require ruleset-specific stacking policies and acceptance tests.
 5. Keep disease immunity as E1's separate result unless a reviewed downstream contract adopts it; retain normalized inputs wherever full movement provenance is needed.
