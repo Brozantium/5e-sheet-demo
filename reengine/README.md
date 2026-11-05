@@ -17,6 +17,7 @@ This directory is the clean-room workspace for the new 5e content model, builder
 - ROADMAP.md — revised implementation order from audit through integration.
 - SESSION_HANDOFF.md — required continuation checkpoint for new chats/sessions; read this first, then verify live GitHub status.
 - REVERSE_ENGINEERING/ — verified observations from the legacy app.
+  - `REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md` — RE-006E legacy condition/exhaustion call-path audit and acceptance criteria.
 - SCHEMAS/ — JSON contracts for canonical content and character state.
 - content/ — the only canonical content location for the new builder.
 - src/domain/ — domain types with no UI dependencies.
