@@ -25,14 +25,14 @@ function getSourceCreatureId(source: ConditionSource): string | undefined {
   return undefined;
 }
 
-function mergeRollMode(current: RollMode, next: RollMode): RollMode {
-  if (next === "normal") return current;
-  if (current === "normal") return next;
-  return current === next ? current : "normal";
-}
-
 export function combineConditionRollModes(...modes: RollMode[]): RollMode {
-  return modes.reduce(mergeRollMode, "normal");
+  const hasAdvantage = modes.includes("advantage");
+  const hasDisadvantage = modes.includes("disadvantage");
+
+  if (hasAdvantage && hasDisadvantage) return "normal";
+  if (hasAdvantage) return "advantage";
+  if (hasDisadvantage) return "disadvantage";
+  return "normal";
 }
 
 function emptyEffects(): ConditionDerivedEffects {
@@ -42,6 +42,7 @@ function emptyEffects(): ConditionDerivedEffects {
     rollModifiers: [],
     automaticSavingThrowFailures: [],
     automaticAbilityCheckFailures: [],
+    prohibitedAttackTargetCreatureIds: [],
     prohibitedHarmfulTargetCreatureIds: [],
     prohibitedDamagingTargetCreatureIds: [],
     automaticCriticalHitWithinFeet: null,
@@ -268,6 +269,7 @@ export function resolveConditionEffects(
         break;
       case "charmed":
         if (sourceCreatureId) {
+          addUnique(effects.prohibitedAttackTargetCreatureIds, sourceCreatureId);
           if (input.ruleset === "2014") {
             addUnique(effects.prohibitedHarmfulTargetCreatureIds, sourceCreatureId);
           } else {
@@ -410,6 +412,9 @@ export function resolveConditionEffects(
   );
   effects.movement.grappleDragRules = [...dragByGrappler.values()];
 
+  effects.prohibitedAttackTargetCreatureIds = [
+    ...new Set(effects.prohibitedAttackTargetCreatureIds),
+  ];
   effects.prohibitedHarmfulTargetCreatureIds = [
     ...new Set(effects.prohibitedHarmfulTargetCreatureIds),
   ];
