@@ -21,7 +21,7 @@
 
 ### Copy/paste prompt for a new chat
 
-> Continue the 5e Sheet Reengine project in repository `Brozantium/5e-sheet-demo`. First read `reengine/SESSION_HANDOFF.md`, `reengine/REENGINE_INDEX.md`, and `reengine/ROADMAP.md`. Verify the live GitHub branch, PR state, exact head SHAs, reviews, and CI. Follow the index's incremental-reading protocol and preserve all architecture/ruleset boundaries. RE-006D4 and E1–E3 are merged into `main`; F0–F3 are implemented and CI verified on clean PR #25. PRs #23 and #24 are superseded by #25. Do not begin RE-007 until #25 is merged and the exact-main reengine suite passes. Do not wire the clean-room engine into `src/App.tsx` or legacy runtime before the approved RE-009 integration phase.
+> Continue the 5e Sheet Reengine project in repository `Brozantium/5e-sheet-demo`. First read `reengine/SESSION_HANDOFF.md`, `reengine/REENGINE_INDEX.md`, and `reengine/ROADMAP.md`. Verify the live GitHub branch, PR state, exact head SHAs, reviews, and CI. Follow the index's incremental-reading protocol and preserve all architecture/ruleset boundaries. RE-006D4 and E1–E3 are merged into `main`; F0–F3 are merged via PR #25 and exact-head CI passed 338 tests. The final mainline verification is being recorded on checkpoint PR #26. Do not begin RE-007 until its required CI passes. Do not wire the clean-room engine into `src/App.tsx` or legacy runtime before the approved RE-009 integration phase.
 
 ## Project purpose
 
@@ -85,7 +85,7 @@ This is a compact history of the decisions and slices already recorded in the re
 | RE-006D3 | Death Saves, damage at 0 HP, stabilization | Pure state resolution; turn/timer/action orchestration remains caller-owned. |
 | RE-006D4 | Ruleset-aware Long Rest and recovery | Completed before RE-006E; see PR #12 and its verification record below. |
 | RE-006E | Conditions & Exhaustion | Legacy audit complete. E1–E3 are merged into `main` via PRs #20–#22; exact-head CI passed 289 / 303 / 324 tests. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md). |
-| RE-006F | Movement & derived defenses | F0 audit and F1–F3 engines are consolidated in clean PR #25; exact-head CI passed 338 tests (0 failures). Review/merge remains pending. See [movement-defenses-audit.md](./REVERSE_ENGINEERING/findings/movement-defenses-audit.md). |
+| RE-006F | Movement & derived defenses | F0 audit and F1–F3 engines are merged into `main` via PR #25; exact-head CI passed 338 tests (0 failures). See [movement-defenses-audit.md](./REVERSE_ENGINEERING/findings/movement-defenses-audit.md). |
 | RE-007 | Spellcasting engine | Planned. |
 | RE-008 | Action, trigger, and effect engine | Planned; owns action execution, event triggers, reactions, mastery effects, and condition/action timing. |
 | RE-009 | Migration, content, UI, Owlbear integration | Planned integration phase. |
@@ -170,17 +170,16 @@ The live PR statuses and exact-head CI listed above were rechecked on 2026-11-05
 
 ## Current checkpoint and next action
 
-**Checkpoint (2026-11-05):** RE-006D4 and RE-006E1–E3 are merged into `main` via PRs #12 and #20–#22. E1, E2, and E3 exact-head CI passed 289, 303, and 324 tests respectively. RE-006F0–F3 are consolidated on clean PR #25, based directly on current `main`; exact-head workflow 41969537457 passed install, typecheck, and 338 tests (0 failures). RE-006 is not yet administratively complete until PR #25 is merged and the final mainline suite passes. No legacy `src/App.tsx` or `src/combat-rules.ts` source was changed; there is still no Owlbear/UI integration.
+**Checkpoint (2026-11-05):** RE-006A–F3 implementation is merged into `main`. RE-006E1–E3 exact-head CI passed 289 / 303 / 324 tests; RE-006F0–F3 exact-head workflow 41969905962 passed frozen-lockfile install, typecheck, and 338 tests (0 failures). PRs #19–#22 and #25 are merged; old branches #13–#18 and superseded movement PRs #23–#24 are closed. The final mainline verification is being recorded on documentation checkpoint PR #26. No legacy `src/App.tsx` or `src/combat-rules.ts` source was changed; there is still no Owlbear/UI integration.
 
 - **PR #12 — RE-006D4:** merged into `main`. [PR #12](https://github.com/Brozantium/5e-sheet-demo/pull/12)
-- **PRs #19–#22 — RE-006 documentation, conditions, Exhaustion, lifecycle:** merged into `main`. PR #19 workflow 41968985049 passed; PR #20 workflow 41957036163 passed 289 tests; PR #21 workflow 41957070754 passed 303 tests; PR #22 workflow 41957082301 passed 324 tests.
-- **PRs #13–#18:** closed as superseded; their implementation/audit work was reconciled into clean PRs #19–#25.
-- **PR #23 — old RE-006F0 audit:** superseded by PR #25 because its documentation branch conflicted after E1–E3 landed on `main`. [PR #23](https://github.com/Brozantium/5e-sheet-demo/pull/23)
-- **PR #24 — old RE-006F1–F3 implementation:** superseded by PR #25 to remove divergent stacked ancestry. Its exact-head workflow 41968885940 passed 338 tests. [PR #24](https://github.com/Brozantium/5e-sheet-demo/pull/24)
-- **PR #25 — RE-006F0–F3 consolidated:** open, non-draft, based directly on `main`; exact head `d75eccd3eba905bcb0a031fa68e170fcda892d43`. Exact-head workflow 41969537457 passed frozen-lockfile install, `pnpm typecheck:reengine`, and 338 tests (0 failures). It contains the movement/defense audit, movement and defense domain contracts/engines, exports, and regression tests. [PR #25](https://github.com/Brozantium/5e-sheet-demo/pull/25)
+- **PRs #19–#22 — RE-006 audit/docs, conditions, Exhaustion, lifecycle:** merged into `main`. PR #19 workflow 41968985049 passed; PR #20 workflow 41957036163 passed 289 tests; PR #21 workflow 41957070754 passed 303 tests; PR #22 workflow 41957082301 passed 324 tests.
+- **PR #25 — RE-006F0–F3:** merged into `main`. Exact-head workflow 41969905962 passed frozen-lockfile install, `pnpm typecheck:reengine`, and 338 tests (0 failures). [PR #25](https://github.com/Brozantium/5e-sheet-demo/pull/25)
+- **PRs #13–#18, #23–#24:** closed as superseded. Their work is represented by the merged clean PRs #19–#22 and #25.
+- **PR #26 — final RE-006 completion checkpoint:** documentation-only verification PR based on current `main`; its required CI is the final mainline typecheck/unit-suite gate. [PR #26](https://github.com/Brozantium/5e-sheet-demo/pull/26)
 
-**Immediate next task:** review PR #25's final diff and merge it after confirming its exact-head CI and mergeability. Then run the exact-main reengine typecheck and unit suite. Do not start RE-007 until the RE-006 completion gate is satisfied.
- 
+**Immediate next task:** verify that PR #26's exact-head workflow passes frozen-lockfile install, `pnpm typecheck:reengine`, and the complete unit suite. Once green and merged, RE-006 is administratively complete and RE-007 may begin. Do not integrate the clean-room engine into the legacy app before RE-009.
+
 **E3 contract now implemented:**
 
 - Manual remove targets one instance ID regardless of its automatic expiry setting.
