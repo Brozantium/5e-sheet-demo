@@ -266,7 +266,7 @@ Status: implemented and CI verified on consolidated [PR #25](https://github.com/
 - Apply E1 hard Speed-zero / cannot-increase constraints last; preserve crawl/stand, source-approach, and Grappled drag metadata without executing movement.
 - Keep movement costs and target restrictions separate from Speed values.
 
-Status: implemented and CI verified on clean [PR #24](https://github.com/Brozantium/5e-sheet-demo/pull/24).
+Status: implemented and CI verified on consolidated [PR #25](https://github.com/Brozantium/5e-sheet-demo/pull/25).
 
 #### RE-006F3 — Derived Defense Aggregation
 
@@ -274,7 +274,7 @@ Status: implemented and CI verified on clean [PR #24](https://github.com/Brozant
 - Coalesce duplicate labels while preserving unique source provenance.
 - Preserve AC bonus source records without owning AC arithmetic; leave damage conflict resolution downstream.
 
-Status: implemented and CI verified on clean [PR #24](https://github.com/Brozantium/5e-sheet-demo/pull/24).
+Status: implemented and CI verified on consolidated [PR #25](https://github.com/Brozantium/5e-sheet-demo/pull/25).
 
 PR #25 carries the F0–F3 audit and implementation on a clean branch based directly on `main`. Exact-head workflow 41969537457 passed frozen-lockfile install, `pnpm typecheck:reengine`, and `pnpm test:reengine` (338 tests, 0 failures). Review/merge remains pending.
 
