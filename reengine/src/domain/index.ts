@@ -12,3 +12,6 @@ export * from "./conditions";
 export * from "./condition-lifecycle";
 export * from "./exhaustion";
 
+
+export * from "./movement";
+export * from "./defenses";
