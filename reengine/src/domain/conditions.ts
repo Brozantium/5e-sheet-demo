@@ -174,7 +174,9 @@ export interface ConditionDerivedEffects {
   rollModifiers: ConditionRollModifier[];
   automaticSavingThrowFailures: Ability[];
   automaticAbilityCheckFailures: ConditionAbilityCheckSense[];
-  /** Charmed target restrictions differ in scope between the two rulesets. */
+  /** Charmed prevents attacks against the charmer under both rulesets. */
+  prohibitedAttackTargetCreatureIds: string[];
+  /** 2014 Charmed blocks harmful abilities; 2024 blocks damaging abilities/effects. */
   prohibitedHarmfulTargetCreatureIds: string[];
   prohibitedDamagingTargetCreatureIds: string[];
   /** Critical hits are automatic for a hit within this distance; null means none. */
