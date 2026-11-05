@@ -3,7 +3,7 @@
 > **Audit date:** 2026-11-04 (Asia/Jakarta)  
 > **Legacy source:** `src/App.tsx` and `src/combat-rules.ts` on `feat/re-006e3-condition-lifecycle`  
 > **Clean-room source:** RE-006E domain and engines on the same branch  
-> **Status:** bounded source audit complete; F1–F3 are implemented and exact-head CI-verified on clean PR #24. Review/merge is pending. Remaining notes below are consumer/integration boundaries, not unimplemented F1–F3 work.
+> **Status:** bounded source audit complete; F0–F3 are merged into `main` via PR #25. Exact-head workflow 41969905962 passed frozen-lockfile install, typecheck, and 338 tests (0 failures). Remaining notes below are consumer/integration boundaries, not unimplemented F1–F3 work.
 
 ## Executive summary
 
