@@ -156,6 +156,6 @@ The first implementation was developed on the original branch `feat/re-006f-move
 - **F3:** pure defense aggregation for resistance, vulnerability, immunity, condition immunity, and individual AC-bonus contributions. Duplicate labels are coalesced case-insensitively while unique source provenance is retained. Resistance/immunity conflicts and AC arithmetic remain downstream responsibilities.
 - Added 14 regression test cases across movement and defense engine tests.
 - Original implementation CI: workflow [41806337613](https://github.com/Brozantium/5e-sheet-demo/actions/runs/41806337613) passed on the first code head (337 tests, 0 failures).
-- Clean replacement CI: workflow [41955241176](https://github.com/Brozantium/5e-sheet-demo/actions/runs/41955241176) passed frozen-lockfile install, `pnpm typecheck:reengine`, and `pnpm test:reengine`: 337 tests passed, 0 failures. It verified clean PR #24 head `a63146038d9a28352d2625a9e68a1856307e3059`.
+- Clean replacement CI: earlier workflow [41955241176](https://github.com/Brozantium/5e-sheet-demo/actions/runs/41955241176) passed 337 tests. After E1's shared condition-time contract was completed and the stacked history was reconciled, workflow [41957137088](https://github.com/Brozantium/5e-sheet-demo/actions/runs/41957137088) passed frozen-lockfile install, `pnpm typecheck:reengine`, and `pnpm test:reengine`: 338 tests passed, 0 failures.
 
-**F1–F3 status: implemented and exact-head CI verified on clean PR #24; 337 tests passed, 0 failures. Review/merge remains pending.**
+**F1–F3 status: implemented and CI verified on the reconciled clean PR #24 stack; latest recorded code workflow passed 338 tests, 0 failures. Review/merge remains pending.**
