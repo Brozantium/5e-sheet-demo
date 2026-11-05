@@ -58,6 +58,7 @@ Use this order at the beginning of a new chat:
 | Path | Responsibility |
 |---|---|
 | [README.md](./README.md) | Workspace boundary rules, tooling, navigation |
+| [REENGINE_INDEX.md](./REENGINE_INDEX.md) | Targeted repository map and incremental-reading protocol |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Target runtime, data flow, and separation of concerns |
 | [ROADMAP.md](./ROADMAP.md) | RE-001 through RE-010 sequence, slice scope, status, completion gates |
 | [SESSION_HANDOFF.md](./SESSION_HANDOFF.md) | Cross-chat checkpoint, decisions, PRs, tests, next action |
@@ -161,7 +162,7 @@ The test command compiles test TypeScript and runs `node --test reengine/tests/u
 
 1. **Public barrel exports need deliberate review:** `src/domain/index.ts` re-exports the Conditions, Condition Lifecycle, and Exhaustion domain contracts. At the inspected feature-branch snapshot `ee4d1c9`, `src/index.ts` re-exports the condition, condition-lifecycle, Exhaustion, movement, and defense engines. These exports are on unmerged PR #18's branch lineage and must not be assumed present on `main` until the dependent PR stack is merged. Verify root-barrel exports again after merge.
 2. **UI and persistence are not integrated:** the inspected UI subfolders and serialization area contain placeholders. The existence of domain engines does not mean the Owlbear sheet uses them.
-3. **Movement F1–F3 are implemented and CI verified:** PR #18 run 41806337613 passed typecheck and 337 tests. This does not imply Owlbear/UI integration.
+3. **Movement F1–F3 are implemented and CI verified:** PR #18 exact-head workflow 41953260760 passed typecheck and 337 tests on `ee4d1c9`. This does not imply Owlbear/UI integration.
 4. **Legacy sources remain separate:** `src/App.tsx`, `src/combat-rules.ts`, `assets/`, and `data/` are reference/legacy areas. Do not make them runtime dependencies of `reengine/`.
 
 ## Maintenance rule
