@@ -205,7 +205,7 @@ Status: implementation complete and exact-`main` CI verified on PR #12 head `fe1
 
 ### RE-006E — Conditions & Exhaustion
 
-**Audit status:** complete for the inspected legacy sheet path. **Implementation status:** E1–E3 are implemented and CI verified on open stacked PRs #14–#16; review/merge remains pending. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md).
+**Audit status:** complete for the inspected legacy sheet path. **Implementation status:** E1–E3 are implemented and CI verified on clean stacked PRs #20–#22; review/merge remains pending. See [conditions-exhaustion-audit.md](./REVERSE_ENGINEERING/findings/conditions-exhaustion-audit.md).
 
 #### RE-006E1 — Condition Instances & Derived Resolver
 
@@ -215,7 +215,7 @@ Status: implementation complete and exact-`main` CI verified on PR #12 head `fe1
 - Model context-dependent requirements (source/target identity, line of sight, distance) as structured inputs/results rather than reminder-only strings.
 - Do not execute attacks, actions, reactions, movement, or triggers; those remain downstream engine responsibilities.
 
-Status: implemented and CI verified on [PR #14](https://github.com/Brozantium/5e-sheet-demo/pull/14). Exact head `1b9bd4783ea14bc631b1506473108e038a1fe98a`; workflow 41787492057 succeeded.
+Status: implemented and CI verified on clean [PR #20](https://github.com/Brozantium/5e-sheet-demo/pull/20). Exact head `74b91177cb7456c98dc22b7266e6f30a597d0cec`; workflow 41957036163 succeeded (289 tests, 0 failures).
 
 #### RE-006E2 — Ruleset-aware Exhaustion Resolver
 
@@ -225,7 +225,7 @@ Status: implemented and CI verified on [PR #14](https://github.com/Brozantium/5e
 - Reuse RE-006D4 for Long Rest Exhaustion recovery. Do not duplicate D4's 2014 food/drink gate or 2024 unconditional one-level recovery.
 - Return an explicit death outcome at level 6 compatible with D3; do not synthesize failed Death Saves.
 
-Status: implemented and CI verified on [PR #15](https://github.com/Brozantium/5e-sheet-demo/pull/15). Exact head `b84975a3cafa3fad23829828bb403412030dee67`; workflow 41788311442 succeeded.
+Status: implemented and CI verified on clean [PR #21](https://github.com/Brozantium/5e-sheet-demo/pull/21). Exact head `49869b7bc58c7018b522380c752ce88407317ad0`; workflow 41957070754 succeeded (303 tests, 0 failures).
 
 #### RE-006E3 — Condition Lifecycle
 
@@ -233,7 +233,7 @@ Status: implemented and CI verified on [PR #15](https://github.com/Brozantium/5e
 - Expire/remove only the matching instance(s); preserve other instances of the same condition type.
 - Keep lifecycle operations pure and caller-driven. No internal timers, clocks, event scheduler, or persistence.
 
-Status: implemented and CI verified on [PR #16](https://github.com/Brozantium/5e-sheet-demo/pull/16). Exact head `d2baa198fa4d45ad9060d83916bed3aa5762629b`; workflow 41798828275 succeeded.
+Status: implemented and CI verified on clean [PR #22](https://github.com/Brozantium/5e-sheet-demo/pull/22). Exact head `75fd2a9515917721c5a2785331d42b7538272d54`; workflow 41957082301 succeeded (324 tests, 0 failures).
 
 **Audit findings that affect implementation:**
 
@@ -257,7 +257,7 @@ Status: audit complete. The legacy single-Speed path, visible movement grants, E
 - Preserve absent modes separately from explicit zero Speed.
 - Retain provenance and keep base profiles separate from temporary modifiers.
 
-Status: implemented and CI verified on [PR #18](https://github.com/Brozantium/5e-sheet-demo/pull/18).
+Status: implemented and CI verified on clean [PR #24](https://github.com/Brozantium/5e-sheet-demo/pull/24).
 
 #### RE-006F2 — Effective Movement Resolver
 
@@ -276,7 +276,7 @@ Status: implemented and CI verified on [PR #18](https://github.com/Brozantium/5e
 
 Status: implemented and CI verified on [PR #18](https://github.com/Brozantium/5e-sheet-demo/pull/18).
 
-PR #18 current head `ee4d1c98c646974570c776341f0317e1bef7ad98` passed workflow 41953260760: frozen-lockfile install, `pnpm typecheck:reengine`, and 337 tests (0 failures). Review/merge remains pending.
+PR #24 clean implementation head `f4a26f7f912a56e69419b4d71499b71ab2e3fd8c` passed workflow 41957445119: frozen-lockfile install, `pnpm typecheck:reengine`, and 338 tests (0 failures). Review/merge remains pending.
 
 **Movement/defense consumer boundaries:**
 
@@ -288,7 +288,7 @@ PR #18 current head `ee4d1c98c646974570c776341f0317e1bef7ad98` passed workflow 4
 
 ### RE-006 completion gate
 
-RE-006 implementation is present across the documented slices and the relevant exact-head CI checks have passed. It is **not yet administratively complete**: PRs #14–#18 still require dependency-aware review/merge reconciliation. Do not begin RE-007 until all RE-006 slices are merged and the final mainline typecheck/unit suite passes. UI integration and legacy migration remain later work.
+RE-006 implementation is present across the documented slices and the relevant exact-head CI checks have passed. It is **not yet administratively complete**: PRs #19–#24 still require dependency-aware review/merge reconciliation. Do not begin RE-007 until all RE-006 slices are merged and the final mainline typecheck/unit suite passes. UI integration and legacy migration remain later work.
 
 ## RE-007 — Spellcasting Engine
 
