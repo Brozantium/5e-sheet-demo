@@ -1,4 +1,4 @@
-import "./homebrew.css"
+import "../homebrew.css"
 
 type CategoryKey = "races" | "backgrounds" | "feats" | "spells" | "actions" | "items" | "magicitems" | "creatures" | "classes" | "subclasses"
 type Edition = "shared" | "2014" | "2024"
