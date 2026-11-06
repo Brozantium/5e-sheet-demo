@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url"
 import { defineConfig, type Plugin } from "vite"
 
 const testRoot = fileURLToPath(new URL(".", import.meta.url))
-const dataRoot = fileURLToPath(new URL("../data/", import.meta.url))
+const dataRoot = resolve(fileURLToPath(new URL("../data/", import.meta.url)))
 
 function repositoryDataPlugin(): Plugin {
   return {
@@ -40,7 +40,7 @@ function repositoryDataPlugin(): Plugin {
             continue
           }
           if (!entry.isFile() || !entry.name.endsWith(".json")) continue
-          const relativePath = absolutePath.slice(dataRoot.length).split(sep).join("/")
+          const relativePath = absolutePath.slice(dataRoot.length + 1).split(sep).join("/")
           this.emitFile({
             type: "asset",
             fileName: `data/${relativePath}`,
