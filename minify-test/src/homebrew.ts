@@ -169,15 +169,14 @@ function renderShell(): void {
           </div>
           <section class="risk-banner" id="risk-banner" role="status"><span class="risk-symbol">!</span><p><strong>Local drafts only.</strong> Homebrew tersimpan di browser ini. Membersihkan data situs atau pindah perangkat dapat menghapusnya. Export backup secara berkala.</p><button type="button" class="risk-dismiss" id="dismiss-risk" aria-label="Tutup peringatan">×</button></section>
           <section class="homebrew-workspace">
-            <aside class="category-column"><div class="category-heading"><span class="eyebrow">LIBRARY</span><span class="category-total" id="total-count">0</span></div><nav class="category-list" id="category-list" aria-label="Homebrew categories"></nav><p class="category-footnote">Category set is intentionally broad for this first pass. We can remove unused sections later.</p></aside>
+            <nav class="category-list category-chips" id="category-list" aria-label="Homebrew categories"></nav>
             <div class="content-column">
-              <div class="content-toolbar"><div><p class="eyebrow">CUSTOM CONTENT</p><h2 id="category-title">Races</h2><p class="category-description" id="category-description"></p></div><button type="button" class="primary-button" id="new-item">＋ New race</button></div>
+              <div class="content-toolbar"><div><p class="eyebrow">CUSTOM CONTENT</p><h2 id="category-title">Races</h2></div><button type="button" class="primary-button" id="new-item">＋ New race</button></div>
               <div class="list-tools"><label class="search-box"><span>⌕</span><input type="search" id="search-items" placeholder="Search your homebrew..." autocomplete="off" /></label><span class="list-count" id="list-count">0 entries</span></div>
               <div class="item-list" id="item-list"></div>
-              <div class="format-note"><strong>Draft format · v1</strong><span>Portable JSON draft format. Native Content Registry mapping and schema validation will be added after category contracts are finalized.</span></div>
             </div>
           </section>
-          <footer class="app-footer"><span>BROZANTIUM · HOMEBREW WORKSPACE</span><span>Local storage · JSON backup · Ruleset-aware drafts</span></footer>
+          <footer class="app-footer"><nav class="footer-links" aria-label="Footer navigation"><a href="./">Character Builder</a><a href="./homebrew.html" aria-current="page">Homebrew</a></nav><span>BROZANTIUM · HOMEBREW WORKSPACE</span><button type="button" class="dice-button" id="dice-button">⚄ Dice</button></footer>
         </main>
       </div>
     </div>
@@ -196,18 +195,16 @@ function renderShell(): void {
     <dialog class="json-dialog" id="json-dialog"><div class="dialog-heading"><div><p class="eyebrow">JSON TRANSFER</p><h2 id="json-title">Paste homebrew JSON</h2></div><button type="button" class="icon-button" data-close-json aria-label="Close JSON dialog">×</button></div>
       <p class="json-help" id="json-help"></p><textarea id="json-textarea" rows="13" spellcheck="false" placeholder='{"items":[...]}'></textarea><p class="form-error" id="json-error" role="alert"></p>
       <div class="dialog-actions"><button type="button" class="tool-button" data-close-json>Close</button><button type="button" class="primary-button" id="apply-json">Import JSON</button></div></dialog>
+    <dialog class="dice-dialog" id="dice-dialog"><div class="dialog-heading"><div><p class="eyebrow">QUICK ROLL</p><h2>Dice roller</h2></div><button type="button" class="icon-button" id="dice-close" aria-label="Close dice roller">×</button></div><div class="dice-controls"><label class="field"><span>Die</span><select id="dice-sides"><option value="4">d4</option><option value="6">d6</option><option value="8">d8</option><option value="10">d10</option><option value="12">d12</option><option value="20" selected>d20</option><option value="100">d100</option></select></label><label class="field"><span>Number of dice</span><input id="dice-count" type="number" min="1" max="20" value="1" /></label></div><button type="button" class="primary-button dice-roll" id="dice-roll">Roll dice</button><output class="dice-result" id="dice-result" aria-live="polite">—</output></dialog>
   `
 }
 function renderCategories(): void {
   const nav = document.querySelector<HTMLElement>("#category-list")
   if (!nav) return
-  nav.innerHTML = CATEGORIES.map(c => {
-    const count = items.filter(item => categoryForKind(item.kind) === c.key).length
-    return `<button type="button" class="category-button ${active === c.key ? "active" : ""}" data-category="${c.key}" aria-pressed="${active === c.key}"><span class="category-icon">${icon(c.key)}</span><span class="category-label">${c.label}</span><span class="category-count">${count}</span></button>`
-  }).join("")
-  const total = document.querySelector<HTMLElement>("#total-count")
+  nav.innerHTML = CATEGORIES.map(c =>
+    `<button type="button" class="category-button ${active === c.key ? "active" : ""}" data-category="${c.key}" aria-pressed="${active === c.key}"><span class="category-label">${c.label}</span></button>`
+  ).join("")
   const side = document.querySelector<HTMLElement>("#sidebar-count")
-  if (total) total.textContent = String(items.length)
   if (side) side.textContent = items.length + " drafts on this device"
 }
 function fieldSummary(item: HBItem): string[] {
@@ -220,12 +217,10 @@ function fieldSummary(item: HBItem): string[] {
 function renderList(): void {
   const list = document.querySelector<HTMLElement>("#item-list")
   const title = document.querySelector<HTMLElement>("#category-title")
-  const desc = document.querySelector<HTMLElement>("#category-description")
   const newButton = document.querySelector<HTMLButtonElement>("#new-item")
   const count = document.querySelector<HTMLElement>("#list-count")
   const cat = currentCategory()
   if (title) title.textContent = cat.label
-  if (desc) desc.textContent = description(active)
   if (newButton) newButton.textContent = "＋ New " + cat.singular.toLowerCase()
   if (!list) return
   const q = search.trim().toLowerCase()
@@ -357,6 +352,19 @@ function saveEditor(event: SubmitEvent): void {
 }
 
 function bind(): void {
+  const diceDialog = document.querySelector<HTMLDialogElement>("#dice-dialog")
+  document.querySelector<HTMLButtonElement>("#dice-button")?.addEventListener("click", () => diceDialog?.showModal())
+  document.querySelector<HTMLButtonElement>("#dice-close")?.addEventListener("click", () => diceDialog?.close())
+  document.querySelector<HTMLButtonElement>("#dice-roll")?.addEventListener("click", () => {
+    const sides = Number(document.querySelector<HTMLSelectElement>("#dice-sides")?.value ?? 20)
+    const countInput = document.querySelector<HTMLInputElement>("#dice-count")
+    const count = Math.max(1, Math.min(20, Math.floor(Number(countInput?.value ?? 1) || 1)))
+    if (countInput) countInput.value = String(count)
+    const rolls = Array.from({ length: count }, () => Math.floor(Math.random() * sides) + 1)
+    const total = rolls.reduce((sum, value) => sum + value, 0)
+    const result = document.querySelector<HTMLOutputElement>("#dice-result")
+    if (result) result.textContent = count === 1 ? `d${sides}: ${total}` : `${count}d${sides}: ${rolls.join(" + ")} = ${total}`
+  })
   document.querySelector<HTMLElement>("#category-list")?.addEventListener("click", event => {
     const target = event.target
     if (!(target instanceof HTMLElement)) return
