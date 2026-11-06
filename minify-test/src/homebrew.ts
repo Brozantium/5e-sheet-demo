@@ -147,7 +147,7 @@ function description(key: CategoryKey): string {
   } as Record<CategoryKey,string>)[key]
 }
 function renderShell(): void {
-  app.innerHTML = \`
+  app.innerHTML = `
     <div class="app-shell">
       <aside class="sidebar">
         <a class="brand" href="./" aria-label="Brozantium Character Builder"><span class="brand-mark">5e</span><span class="brand-copy"><strong>BROZANTIUM</strong><small>CHARACTER TOOLS</small></span></a>
@@ -195,14 +195,14 @@ function renderShell(): void {
     <dialog class="json-dialog" id="json-dialog"><div class="dialog-heading"><div><p class="eyebrow">JSON TRANSFER</p><h2 id="json-title">Paste homebrew JSON</h2></div><button type="button" class="icon-button" data-close-json aria-label="Close JSON dialog">×</button></div>
       <p class="json-help" id="json-help"></p><textarea id="json-textarea" rows="13" spellcheck="false" placeholder='{"items":[...]}'></textarea><p class="form-error" id="json-error" role="alert"></p>
       <div class="dialog-actions"><button type="button" class="tool-button" data-close-json>Close</button><button type="button" class="primary-button" id="apply-json">Import JSON</button></div></dialog>
-  \`
+  `
 }
 function renderCategories(): void {
   const nav = document.querySelector<HTMLElement>("#category-list")
   if (!nav) return
   nav.innerHTML = CATEGORIES.map(c => {
     const count = items.filter(item => categoryForKind(item.kind) === c.key).length
-    return \`<button type="button" class="category-button \${active === c.key ? "active" : ""}" data-category="\${c.key}" aria-pressed="\${active === c.key}"><span class="category-icon">\${icon(c.key)}</span><span class="category-label">\${c.label}</span><span class="category-count">\${count}</span></button>\`
+    return `<button type="button" class="category-button ${active === c.key ? "active" : ""}" data-category="${c.key}" aria-pressed="${active === c.key}"><span class="category-icon">${icon(c.key)}</span><span class="category-label">${c.label}</span><span class="category-count">${count}</span></button>`
   }).join("")
   const total = document.querySelector<HTMLElement>("#total-count")
   const side = document.querySelector<HTMLElement>("#sidebar-count")
@@ -233,13 +233,13 @@ function renderList(): void {
     .sort((a,b) => String(b.updatedAt ?? "").localeCompare(String(a.updatedAt ?? "")))
   if (count) count.textContent = visible.length + (visible.length === 1 ? " entry" : " entries")
   if (!visible.length) {
-    list.innerHTML = \`<div class="empty-state"><div class="empty-emblem">\${icon(active)}</div><h3>\${q ? "No matching homebrew" : "Nothing here yet."}</h3><p>\${q ? "Try another search term or clear the search." : "Your custom " + cat.label.toLowerCase() + " will appear here. Create your first entry to get started."}</p>\${q ? "" : '<button type="button" class="primary-button" data-create-empty>＋ Create ' + cat.singular.toLowerCase() + "</button>"}</div>\`
+    list.innerHTML = `<div class="empty-state"><div class="empty-emblem">${icon(active)}</div><h3>${q ? "No matching homebrew" : "Nothing here yet."}</h3><p>${q ? "Try another search term or clear the search." : "Your custom " + cat.label.toLowerCase() + " will appear here. Create your first entry to get started."}</p>${q ? "" : '<button type="button" class="primary-button" data-create-empty>＋ Create ' + cat.singular.toLowerCase() + "</button>"}</div>`
     return
   }
   list.innerHTML = visible.map(item => {
     const tags = fieldSummary(item)
     const edition = item.edition ?? "shared"
-    return \`<article class="homebrew-item"><div class="item-symbol">\${icon(active)}</div><div class="item-body"><div class="item-title-row"><h3>\${esc(item.name)}</h3><span class="edition-pill">\${esc(edition === "shared" ? "SHARED" : edition)}</span></div><p class="item-description">\${esc(item.description || "No description added yet.")}</p>\${tags.length ? '<div class="item-tags">' + tags.map(v => "<span>" + esc(v) + "</span>").join("") + "</div>" : ""}<div class="item-meta"><span>Homebrew</span><span>·</span><code>\${esc(item.id)}</code></div></div><div class="item-actions"><button type="button" class="quiet-button" data-action="edit" data-id="\${esc(item.id)}">Edit</button><button type="button" class="quiet-button danger" data-action="delete" data-id="\${esc(item.id)}">Delete</button></div></article>\`
+    return `<article class="homebrew-item"><div class="item-symbol">${icon(active)}</div><div class="item-body"><div class="item-title-row"><h3>${esc(item.name)}</h3><span class="edition-pill">${esc(edition === "shared" ? "SHARED" : edition)}</span></div><p class="item-description">${esc(item.description || "No description added yet.")}</p>${tags.length ? '<div class="item-tags">' + tags.map(v => "<span>" + esc(v) + "</span>").join("") + "</div>" : ""}<div class="item-meta"><span>Homebrew</span><span>·</span><code>${esc(item.id)}</code></div></div><div class="item-actions"><button type="button" class="quiet-button" data-action="edit" data-id="${esc(item.id)}">Edit</button><button type="button" class="quiet-button danger" data-action="delete" data-id="${esc(item.id)}">Delete</button></div></article>`
   }).join("")
 }
 function renderRisk(): void {
@@ -270,8 +270,8 @@ function showEditor(item?: HBItem): void {
   extra.innerHTML = FIELDS[active].map(field => {
     const value = item?.[field.key]
     const current = Array.isArray(value) ? value.join(", ") : String(value ?? "")
-    if (field.kind === "select") return \`<label class="field"><span>\${field.label}</span><select data-extra-key="\${field.key}"><option value="">Select…</option>\${(field.options ?? []).map(option => \`<option value="\${esc(option)}" \${current === option ? "selected" : ""}>\${esc(option)}</option>\`).join("")}</select></label>\`
-    return \`<label class="field"><span>\${field.label}</span><input data-extra-key="\${field.key}" type="\${field.kind === "number" ? "number" : "text"}" value="\${esc(current)}" placeholder="\${esc(field.hint ?? "")}" /></label>\`
+    if (field.kind === "select") return `<label class="field"><span>${field.label}</span><select data-extra-key="${field.key}"><option value="">Select…</option>${(field.options ?? []).map(option => `<option value="${esc(option)}" ${current === option ? "selected" : ""}>${esc(option)}</option>`).join("")}</select></label>`
+    return `<label class="field"><span>${field.label}</span><input data-extra-key="${field.key}" type="${field.kind === "number" ? "number" : "text"}" value="${esc(current)}" placeholder="${esc(field.hint ?? "")}" /></label>`
   }).join("")
   dialog.showModal()
   name.focus()
