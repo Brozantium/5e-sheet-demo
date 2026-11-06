@@ -1,52 +1,38 @@
-# Minify JS — separate HTML test
+# Brozantium — 5e Character Builder HTML Test
 
-This folder is an isolated test harness. It does not replace the main app and does not modify `src/App.tsx`.
+This isolated interface experiment is served by the separate repository `Brozantium/5e-sheet-minify-test`. It does not replace the main application and does not modify `src/App.tsx`.
 
-## What this test checks
+## Current interface milestone
 
-- `index.html` and `alternate.html` are two separate HTML entry points.
-- Both import the same external module: `src/main.ts`.
-- `src/main.ts` imports the same pure function from `src/shared-logic.ts`.
-- The test Vite config builds both HTML pages and minifies their production JavaScript with esbuild.
+- A ruleset selector switches between 2014 and 2024.
+- Class, race/species, and background options are loaded from the corresponding repository JSON files.
+- The preview updates when the character name, level, class, race, or background changes.
+- The data files remain separate static JSON assets under `/data/` and `/data/2024/`.
+- Vite minifies production JavaScript with OXC and CSS with Lightning CSS.
+- Both `index.html` and `alternate.html` import the shared TypeScript entry module.
 
-The character snapshot function is only a smoke-test example. It is not intended to become canonical 5e rules logic.
+## Data loading
 
-## Run in development
+The Vite plugin serves the repository's existing `data/` directory during development and copies JSON files to the build output without editing their contents. The browser requests only the three JSON catalogs needed for the initial builder screen.
 
-From the repository root:
+Ruleset mapping:
 
-```bash
-pnpm install
-pnpm exec vite --config minify-test/vite.config.ts
-```
+- 2014: `/data/classes.json`, `/data/races.json`, `/data/backgrounds.json`
+- 2024: `/data/2024/classes.json`, `/data/2024/races.json`, `/data/2024/backgrounds.json`
 
-Open both pages:
+The remaining JSON catalogs are copied too, ready for later builder sections.
 
-- http://127.0.0.1:5173/
-- http://127.0.0.1:5173/alternate.html
+## Build
 
-Use the form on each page. Both should return a JSON snapshot and identify the same source module.
-
-## Test the minified production build
-
-From the repository root:
+The separate Pages repository checks out this branch as its build source and runs:
 
 ```bash
-pnpm exec vite build --config minify-test/vite.config.ts
-pnpm exec vite preview --config minify-test/vite.config.ts
+pnpm --dir source install --frozen-lockfile
+pnpm --dir source exec vite build --config minify-test/vite.config.ts
 ```
 
-Open:
+The resulting static site is written to `minify-test/dist/`.
 
-- http://127.0.0.1:4173/
-- http://127.0.0.1:4173/alternate.html
+## Scope boundary
 
-The production build is written to `minify-test/dist/`. Inspect the generated files under `minify-test/dist/assets/` or use the browser's Network/Sources panel to confirm the HTML loads generated JavaScript bundles rather than the TypeScript source.
-
-## What this proves about src/App.tsx
-
-The main app already uses Vite. Its root `vite.config.ts` sets `build.minify` to `true` for production builds and disables it only in development mode.
-
-The corresponding app pattern is to move reusable logic into a normal source module (for example, `src/utils/character-calculation.ts`) and import that module from `src/App.tsx`. Vite follows the import graph and minifies the production output automatically. Do not manually import a generated minified bundle into `App.tsx`.
-
-This experiment deliberately stays outside the production source tree so it cannot change app behavior.
+This milestone is a data-backed interface prototype. It does not yet create persistent character records, run the canonical character-calculation engine, implement spellcasting, or replace the production React/Owlbear interface. Rules-engine calculations remain the responsibility of the dedicated engine work.
