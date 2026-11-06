@@ -1,3 +1,4 @@
+import "../style.css"
 import "../homebrew.css"
 
 type CategoryKey = "races" | "backgrounds" | "feats" | "spells" | "actions" | "items" | "magicitems" | "creatures" | "classes" | "subclasses"
