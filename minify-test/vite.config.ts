@@ -70,6 +70,7 @@ export default defineConfig({
       input: {
         index: fileURLToPath(new URL("./index.html", import.meta.url)),
         alternate: fileURLToPath(new URL("./alternate.html", import.meta.url)),
+        homebrew: fileURLToPath(new URL("./homebrew.html", import.meta.url)),
       },
     },
   },

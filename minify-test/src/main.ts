@@ -83,6 +83,7 @@ function renderShell(): void {
         <nav class="side-nav" aria-label="Navigasi halaman">
           <a class="nav-link active" href="#identity"><span class="nav-icon">✦</span><span>Character Builder</span></a>
           <a class="nav-link" href="#choices"><span class="nav-icon">◈</span><span>Build Options</span></a>
+          <a class="nav-link" href="./homebrew.html"><span class="nav-icon">◇</span><span>Homebrew</span></a>
           <a class="nav-link" href="#preview"><span class="nav-icon">▤</span><span>Character Preview</span></a>
         </nav>
         <div class="sidebar-spacer"></div>

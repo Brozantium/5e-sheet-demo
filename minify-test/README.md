@@ -36,3 +36,11 @@ The resulting static site is written to `minify-test/dist/`.
 ## Scope boundary
 
 This milestone is a data-backed interface prototype. It does not yet create persistent character records, run the canonical character-calculation engine, implement spellcasting, or replace the production React/Owlbear interface. Rules-engine calculations remain the responsibility of the dedicated engine work.
+
+## Homebrew workspace milestone
+
+- A separate `homebrew.html` page is linked from Character Builder.
+- Category navigation covers races, backgrounds, feats, spells, actions, items, magic items, creatures, classes, and subclasses.
+- Draft entries are saved in browser localStorage and support JSON import, paste, copy, and export backup.
+- Drafts use a portable `id`, `name`, `source`, `kind`, `edition`, `description`, and optional `effects` representation with category-specific fields.
+- This first pass is explicitly a local draft workspace. Native Content Registry mapping and final schema validation remain a later integration task.
