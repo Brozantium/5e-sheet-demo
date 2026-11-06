@@ -95,3 +95,30 @@
 @media(max-width:1050px){.homebrew-heading{align-items:flex-start;flex-direction:column}.toolbar{justify-content:flex-start}.homebrew-workspace{grid-template-columns:200px minmax(0,1fr)}}
 @media(max-width:760px){.homebrew-main{padding:25px 16px 20px}.homebrew-workspace{grid-template-columns:1fr}.category-column{padding:11px}.category-list{display:flex;gap:5px;overflow-x:auto;padding-bottom:3px}.category-button{flex:0 0 auto;min-height:34px}.category-icon{display:none}.category-footnote{display:none}.category-heading{padding-bottom:8px}.content-toolbar{align-items:flex-start}.homebrew-item{grid-template-columns:30px minmax(0,1fr);gap:9px}.item-symbol{width:29px;height:29px}.item-actions{grid-column:2}}
 @media(max-width:520px){.toolbar{display:grid;grid-template-columns:1fr 1fr;width:100%}.toolbar button{width:100%}.risk-banner{align-items:flex-start}.content-toolbar{flex-direction:column}.content-toolbar .primary-button{width:100%}.list-tools{align-items:flex-start;flex-direction:column}.search-box{width:100%}.dialog-fields,.extra-fields{grid-template-columns:1fr}.full-field{grid-column:auto}.editor-dialog form{padding:17px}.json-dialog{padding:17px}.item-title-row{align-items:flex-start;flex-direction:column;gap:5px}}
+
+/* Homebrew layout follows the reference: one horizontal category-chip row. */
+.homebrew-workspace{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.category-chips{display:flex;flex-wrap:wrap;gap:7px;padding:11px;border:1px solid var(--hb-line);border-radius:10px;background:rgba(17,27,41,.72)}
+.category-chips .category-button{display:inline-flex;min-height:35px;flex:0 0 auto;align-items:center;justify-content:center;padding:0 13px;border:1px solid var(--hb-line);border-radius:999px;background:rgba(255,255,255,.025);color:#aab7c9}
+.category-chips .category-button.active{border-color:rgba(216,177,110,.42);background:rgba(216,177,110,.14);color:var(--hb-gold-bright);box-shadow:inset 0 0 0 1px rgba(216,177,110,.04)}
+.category-chips .category-label{font-size:10px;white-space:nowrap}
+.content-toolbar{margin-bottom:13px}
+.content-toolbar h2{font-size:21px}
+.category-description{display:none}
+.app-footer{align-items:center;flex-wrap:wrap;border-top:1px solid var(--hb-line);padding-top:17px}
+.footer-links{display:flex;flex-wrap:wrap;gap:15px}
+.footer-links a{color:#8797ad;text-decoration:none;transition:color .15s ease}
+.footer-links a:hover,.footer-links a[aria-current=page]{color:var(--hb-gold-bright)}
+.dice-button{min-height:32px;padding:6px 12px;border:1px solid rgba(216,177,110,.28);border-radius:999px;background:rgba(216,177,110,.09);color:var(--hb-gold-bright);cursor:pointer;font-size:10px;font-weight:750}
+.dice-button:hover{background:rgba(216,177,110,.17)}
+.dice-dialog{width:min(380px,calc(100% - 28px));padding:20px;border:1px solid rgba(216,177,110,.3);border-radius:13px;background:#121d2b;color:#e9edf5;box-shadow:0 30px 100px rgba(0,0,0,.55)}
+.dice-dialog::backdrop{background:rgba(2,6,12,.76);backdrop-filter:blur(4px)}
+.dice-dialog .dialog-heading{margin-bottom:15px}
+.dice-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dice-roll{width:100%;margin-top:14px}
+.dice-result{display:grid;min-height:66px;place-items:center;margin-top:12px;padding:12px;border:1px solid var(--hb-line);border-radius:8px;background:rgba(255,255,255,.025);color:var(--hb-gold-bright);font-family:Georgia,serif;font-size:22px;text-align:center}
+@media(max-width:760px){
+  .category-chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding:8px}
+  .category-chips .category-button{min-height:33px;padding:0 11px}
+  .app-footer{align-items:flex-start;flex-direction:column;gap:12px}
+}
