@@ -105,8 +105,11 @@ Keep canonical content definitions separate from character-selected/applied stat
 | `src/domain/index.ts` | Domain barrel; currently re-exports conditions, lifecycle, and Exhaustion |
 | `src/registry/content-registry.ts` | In-memory validation and registration of canonical content records |
 | `src/builder/builder-manifest.ts` | Ruleset-neutral Builder step order and feature mechanic panel identifiers |
-| `src/application/AppRoot.tsx` | Small active application composition root; mounted from `src/main.tsx` |
-| `src/application/builder/CharacterBuilderPage.tsx` | Initial interactive ruleset-selection page; remaining Builder steps are pending |
+| `src/application/AppRoot.tsx` | Active application composition root; opens the content-only editor directly |
+| `src/application/content-editor/ContentEditorPage.tsx` | Active content editor: edition-separated category navigation, record edit/create/delete, JSON import/export |
+| `src/application/content-editor/model.ts` | Homebrew Editor category model, edition-scoped package parsing, record templates, field helpers |
+| `src/application/content-editor/persistence.ts` | Per-edition IndexedDB persistence for local editor workspaces |
+| `src/application/builder/CharacterBuilderPage.tsx` | Preserved Builder shell prototype; not mounted by the active application entry point |
 | `src/engines/builder-flow-engine.ts` | Conditional step visibility, completion-aware navigation locks, visited/completed step state, and finish gate |
 | `src/engines/` | Pure rule/domain engines; see the engine map below |
 | `src/adapters/README.md` | Adapter boundary guidance; controlled migration/integration belongs later |
