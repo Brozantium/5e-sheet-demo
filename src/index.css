@@ -20,6 +20,23 @@
 }
 
 :root,
+[data-theme="purple"] {
+  color-scheme: light;
+  --paper: #f5f1fc;
+  --card: #ffffff;
+  --ink: #302442;
+  --muted: #746782;
+  --rule: #e2d8f0;
+  --head: #7251bd;
+  --accent: #7957c8;
+  --accent-soft: #eee8fb;
+  --onaccent: #ffffff;
+  --pink: #c1a8ed;
+  --onpink: #2f1c50;
+  --danger: #bb4652;
+  --moss: #39805a;
+}
+
 [data-theme="blue"] {
   color-scheme: light;
   --paper: #f1f5fb;
@@ -36,7 +53,6 @@
   --danger: #c0392b;
   --moss: #2f7d3b;
 }
-
 [data-theme="red"] {
   color-scheme: light;
   --paper: #fbf2f1;
