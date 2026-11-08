@@ -10,6 +10,8 @@ export interface BuilderStepProgress {
 
 export interface BuilderFlowInput {
   progress: readonly BuilderStepProgress[];
+  /** A finished character is edited in a draft transaction; all steps stay reachable. */
+  mode?: "create" | "edit-finished-character";
   /** Requested active step. Falls back to the first incomplete visible step. */
   activeStepId?: BuilderStep;
   /** Steps the user has already visited in this builder session. */
@@ -99,9 +101,10 @@ export function resolveBuilderFlow(input: BuilderFlowInput): BuilderFlowState {
     ...[...visited].map((step) => visibleStepIds.indexOf(step)),
   );
   const lastIndex = visibleStepIds.length - 1;
-  const navigationLimit = allStepsComplete
-    ? lastIndex
-    : Math.min(firstIncompleteIndex, highestVisitedIndex + 1);
+  const navigationLimit =
+    allStepsComplete || input.mode === "edit-finished-character"
+      ? lastIndex
+      : Math.min(firstIncompleteIndex, highestVisitedIndex + 1);
 
   const navigableStepIds = visibleStepIds.filter(
     (_, index) => index <= navigationLimit,
