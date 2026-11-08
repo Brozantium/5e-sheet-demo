@@ -3,6 +3,7 @@
 Engines are pure domain functions. They must not import React, Owlbear SDK, browser storage, or legacy bundle files.
 
 Current first-pass modules:
+- builder-flow-engine: resolves the ruleset-neutral Builder step sequence, conditional step visibility, first-incomplete-step navigation lock, visited/completed indicators, and finish gate. It does not resolve content prerequisites or perform persistence.
 - progression-engine: resolves fixed values or class-table columns.
 - prerequisite-engine: evaluates structured requirements.
 - choice-engine: validates a selection against count, option set, repeatability, and prerequisites.

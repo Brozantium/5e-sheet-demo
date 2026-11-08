@@ -1,15 +1,25 @@
+/**
+ * Ordered Character Builder flow.
+ *
+ * The sequence is informed by the Play5e behavioral audit, then normalized to
+ * this project's ruleset-neutral naming. Steps such as subclass, feats,
+ * feature choices, and spells are dynamically hidden when not applicable.
+ * "review" is retained as a project-level final review step.
+ */
 export const BUILDER_STEPS = [
   "ruleset",
+  "modifiers",
   "class",
-  "subclass",
   "species-or-race",
-  "background",
+  "subclass",
   "ability-scores",
+  "background",
   "proficiencies",
-  "features-and-options",
   "feats",
-  "spells",
+  "features-and-options",
   "equipment",
+  "spells",
+  "details",
   "review",
 ] as const;
 
