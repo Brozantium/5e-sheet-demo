@@ -46,7 +46,7 @@ Use this order at the beginning of a new chat:
 | Conditions / Exhaustion | `conditions.ts`, `condition-lifecycle.ts`, `exhaustion.ts` | condition, lifecycle, exhaustion, and Long Rest tests as relevant |
 | Movement / derived defenses | `REVERSE_ENGINEERING/findings/movement-defenses-audit.md`, `domain/movement.ts`, `domain/defenses.ts` | `movement-engine.ts`, `defense-engine.ts`, and their unit tests; E1/E2 outputs are inputs, not reimplemented |
 | Content validation | `domain/types.ts`, identity, `registry/content-registry.ts` | affected JSON Schema, fixtures, registry tests |
-| Builder / feature grants | `builder/builder-manifest.ts`, mechanic contracts | progression, choice, prerequisite, assignment, resource engines and their tests |
+| Builder / feature grants | `builder/builder-manifest.ts`, `engines/builder-flow-engine.ts`, mechanic contracts | builder-flow and progression/choice/prerequisite/assignment/resource tests |
 | Spellcasting | spell-related schemas/content and spell modifier engine | RE-007 contracts/tests; do not infer complete casting support from the modifier engine |
 | Actions / triggers / effects | mechanic contracts and relevant mastery/weapon inputs | RE-008 design and tests; execution is not owned by RE-006 |
 | UI / Owlbear / migration | architecture and adapter docs | `src/ui`, adapters, persistence, legacy call path; only in the approved RE-009/RE-010 scope |
@@ -99,7 +99,8 @@ Keep canonical content definitions separate from character-selected/applied stat
 | `src/domain/defenses.ts` | Source-aware defense grants/results; AC contributions stay separate |
 | `src/domain/index.ts` | Domain barrel; currently re-exports conditions, lifecycle, and Exhaustion |
 | `src/registry/content-registry.ts` | In-memory validation and registration of canonical content records |
-| `src/builder/builder-manifest.ts` | Builder step order and feature mechanic panel identifiers |
+| `src/builder/builder-manifest.ts` | Ruleset-neutral Builder step order and feature mechanic panel identifiers |
+| `src/engines/builder-flow-engine.ts` | Conditional step visibility, completion-aware navigation locks, visited/completed step state, and finish gate |
 | `src/engines/` | Pure rule/domain engines; see the engine map below |
 | `src/adapters/README.md` | Adapter boundary guidance; controlled migration/integration belongs later |
 | `src/serialization/` | Serialization area; currently a placeholder |
@@ -142,6 +143,7 @@ Engine functions are intended to remain pure. They consume normalized inputs and
 
 | Path | Responsibility |
 |---|---|
+| `tests/unit/builder-flow-engine.test.cjs` | Builder step ordering, optional-step visibility, navigation gating, revisit behavior, and finish validation |
 | `tests/unit/` | Node test-runner regression suite; files generally pair with an engine or validator |
 | `tests/contracts/` | TypeScript contract fixtures included in the isolated typecheck |
 | `tests/fixtures/2014/`, `2024/`, `homebrew/` | Edition/Homebrew test fixtures |
