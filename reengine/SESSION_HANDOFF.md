@@ -2,9 +2,9 @@
 
 > **Purpose:** durable continuation checkpoint for work across chat/session limits. This is a project handoff, not a raw chat transcript.
 >
-> **Last reviewed:** 2026-11-05 (Asia/Jakarta)  
+> **Last reviewed:** 2026-11-08 (Asia/Jakarta)  
 > **Repository:** [Brozantium/5e-sheet-demo](https://github.com/Brozantium/5e-sheet-demo)  
-> **Working branch at checkpoint:** `docs/re-006f-movement-audit-mainline`  
+> **Working branch at checkpoint:** `chore/detach-figma-runtime` (application-shell cleanup stacked on Builder foundation PR #28)  
 > **Repository index:** [reengine/REENGINE_INDEX.md](./REENGINE_INDEX.md)  
 > **Current roadmap:** [reengine/ROADMAP.md](./ROADMAP.md)
 
@@ -21,7 +21,18 @@
 
 ### Copy/paste prompt for a new chat
 
-> Continue the 5e Sheet Reengine project in repository `Brozantium/5e-sheet-demo`. First read `reengine/SESSION_HANDOFF.md`, `reengine/REENGINE_INDEX.md`, and `reengine/ROADMAP.md`. Verify the live GitHub branch, PR state, exact head SHAs, reviews, and CI. Follow the index's incremental-reading protocol and preserve all architecture/ruleset boundaries. RE-006D4 and E1–E3 are merged into `main`; F0–F3 are merged via PR #25 and exact-head CI passed 338 tests. Final mainline-based workflow 41970251639 on checkpoint PR #26 passed frozen-lockfile install, typecheck, and 338 tests (0 failures). RE-006 is administratively complete; RE-007 may begin. Do not wire the clean-room engine into `src/App.tsx` or legacy runtime before the approved RE-009 integration phase.
+> Continue the 5e Sheet Reengine project in repository `Brozantium/5e-sheet-demo`. First read `reengine/SESSION_HANDOFF.md`, `reengine/REENGINE_INDEX.md`, and `reengine/ROADMAP.md`. Verify the live GitHub branch, PR state, exact head SHAs, reviews, and CI. Follow the index's incremental-reading protocol and preserve all architecture/ruleset boundaries. RE-006D4 and E1–E3 are merged into `main`; F0–F3 are merged via PR #25 and exact-head CI passed 338 tests. Final mainline-based workflow 41970251639 on checkpoint PR #26 passed frozen-lockfile install, typecheck, and 338 tests (0 failures). RE-006 is administratively complete; RE-007 may begin. The active entry point is `src/main.tsx` → `src/application/AppRoot.tsx`. Do not import the archived legacy application. Continue the staged RE-007/RE-008/RE-009 boundaries.
+
+## Application runtime separation — 2026-11-08
+
+The Figma Make runtime/tooling has been detached on the working branch:
+
+- `src/main.tsx` mounts `src/application/AppRoot.tsx`; it does not mount the former monolithic app.
+- The former `src/App.tsx` and its `combat-rules.ts`, `spell-rules.ts`, and `srd-spells.ts` dependencies are archived under `REVERSE_ENGINEERING/legacy/` and are not runtime imports.
+- Figma-specific Vite plugins, `.figma/make/` scripts/configuration, Figma HTML slots/branding, and the Figma-only Pages setup step have been removed.
+- Vite now uses the standard React and Tailwind plugins. GitHub Pages uses the existing `VITE_BASE` setting.
+- The new Character Builder page currently provides the ruleset-selection starting screen only. Content loading, class/subclass selection, ability-score workflows, spell/equipment flows, save/restore, and full orchestration remain incomplete.
+- Cleanup work is in PR #29, stacked on Builder foundation PR #28. Neither branch should be treated as merged until GitHub confirms it.
 
 ## Project purpose
 
