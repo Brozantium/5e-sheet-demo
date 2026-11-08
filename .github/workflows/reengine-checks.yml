@@ -34,5 +34,7 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck:app
       - run: pnpm typecheck:reengine
       - run: pnpm test:reengine
+      - run: pnpm build
