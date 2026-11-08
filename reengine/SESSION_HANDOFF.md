@@ -239,6 +239,23 @@ Detailed evidence and mapping:
 
 **Next bounded action:** DATA-001A — create a source manifest with per-file hash, bytes, record count and shape. Follow with DATA-001B/C field-level category mapping and loss-aware compatibility matrix. Start with a one-record-per-category pilot before any bulk conversion. Do not change completed RE-001–RE-006 engines without evidence and regression tests.
 
+
+### DATA-001D read-only compatibility pilot — 2026-11-08
+
+The pilot is documented in `REVERSE_ENGINEERING/findings/homebrew-editor-compatibility-pilot.md`. It examined representative 2014 and 2024 examples for races/species, backgrounds, classes, subclasses, feats, spells, items, and magic items. Actions and creatures have no source datasets in the two captured `data` folders. 2024 weapon masteries remain a separate registry.
+
+Key verified findings:
+- Homebrew Editor import normalizer de-duplicates by ID within category, without edition in the key. Cross-edition overlaps: backgrounds 13, classes 13, feats 49, items 197, magic items 321, races 17, spells 369.
+- Import path caps each category at 1,000 source rows. Combined magic-item datasets contain 1,239 rows, so do not combine them in one category array.
+- The normalizer preserves the `edition` marker only for exact `2014` / `2024` values; conflict import can generate random replacement IDs and append `(imported)`. That interactive merge behavior is not suitable as an official-content migration policy.
+- Source subclasses are nested under class records: 137 for 2014, 76 for 2024. Their slash-form IDs fail the canonical content-ID pattern. All source class and subclass feature records lack IDs (class features 149/174; subclass features 741/400).
+- Current canonical schemas/registry support class, feature, progression, option set and item only. Races/species, backgrounds, feats, spells, subclasses, magic-item metadata, actions, creatures and mastery source descriptions need reviewed schema/registry support.
+- No official source records have been copied into `reengine/content/`. Raw ZIP/JSON remains preserved; no conversion or runtime import performed.
+
+CI was checked on the branch head after the audit/index/handoff edits; see the exact-head run links in the current PR #29 checks.
+
+**Next bounded task:** DATA-001C — loss-aware compatibility matrix. Classify every source key in all 15 JSON files as direct, transform, preserve-only, derived, unsupported, or needs-evidence. Then prototype/test adapters one category at a time. Do not bulk-write canonical content before that matrix and the adapter tests are reviewed.
+
 ## How to maintain this safeguard
 
 Update this file whenever a meaningful slice or architecture decision is completed. At minimum record:
