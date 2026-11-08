@@ -295,7 +295,9 @@ Do not paste a raw conversation transcript. Keep durable decisions here and deta
 
 ### Verification status
 
-- Typecheck, production build, and exact-head CI must be checked on the resulting implementation commit before calling this prototype verified.
+- Exact-head CI passed on `bb22d610b7e3b915d4979ddabaa5e50e8b3796a1`: workflow run [42497432450](https://github.com/Brozantium/5e-sheet-demo/actions/runs/42497432450) completed successfully, including app typecheck, reengine typecheck, unit tests, and production build.
 - Browser interaction and edit/import/export round-trip have not yet been manually exercised by the user.
 
-**Next action:** let the repository CI run on the exact implementation head, then ask the owner to test Actions and Creatures plus one imported edition package. Keep this branch stacked on PR #29; do not merge it into `main` independently of its base.
+**Current PR:** draft [PR #30](https://github.com/Brozantium/5e-sheet-demo/pull/30), head `bb22d610b7e3b915d4979ddabaa5e50e8b3796a1`, stacked on PR #29. GitHub Pages still deploys `main` only; this draft has no live Pages preview and has not changed the production site.
+
+**Next action:** owner manually tests Actions and Creatures, imports the appropriate edition package, edits/saves/exports a record, and verifies that switching edition does not mix the workspaces. Keep this branch stacked on PR #29; do not merge it into `main` independently of its base.
