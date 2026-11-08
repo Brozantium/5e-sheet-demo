@@ -1,11 +1,11 @@
 name: Reengine checks
 
 on:
-  # Run on main and feature branches so isolated stacked reengineering slices
-  # receive the same frozen-install, typecheck, and unit-test gate.
+  # Run on main and every active implementation branch so direct pushes
+  # receive the same validation as pull requests.
   push:
-    branches: [main, "feat/**"]
-  # Run on every PR, including stacked phase PRs whose base is another feature branch.
+    branches: [main, "feat/**", "chore/**"]
+  # Run on every PR, including stacked phase PRs whose base is another branch.
   pull_request:
   workflow_dispatch:
 
