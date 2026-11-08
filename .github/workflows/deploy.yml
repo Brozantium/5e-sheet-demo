@@ -43,12 +43,6 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # vite.config.ts imports this Figma Make file, which is not committed to git.
-      - name: Ensure site config exists
-        run: |
-          mkdir -p .figma/make
-          [ -f .figma/make/site.json ] || echo '{}' > .figma/make/site.json
-
       - run: pnpm build
         env:
           VITE_BASE: /${{ github.event.repository.name }}/

@@ -2,9 +2,9 @@
 
 > **Purpose:** durable continuation checkpoint for work across chat/session limits. This is a project handoff, not a raw chat transcript.
 >
-> **Last reviewed:** 2026-11-05 (Asia/Jakarta)  
+> **Last reviewed:** 2026-11-08 (Asia/Jakarta)  
 > **Repository:** [Brozantium/5e-sheet-demo](https://github.com/Brozantium/5e-sheet-demo)  
-> **Working branch at checkpoint:** `docs/re-006f-movement-audit-mainline`  
+> **Working branch at checkpoint:** `chore/detach-figma-runtime` (application-shell cleanup stacked on Builder foundation PR #28)  
 > **Repository index:** [reengine/REENGINE_INDEX.md](./REENGINE_INDEX.md)  
 > **Current roadmap:** [reengine/ROADMAP.md](./ROADMAP.md)
 
@@ -21,7 +21,18 @@
 
 ### Copy/paste prompt for a new chat
 
-> Continue the 5e Sheet Reengine project in repository `Brozantium/5e-sheet-demo`. First read `reengine/SESSION_HANDOFF.md`, `reengine/REENGINE_INDEX.md`, and `reengine/ROADMAP.md`. Verify the live GitHub branch, PR state, exact head SHAs, reviews, and CI. Follow the index's incremental-reading protocol and preserve all architecture/ruleset boundaries. RE-006D4 and E1–E3 are merged into `main`; F0–F3 are merged via PR #25 and exact-head CI passed 338 tests. Final mainline-based workflow 41970251639 on checkpoint PR #26 passed frozen-lockfile install, typecheck, and 338 tests (0 failures). RE-006 is administratively complete; RE-007 may begin. Do not wire the clean-room engine into `src/App.tsx` or legacy runtime before the approved RE-009 integration phase.
+> Continue the 5e Sheet Reengine project in repository `Brozantium/5e-sheet-demo`. First read `reengine/SESSION_HANDOFF.md`, `reengine/REENGINE_INDEX.md`, and `reengine/ROADMAP.md`. Verify the live GitHub branch, PR state, exact head SHAs, reviews, and CI. Follow the index's incremental-reading protocol and preserve all architecture/ruleset boundaries. RE-006D4 and E1–E3 are merged into `main`; F0–F3 are merged via PR #25 and exact-head CI passed 338 tests. Final mainline-based workflow 41970251639 on checkpoint PR #26 passed frozen-lockfile install, typecheck, and 338 tests (0 failures). RE-006 is administratively complete; RE-007 may begin. The active entry point is `src/main.tsx` → `src/application/AppRoot.tsx`. Do not import the archived legacy application. Continue the staged RE-007/RE-008/RE-009 boundaries.
+
+## Application runtime separation — 2026-11-08
+
+The Figma Make runtime/tooling has been detached on the working branch:
+
+- `src/main.tsx` mounts `src/application/AppRoot.tsx`; it does not mount the former monolithic app.
+- The former `src/App.tsx` and its `combat-rules.ts`, `spell-rules.ts`, and `srd-spells.ts` dependencies are archived under `REVERSE_ENGINEERING/legacy/` and are not runtime imports.
+- Figma-specific Vite plugins, `.figma/make/` scripts/configuration, Figma HTML slots/branding, and the Figma-only Pages setup step have been removed.
+- Vite now uses the standard React and Tailwind plugins. GitHub Pages uses the existing `VITE_BASE` setting.
+- The new Character Builder page currently provides the ruleset-selection starting screen only. Content loading, class/subclass selection, ability-score workflows, spell/equipment flows, save/restore, and full orchestration remain incomplete.
+- Cleanup work is in PR #29, stacked on Builder foundation PR #28. Neither branch should be treated as merged until GitHub confirms it.
 
 ## Project purpose
 
@@ -206,6 +217,44 @@ The live PR statuses and exact-head CI listed above were rechecked on 2026-11-05
 3. Begin RE-007 only after the RE-006 completion gate is satisfied.
 4. Keep movement modifier order caller-defined until concrete consumers require ruleset-specific stacking policies and acceptance tests.
 5. Keep disease immunity as E1's separate result unless a reviewed downstream contract adopts it; retain normalized inputs wherever full movement provenance is needed.
+
+
+## ZIP data + Homebrew compatibility checkpoint — 2026-11-08
+
+**Latest bounded data audit:** the uploaded `play5e.net.zip` is retained in the user's ChatGPT Library and was successfully opened from there. SHA-256: `b2fd929aec34a050acfa52857c9155442aafc1373dfa14cc16efc279bad356fe`.
+
+- The captured archive contains 2,038 paths.
+- `play5e.net/data/` contains 7 JSON arrays and 1,875 records.
+- `play5e.net/data/2024/` contains 8 JSON arrays and 1,482 records, including 8 weapon masteries.
+- Total verified JSON input: 15 files, 3,357 records, 5,906,456 uncompressed bytes. All 15 files parsed successfully.
+- **Important:** these raw JSON files have not yet been copied into GitHub. `reengine/content/2014/`, `2024/`, `shared/`, and `homebrew/` still contain only `.gitkeep` placeholders. The original ZIP in Library is currently the preserved raw input.
+- The Homebrew Editor importer accepts ten top-level categories: `races`, `backgrounds`, `feats`, `spells`, `actions`, `items`, `magicitems`, `creatures`, `classes`, and `subclasses`. It applies category-specific normalization, requires an ID/name, de-duplicates by category ID, and accepts only explicit `edition: "2014" | "2024"`.
+- The captured source has no standalone `actions` or `creatures` JSON dataset. Subclasses are nested under classes and need an explicit mapping to the editor's separate subclass category. 2024 `masteries.json` is separate; the editor has no matching top-level `masteries` category.
+- Do **not** import every official record into the user's actual Homebrew collection. Use the editor's field model as a compatibility target while preserving official source provenance and edition in Brozantium's canonical content registry.
+- Do not port standalone Play5e documentation pages, Play5e theme/CSS/fonts/colors/logos or branded assets.
+
+Detailed evidence and mapping:
+- [Play5e entry/assets/data graph](./REVERSE_ENGINEERING/findings/play5e-entrypoint-asset-data-graph.md)
+- [Play5e dataset ↔ Homebrew Editor compatibility audit](./REVERSE_ENGINEERING/findings/play5e-homebrew-data-compatibility-audit.md)
+
+**Next bounded action:** DATA-001A — create a source manifest with per-file hash, bytes, record count and shape. Follow with DATA-001B/C field-level category mapping and loss-aware compatibility matrix. Start with a one-record-per-category pilot before any bulk conversion. Do not change completed RE-001–RE-006 engines without evidence and regression tests.
+
+
+### DATA-001D read-only compatibility pilot — 2026-11-08
+
+The pilot is documented in `REVERSE_ENGINEERING/findings/homebrew-editor-compatibility-pilot.md`. It examined representative 2014 and 2024 examples for races/species, backgrounds, classes, subclasses, feats, spells, items, and magic items. Actions and creatures have no source datasets in the two captured `data` folders. 2024 weapon masteries remain a separate registry.
+
+Key verified findings:
+- Homebrew Editor import normalizer de-duplicates by ID within category, without edition in the key. Cross-edition overlaps: backgrounds 13, classes 13, feats 49, items 197, magic items 321, races 17, spells 369.
+- Import path caps each category at 1,000 source rows. Combined magic-item datasets contain 1,239 rows, so do not combine them in one category array.
+- The normalizer preserves the `edition` marker only for exact `2014` / `2024` values; conflict import can generate random replacement IDs and append `(imported)`. That interactive merge behavior is not suitable as an official-content migration policy.
+- Source subclasses are nested under class records: 137 for 2014, 76 for 2024. Their slash-form IDs fail the canonical content-ID pattern. All source class and subclass feature records lack IDs (class features 149/174; subclass features 741/400).
+- Current canonical schemas/registry support class, feature, progression, option set and item only. Races/species, backgrounds, feats, spells, subclasses, magic-item metadata, actions, creatures and mastery source descriptions need reviewed schema/registry support.
+- No official source records have been copied into `reengine/content/`. Raw ZIP/JSON remains preserved; no conversion or runtime import performed.
+
+CI was checked on the branch head after the audit/index/handoff edits; see the exact-head run links in the current PR #29 checks.
+
+**Next bounded task:** DATA-001C — loss-aware compatibility matrix. Classify every source key in all 15 JSON files as direct, transform, preserve-only, derived, unsupported, or needs-evidence. Then prototype/test adapters one category at a time. Do not bulk-write canonical content before that matrix and the adapter tests are reviewed.
 
 ## How to maintain this safeguard
 

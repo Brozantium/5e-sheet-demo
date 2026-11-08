@@ -62,8 +62,12 @@ Use this order at the beginning of a new chat:
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Target runtime, data flow, and separation of concerns |
 | [ROADMAP.md](./ROADMAP.md) | RE-001 through RE-010 sequence, slice scope, status, completion gates |
 | [SESSION_HANDOFF.md](./SESSION_HANDOFF.md) | Cross-chat checkpoint, decisions, PRs, tests, next action |
+| [REVERSE_ENGINEERING/legacy/](./REVERSE_ENGINEERING/legacy/) | Archived previous app and supporting files; reference only, never imported at runtime |
 | [REVERSE_ENGINEERING/findings/](./REVERSE_ENGINEERING/findings/) | Evidence-based legacy observations and bounded audits |
 | `REVERSE_ENGINEERING/findings/play5e-character-builder-audit.md` | Play5e Builder step order, conditional visibility, completion gates, edition behavior, score methods, and finished-character edit draft behavior |
+| `REVERSE_ENGINEERING/findings/play5e-entrypoint-asset-data-graph.md` | ZIP entry HTML → Vite asset graph → shared state/data loader → edition JSON map; initial record counts and focused audit slices |
+| `REVERSE_ENGINEERING/findings/play5e-homebrew-data-compatibility-audit.md` | Complete 2014/2024 JSON dataset inventory, Homebrew Editor accepted categories/normalizers, per-category migration map, loss-aware conversion gates |
+| `REVERSE_ENGINEERING/findings/homebrew-editor-compatibility-pilot.md` | DATA-001D read-only pilot using representative records; edition ID collisions, 1,000/category import cap, source→editor field maps and current canonical schema gaps |
 
 ### Canonical content and schemas
 
@@ -101,6 +105,8 @@ Keep canonical content definitions separate from character-selected/applied stat
 | `src/domain/index.ts` | Domain barrel; currently re-exports conditions, lifecycle, and Exhaustion |
 | `src/registry/content-registry.ts` | In-memory validation and registration of canonical content records |
 | `src/builder/builder-manifest.ts` | Ruleset-neutral Builder step order and feature mechanic panel identifiers |
+| `src/application/AppRoot.tsx` | Small active application composition root; mounted from `src/main.tsx` |
+| `src/application/builder/CharacterBuilderPage.tsx` | Initial interactive ruleset-selection page; remaining Builder steps are pending |
 | `src/engines/builder-flow-engine.ts` | Conditional step visibility, completion-aware navigation locks, visited/completed step state, and finish gate |
 | `src/engines/` | Pure rule/domain engines; see the engine map below |
 | `src/adapters/README.md` | Adapter boundary guidance; controlled migration/integration belongs later |
@@ -166,7 +172,7 @@ The test command compiles test TypeScript and runs `node --test reengine/tests/u
 1. **Public barrel exports need deliberate review:** `src/domain/index.ts` re-exports the Conditions, Condition Lifecycle, and Exhaustion domain contracts. At the clean feature-branch snapshot `a6314603`, `src/index.ts` re-exports the condition, condition-lifecycle, Exhaustion, movement, and defense engines. The condition, lifecycle, Exhaustion, movement, and defense exports are all merged on `main` via PRs #20–#22 and #25. Verify root-barrel exports again after merge.
 2. **UI and persistence are not integrated:** the inspected UI subfolders and serialization area contain placeholders. The existence of domain engines does not mean the Owlbear sheet uses them.
 3. **Movement F1–F3 are implemented and CI verified:** clean PR #25 exact-head workflow 41969537457 passed typecheck and 338 tests with 0 failures. This does not imply Owlbear/UI integration.
-4. **Legacy sources remain separate:** `src/App.tsx`, `src/combat-rules.ts`, `assets/`, and `data/` are reference/legacy areas. Do not make them runtime dependencies of `reengine/`.
+4. **Legacy sources remain separate:** `REVERSE_ENGINEERING/legacy/`, root `assets/`, and root `data/` are reference areas. Do not make them runtime dependencies of the active application or `reengine/`.
 
 ## Maintenance rule
 
