@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "format": "oxfmt",
+    "typecheck:app": "tsc -p tsconfig.json",
     "typecheck:reengine": "tsc -p reengine/tsconfig.json",
     "test:reengine": "tsc -p reengine/tsconfig.test.json && node -e \"require('node:fs').writeFileSync('reengine/.test-dist/package.json', '{\\\"type\\\":\\\"commonjs\\\"}')\" && node --test reengine/tests/unit/*.test.cjs"
   },
