@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import type { Ruleset } from "../../../reengine/src/domain/types";
 import {
   BUILDER_STEPS,
@@ -195,14 +195,14 @@ export default function CharacterBuilderPage() {
           </a>
 
           <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-2 sm:flex" aria-label="Color theme">
-              <span className="mr-1 text-[11px] font-semibold uppercase tracking-wider text-muted">Theme</span>
+            <div className="flex items-center gap-1.5 sm:gap-2" aria-label="Color theme">
+              <span className="mr-1 hidden text-[11px] font-semibold uppercase tracking-wider text-muted sm:inline">Theme</span>
               {THEMES.map((item) => (
                 <button
                   key={item.id}
                   type="button"
                   className={`theme-swatch ${theme === item.id ? "theme-swatch-selected" : ""}`}
-                  style={{ "--swatch": item.color } as React.CSSProperties}
+                  style={{ "--swatch": item.color } as CSSProperties}
                   onClick={() => setTheme(item.id)}
                   aria-label={`${item.label} theme`}
                   aria-pressed={theme === item.id}
@@ -226,10 +226,10 @@ export default function CharacterBuilderPage() {
               <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-rule">
                 <div
                   className="h-full rounded-full bg-accent transition-all"
-                  style={{ width: ruleset ? "14%" : "0%" }}
+                  style={{ width: `${(flow.completedStepIds.length / REQUIRED_STEPS.length) * 100}%` }}
                 />
               </div>
-              <p className="mt-1.5 text-[10px] text-muted">{ruleset ? "1 of 13 setup stages started" : "Start by choosing an edition"}</p>
+              <p className="mt-1.5 text-[10px] text-muted">{`${flow.completedStepIds.length} of ${REQUIRED_STEPS.length} required steps complete`}</p>
             </div>
 
             <nav className="p-2" aria-label="Character creation steps">
