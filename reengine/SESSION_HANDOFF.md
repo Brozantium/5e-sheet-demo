@@ -268,3 +268,34 @@ Update this file whenever a meaningful slice or architecture decision is complet
 - current next action and blockers.
 
 Do not paste a raw conversation transcript. Keep durable decisions here and detailed forensic evidence in focused files under `REVERSE_ENGINEERING/findings/`. If a previous finding is corrected, explicitly mark the correction as this file does for the RE-006E condition model.
+
+## Content-only Homebrew Editor prototype — 2026-11-08
+
+**Implementation branch:** `feat/content-only-homebrew-editor`  
+**Base:** PR #29 head `ac6f8f9300770e595f1fdff5c5b72a8cfa9b3199`  
+**Scope:** content authoring/editing only. The application entry now opens the Content Editor directly instead of the Character Builder shell.
+
+### Implemented behavior
+
+- Edition workspaces are separate: 2014 and 2024 have independent category collections and independent IndexedDB keys.
+- The editor exposes the ten observed Homebrew Editor categories: races, classes, subclasses, backgrounds, feats, spells, items, magic items, actions, and creatures.
+- Actions and Creatures remain visible with empty states and create-record controls. No source records are fabricated; the audited source folders contain no `actions.json` or `creatures.json`.
+- Records can be searched, selected, created, edited, and deleted. Primitive fields use suitable controls; arrays and objects are edited as formatted JSON so unknown/nested source fields are retained.
+- Save persists locally in the browser through IndexedDB. Import replaces only the currently selected edition after an edition-aware validation; export emits only that edition's `dnd-homebrew` version 1 package.
+- `id` and `name` are required; duplicate IDs are blocked within a category and active edition. The record edition is locked to the current workspace.
+- The UI does not run character calculations, rules validation, spell execution, combat logic, or Builder flows.
+
+### Deliberate boundaries
+
+- No original `/data/` or `/data/2024/` files are modified or imported into canonical content.
+- No cross-edition concatenation or ID rewriting. Identical source IDs remain valid because the edition workspaces are isolated.
+- The editor is a local test prototype, not server-backed multi-device storage. Export JSON to keep/share edits.
+- Actions/Creatures templates contain only neutral identity/source/description fields; users add additional fields as appropriate. No unverified creature/action schema is invented.
+- The previous CharacterBuilderPage source remains in the repository as an inactive prototype. `AppRoot` no longer opens it.
+
+### Verification status
+
+- Typecheck, production build, and exact-head CI must be checked on the resulting implementation commit before calling this prototype verified.
+- Browser interaction and edit/import/export round-trip have not yet been manually exercised by the user.
+
+**Next action:** let the repository CI run on the exact implementation head, then ask the owner to test Actions and Creatures plus one imported edition package. Keep this branch stacked on PR #29; do not merge it into `main` independently of its base.
