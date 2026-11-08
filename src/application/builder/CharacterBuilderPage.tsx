@@ -174,7 +174,7 @@ export default function CharacterBuilderPage() {
     const next = navigateBuilderFlow(flowInput, target);
     if (!next) return;
     setActiveStepId(target);
-    setVisitedStepIds(next.visitedStepIds ?? []);
+    setVisitedStepIds([...(next.visitedStepIds ?? [])]);
   }
 
   function continueForward() {
