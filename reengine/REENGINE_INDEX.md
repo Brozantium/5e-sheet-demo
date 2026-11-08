@@ -66,6 +66,7 @@ Use this order at the beginning of a new chat:
 | [REVERSE_ENGINEERING/findings/](./REVERSE_ENGINEERING/findings/) | Evidence-based legacy observations and bounded audits |
 | `REVERSE_ENGINEERING/findings/play5e-character-builder-audit.md` | Play5e Builder step order, conditional visibility, completion gates, edition behavior, score methods, and finished-character edit draft behavior |
 | `REVERSE_ENGINEERING/findings/play5e-entrypoint-asset-data-graph.md` | ZIP entry HTML → Vite asset graph → shared state/data loader → edition JSON map; initial record counts and focused audit slices |
+| `REVERSE_ENGINEERING/findings/play5e-homebrew-data-compatibility-audit.md` | Complete 2014/2024 JSON dataset inventory, Homebrew Editor accepted categories/normalizers, per-category migration map, loss-aware conversion gates |
 
 ### Canonical content and schemas
 
