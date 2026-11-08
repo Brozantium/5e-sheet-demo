@@ -122,6 +122,25 @@ test("finish requires every visible step and external validation approval", () =
   assert.equal(allowed.canFinish, true);
 });
 
+
+test("finished-character edit drafts keep all steps reachable without bypassing finish validation", () => {
+  const input = {
+    progress: progress(),
+    mode: "edit-finished-character",
+    activeStepId: "ruleset",
+  };
+
+  const flow = resolveBuilderFlow(input);
+  assert.equal(flow.nextStepId, "modifiers");
+  assert.equal(flow.navigableStepIds.at(-1), "review");
+  assert.equal(flow.canFinish, false);
+
+  const lastStep = navigateBuilderFlow(input, "review");
+  assert.ok(lastStep);
+  assert.equal(lastStep.activeStepId, "review");
+  assert.equal(resolveBuilderFlow(lastStep).canFinish, false);
+});
+
 test("an empty applicable step list cannot be finished", () => {
   const entries = progress(
     Object.fromEntries(BUILDER_STEPS.map((id) => [id, { available: false }])),
