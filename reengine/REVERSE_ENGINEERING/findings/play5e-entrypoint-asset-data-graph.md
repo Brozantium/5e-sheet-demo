@@ -137,3 +137,34 @@ Recommended order:
 - ZIP-001F: reconcile each finding against existing RE-001–RE-009 work and update roadmap only with evidence.
 
 Keep these audits small and checkpointed. RE-001–RE-006 implementations remain authoritative where already verified; use the ZIP to identify integration contracts and gaps rather than replacing completed engines wholesale.
+
+
+## 9. Explicit scope exclusions — do not carry over
+
+The captured site is a reverse-engineering reference, not a source of UI pages or visual identity for Brozantium. The following are expressly out of scope for porting:
+
+### 9.1 Standalone content/documentation pages
+
+- Do not copy, migrate, recreate, or publish the captured standalone reference/documentation pages for classes, subclasses, backgrounds, species/races, spells, equipment, weapons, armor, feats, conditions, monsters, magic items, weapon masteries, or similar rules/content topics as Brozantium website pages.
+- Do not reproduce their page layouts, navigation, prose presentation, screenshots, or static HTML.
+- Their content may be consulted only as supporting evidence when resolving terminology, identifiers, cross-references, and discrepancies in the application data. Prefer the connected `/data/` JSON and the interactive application's consuming code for data-contract and behavior findings.
+- Brozantium's deliverable is its own Character Builder, Character Sheet, content-management workflows that are explicitly in scope, and application utilities—not a copy of Play5e's rules encyclopedia/documentation site.
+
+### 9.2 Play5e visual theme and branding
+
+- Do not carry over Play5e's `gilded-atlas` theme, `theme.js`, theme tokens, CSS variables, colors, typography, fonts, background treatments, icons, logos, component styling, or other branded visual assets.
+- Do not make the Play5e CSS or theme runtime a dependency of Brozantium.
+- Use Play5e's interactive layouts and behavior only as functional/structural reference where useful; independently design and implement Brozantium's presentation.
+- Brozantium's own theme system remains authoritative: Owlbear-inspired purple/lavender as the default, with the separately designed blue, red, yellow, and green alternatives. Do not import Play5e palettes or let Play5e theme metadata overwrite these choices.
+
+### 9.3 Allowed reference use
+
+Allowed:
+- Trace interactive routes and controls from `index.html` into the application bundles.
+- Inspect state transitions, storage/data loading, ruleset switching, selection validation, and module boundaries.
+- Map the application's use of `/data/` and `/data/2024/` records into Brozantium's own canonical schemas and content registry.
+- Consult standalone documentation content solely to clarify a data record or rules term when the application/data evidence is insufficient, recording the source and uncertainty.
+
+Not allowed:
+- Shipping Play5e HTML pages, CSS, theme scripts, logos, fonts, or branded assets in the Brozantium runtime.
+- Treating the entire scraped site as a website template to reproduce.
