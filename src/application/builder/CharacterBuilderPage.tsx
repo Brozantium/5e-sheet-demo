@@ -10,9 +10,10 @@ import {
   type BuilderFlowInput,
 } from "../../../reengine/src/engines/builder-flow-engine";
 
-type ThemeName = "blue" | "red" | "yellow" | "green";
+type ThemeName = "purple" | "blue" | "red" | "yellow" | "green";
 
 const THEMES: Array<{ id: ThemeName; label: string; color: string }> = [
+  { id: "purple", label: "Purple", color: "#7957c8" },
   { id: "blue", label: "Blue", color: "#3478df" },
   { id: "red", label: "Red", color: "#c94b50" },
   { id: "yellow", label: "Yellow", color: "#d5a629" },
@@ -157,7 +158,7 @@ function StepStatus({
 }
 
 export default function CharacterBuilderPage() {
-  const [theme, setTheme] = useState<ThemeName>("blue");
+  const [theme, setTheme] = useState<ThemeName>("purple");
   const [ruleset, setRuleset] = useState<Ruleset | null>(null);
   const [activeStepId, setActiveStepId] = useState<BuilderStep>("ruleset");
   const [visitedStepIds, setVisitedStepIds] = useState<BuilderStep[]>(["ruleset"]);
@@ -211,7 +212,7 @@ export default function CharacterBuilderPage() {
               ))}
             </div>
             <span className="hidden h-7 w-px bg-rule sm:block" />
-            <span className="rounded-full border border-rule px-3 py-1.5 text-[11px] font-semibold text-muted">
+            <span className="hidden rounded-full border border-rule px-3 py-1.5 text-[11px] font-semibold text-muted sm:inline-flex">
               New character
             </span>
           </div>
