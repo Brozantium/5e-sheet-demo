@@ -56,4 +56,4 @@ The unit suite uses Node's built-in test runner. JSON Schema validation uses Ajv
 - RE-008: action, trigger, and effect engine.
 - RE-009+: migration, canonical content pilot, Owlbear adapter, Builder, Sheet, and final integration.
 
-Spell-record existence checks are planned with RE-007; action/trigger target existence checks are planned with RE-008. Their IDs are already format-validated. The new engine is not yet wired into the current application. No runtime import from reengine is added to src/main.tsx or src/App.tsx.
+Spell-record existence checks are planned with RE-007; action/trigger target existence checks are planned with RE-008. Their IDs are already format-validated. The active application now mounts `src/application/AppRoot.tsx` through `src/main.tsx`. The new shell currently uses only the shared `Ruleset` type; the full Builder orchestration, content loading, and rules-engine integration remain future work. The previous monolithic application is archived under `REVERSE_ENGINEERING/legacy/` and is not part of the runtime.
