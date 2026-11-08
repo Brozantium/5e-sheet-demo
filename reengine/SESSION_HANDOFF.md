@@ -218,6 +218,27 @@ The live PR statuses and exact-head CI listed above were rechecked on 2026-11-05
 4. Keep movement modifier order caller-defined until concrete consumers require ruleset-specific stacking policies and acceptance tests.
 5. Keep disease immunity as E1's separate result unless a reviewed downstream contract adopts it; retain normalized inputs wherever full movement provenance is needed.
 
+
+## ZIP data + Homebrew compatibility checkpoint — 2026-11-08
+
+**Latest bounded data audit:** the uploaded `play5e.net.zip` is retained in the user's ChatGPT Library and was successfully opened from there. SHA-256: `b2fd929aec34a050acfa52857c9155442aafc1373dfa14cc16efc279bad356fe`.
+
+- The captured archive contains 2,038 paths.
+- `play5e.net/data/` contains 7 JSON arrays and 1,875 records.
+- `play5e.net/data/2024/` contains 8 JSON arrays and 1,482 records, including 8 weapon masteries.
+- Total verified JSON input: 15 files, 3,357 records, 5,906,456 uncompressed bytes. All 15 files parsed successfully.
+- **Important:** these raw JSON files have not yet been copied into GitHub. `reengine/content/2014/`, `2024/`, `shared/`, and `homebrew/` still contain only `.gitkeep` placeholders. The original ZIP in Library is currently the preserved raw input.
+- The Homebrew Editor importer accepts ten top-level categories: `races`, `backgrounds`, `feats`, `spells`, `actions`, `items`, `magicitems`, `creatures`, `classes`, and `subclasses`. It applies category-specific normalization, requires an ID/name, de-duplicates by category ID, and accepts only explicit `edition: "2014" | "2024"`.
+- The captured source has no standalone `actions` or `creatures` JSON dataset. Subclasses are nested under classes and need an explicit mapping to the editor's separate subclass category. 2024 `masteries.json` is separate; the editor has no matching top-level `masteries` category.
+- Do **not** import every official record into the user's actual Homebrew collection. Use the editor's field model as a compatibility target while preserving official source provenance and edition in Brozantium's canonical content registry.
+- Do not port standalone Play5e documentation pages, Play5e theme/CSS/fonts/colors/logos or branded assets.
+
+Detailed evidence and mapping:
+- [Play5e entry/assets/data graph](./REVERSE_ENGINEERING/findings/play5e-entrypoint-asset-data-graph.md)
+- [Play5e dataset ↔ Homebrew Editor compatibility audit](./REVERSE_ENGINEERING/findings/play5e-homebrew-data-compatibility-audit.md)
+
+**Next bounded action:** DATA-001A — create a source manifest with per-file hash, bytes, record count and shape. Follow with DATA-001B/C field-level category mapping and loss-aware compatibility matrix. Start with a one-record-per-category pilot before any bulk conversion. Do not change completed RE-001–RE-006 engines without evidence and regression tests.
+
 ## How to maintain this safeguard
 
 Update this file whenever a meaningful slice or architecture decision is completed. At minimum record:
