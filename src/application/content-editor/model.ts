@@ -54,7 +54,7 @@ export function createEmptyEditorPackage(
 ): HomebrewEditorPackage {
   const homebrew = Object.fromEntries(
     CONTENT_CATEGORIES.map(({ key }) => [key, []]),
-  ) as HomebrewCollections;
+  ) as unknown as HomebrewCollections;
 
   return {
     kind: "dnd-homebrew",
