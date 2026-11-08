@@ -63,6 +63,7 @@ Use this order at the beginning of a new chat:
 | [ROADMAP.md](./ROADMAP.md) | RE-001 through RE-010 sequence, slice scope, status, completion gates |
 | [SESSION_HANDOFF.md](./SESSION_HANDOFF.md) | Cross-chat checkpoint, decisions, PRs, tests, next action |
 | [REVERSE_ENGINEERING/findings/](./REVERSE_ENGINEERING/findings/) | Evidence-based legacy observations and bounded audits |
+| `REVERSE_ENGINEERING/findings/play5e-character-builder-audit.md` | Play5e Builder step order, conditional visibility, completion gates, edition behavior, score methods, and finished-character edit draft behavior |
 
 ### Canonical content and schemas
 
